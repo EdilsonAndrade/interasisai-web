@@ -66,7 +66,7 @@ export default function Home() {
         >
           <div className="mx-auto flex max-w-6xl flex-col justify-center gap-8">
             <p className="text-sm font-semibold tracking-[0.14em] uppercase text-text-body">Interasis AI</p>
-            <h1 className="max-w-4xl text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
+            <h1 className="max-w-4xl font-space-grotesk text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
               <span className="text-brand-primary">Inteligência Artificial</span> e Engenharia de Software sob Medida.
             </h1>
             <p className="max-w-3xl text-lg text-text-body">

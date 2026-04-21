@@ -203,4 +203,7 @@ export const tailwindThemeExtension = {
     "gradient-hero": "var(--gradient-hero)",
     "gradient-panel": "var(--gradient-panel)",
   },
+  fontFamily: {
+    "space-grotesk": ["var(--font-space-grotesk)", "ui-sans-serif", "system-ui", "sans-serif"] as string[],
+  },
 } as const;

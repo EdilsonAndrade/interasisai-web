@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import Footer from "@/components/layout/Footer";
+import Header from "@/components/layout/Header";
 import { rootThemeStyle } from "@/theme";
 
 export const metadata: Metadata = {
@@ -19,8 +21,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className="min-h-screen bg-surface-page text-text-body antialiased" style={rootThemeStyle}>
-        {children}
+      <body className="min-h-screen bg-deep text-main antialiased" style={rootThemeStyle}>
+        <Header />
+        <main id="top">{children}</main>
+        <Footer />
       </body>
     </html>
   );

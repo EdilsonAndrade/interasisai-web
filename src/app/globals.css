@@ -3,32 +3,57 @@
 @tailwind utilities;
 
 :root {
+  color-scheme: dark;
+  --gradient-hero: linear-gradient(
+    135deg,
+    rgb(var(--color-surface-hero-start, 10 17 32)) 0%,
+    rgb(var(--color-surface-hero-end, 21 31 57)) 100%
+  );
+  --gradient-panel: linear-gradient(
+    180deg,
+    rgb(var(--color-surface-subtle, 24 35 58)) 0%,
+    rgb(var(--color-surface-base, 18 26 45)) 100%
+  );
+}
+
+html.theme-light {
   color-scheme: light;
+}
+
+html.theme-light body {
+  --color-surface-page: 248 250 252 !important;
+  --color-surface-base: 255 255 255 !important;
+  --color-surface-subtle: 238 244 251 !important;
+  --color-surface-hero-start: 30 42 90 !important;
+  --color-surface-hero-end: 13 110 253 !important;
+  --color-text-strong: 15 23 42 !important;
+  --color-text-body: 71 85 105 !important;
+  --color-border-subtle: 220 231 245 !important;
   --gradient-hero: linear-gradient(
     135deg,
     rgb(var(--color-surface-hero-start, 30 42 90)) 0%,
     rgb(var(--color-surface-hero-end, 13 110 253)) 100%
-  );
+  ) !important;
   --gradient-panel: linear-gradient(
     180deg,
     rgb(var(--color-brand-primary-soft, 234 243 255)) 0%,
     rgb(var(--color-surface-base, 255 255 255)) 100%
-  );
+  ) !important;
 }
 
 @layer base {
   * {
-    border-color: rgb(var(--color-border-subtle, 220 231 245) / 1);
+    border-color: rgb(var(--color-border-subtle, 42 53 80) / 1);
   }
 
   html {
-    background-color: rgb(var(--color-surface-page, 248 250 252) / 1);
+    background-color: rgb(var(--color-surface-page, 11 16 32) / 1);
   }
 
   body {
     min-height: 100vh;
-    background-color: rgb(var(--color-surface-page, 248 250 252) / 1);
-    color: rgb(var(--color-text-body, 71 85 105) / 1);
+    background-color: rgb(var(--color-surface-page, 11 16 32) / 1);
+    color: rgb(var(--color-text-body, 215 223 237) / 1);
     text-rendering: optimizeLegibility;
   }
 

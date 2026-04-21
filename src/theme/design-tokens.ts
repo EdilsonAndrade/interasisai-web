@@ -40,19 +40,19 @@ export const designTokens = {
     campaign: "#2A225A",
   },
   surface: {
-    page: "#F8FAFC",
-    base: "#FFFFFF",
-    subtle: "#EEF4FB",
-    heroStart: "#1E2A5A",
-    heroEnd: "#0D6EFD",
+    page: "#0B1020",
+    base: "#121A2D",
+    subtle: "#18233A",
+    heroStart: "#0A1120",
+    heroEnd: "#151F39",
   },
   text: {
-    strong: "#0F172A",
-    body: "#475569",
+    strong: "#F8FAFC",
+    body: "#D7DFED",
     inverse: "#FFFFFF",
   },
   border: {
-    subtle: "#DCE7F5",
+    subtle: "#2A3550",
   },
   shape: {
     card: "1rem",
@@ -160,6 +160,8 @@ export const rootThemeStyle: ThemeStyle = {
 
 export const tailwindThemeExtension = {
   colors: {
+    deep: colorVariable("--color-surface-page"),
+    main: colorVariable("--color-text-strong"),
     brand: {
       primary: colorVariable("--color-brand-primary"),
       "primary-hover": colorVariable("--color-brand-primary-hover"),

@@ -3,10 +3,21 @@ import { useChatAssistant } from "./useChatAssistant";
 
 // Mock MediaRecorder globally
 class MockMediaRecorder {
-  static isTypeSupported = () => true;
+  static isTypeSupported = (_mimeType: string) => true;
   ondataavailable: ((e: { data: Blob }) => void) | null = null;
   onstop: (() => void) | null = null;
-  start() {}
+  onerror: (() => void) | null = null;
+
+  start() {
+    // Simulate ondataavailable after 100ms with a fake audio chunk
+    setTimeout(() => {
+      if (this.ondataavailable) {
+        const fakeBlob = new Blob(["fake-audio"], { type: "audio/webm" });
+        this.ondataavailable({ data: fakeBlob });
+      }
+    }, 100);
+  }
+
   stop() {
     if (this.onstop) this.onstop();
   }
@@ -26,6 +37,18 @@ Object.defineProperty(global.navigator, "mediaDevices", {
 jest.useFakeTimers();
 
 describe("useChatAssistant", () => {
+  beforeEach(() => {
+    mockGetUserMedia.mockResolvedValue({
+      getTracks: () => [{ stop: jest.fn() }],
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllTimers();
+  });
+
+  // ── Chat message tests ──────────────────────────────────────────────────────
+
   // Test 1 — sending a message adds it to messages with role: 'user'
   it("adds user message to messages list on sendMessage", () => {
     const { result } = renderHook(() => useChatAssistant());
@@ -74,9 +97,78 @@ describe("useChatAssistant", () => {
     expect(aiMessages[0].content).toBeTruthy();
   });
 
-  // Test 4 — audio error sets audioError to a non-null string
-  it("sets audioError when getUserMedia is denied", async () => {
-    mockGetUserMedia.mockRejectedValueOnce(new Error("Permission denied"));
+  // ── Audio recording tests ───────────────────────────────────────────────────
+
+  // T-A1: startRecording → isRecording true
+  it("T-A1: sets isRecording to true when startRecording is called", async () => {
+    const { result } = renderHook(() => useChatAssistant());
+
+    await act(async () => {
+      await result.current.startRecording();
+    });
+
+    expect(result.current.isRecording).toBe(true);
+  });
+
+  // T-A2: recordingTime increments by 1 each second while recording
+  it("T-A2: recordingTime increments by 1 each second while recording", async () => {
+    const { result } = renderHook(() => useChatAssistant());
+
+    await act(async () => {
+      await result.current.startRecording();
+    });
+
+    act(() => {
+      jest.advanceTimersByTime(3000);
+    });
+
+    expect(result.current.recordingTime).toBe(3);
+  });
+
+  // T-A3: stopRecording → audioBlob has size > 0
+  it("T-A3: audioBlob has size > 0 after stopRecording", async () => {
+    const { result } = renderHook(() => useChatAssistant());
+
+    await act(async () => {
+      await result.current.startRecording();
+    });
+
+    // Advance timers to trigger ondataavailable simulation (100ms in MockMediaRecorder.start)
+    act(() => {
+      jest.advanceTimersByTime(200);
+    });
+
+    act(() => {
+      result.current.stopRecording();
+    });
+
+    expect(result.current.audioBlob).not.toBeNull();
+    expect(result.current.audioBlob!.size).toBeGreaterThan(0);
+  });
+
+  // T-A4: stopRecording → isRecording false, recordingTime 0
+  it("T-A4: stopRecording sets isRecording to false and recordingTime to 0", async () => {
+    const { result } = renderHook(() => useChatAssistant());
+
+    await act(async () => {
+      await result.current.startRecording();
+    });
+
+    act(() => {
+      jest.advanceTimersByTime(2000);
+    });
+
+    act(() => {
+      result.current.stopRecording();
+    });
+
+    expect(result.current.isRecording).toBe(false);
+    expect(result.current.recordingTime).toBe(0);
+  });
+
+  // T-A5: getUserMedia rejected → audioError set, isRecording false
+  it("T-A5: sets audioError when getUserMedia is denied", async () => {
+    mockGetUserMedia.mockRejectedValueOnce(new Error("NotAllowedError"));
 
     const { result } = renderHook(() => useChatAssistant());
 
@@ -85,5 +177,24 @@ describe("useChatAssistant", () => {
     });
 
     expect(result.current.audioError).toBe("Permissão de microfone necessária");
+    expect(result.current.isRecording).toBe(false);
+  });
+
+  // T-A6: MediaRecorder not supported → audioError set, isRecording false
+  it("T-A6: sets audioError when MediaRecorder is not supported", async () => {
+    const originalMediaRecorder = global.MediaRecorder;
+    // @ts-expect-error — intentionally removing MediaRecorder to test unsupported path
+    global.MediaRecorder = undefined;
+
+    const { result } = renderHook(() => useChatAssistant());
+
+    await act(async () => {
+      await result.current.startRecording();
+    });
+
+    expect(result.current.audioError).toContain("não suportada");
+    expect(result.current.isRecording).toBe(false);
+
+    global.MediaRecorder = originalMediaRecorder;
   });
 });

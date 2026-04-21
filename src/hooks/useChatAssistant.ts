@@ -5,8 +5,9 @@ type UseChatAssistantReturn = {
   messages: ChatMessage[];
   isLoading: boolean;
   isRecording: boolean;
+  recordingTime: number;
+  audioBlob: Blob | null;
   audioError: string | null;
-  transcript: string;
   sendMessage: (text: string) => void;
   startRecording: () => void;
   stopRecording: () => void;
@@ -14,12 +15,11 @@ type UseChatAssistantReturn = {
 
 const MOCK_AI_REPLY = "Olá! Sou o assistente da Interasis AI. Como posso ajudar você hoje?";
 
-// Web Speech API — webkit prefix fallback for cross-browser support
-type SpeechRecognitionCtor = new () => SpeechRecognition;
-function getSpeechRecognitionClass(): SpeechRecognitionCtor | undefined {
-  if (typeof window === "undefined") return undefined;
-  const w = window as Record<string, unknown>;
-  return (w["SpeechRecognition"] ?? w["webkitSpeechRecognition"]) as SpeechRecognitionCtor | undefined;
+function getSupportedMimeType(): string {
+  if (typeof MediaRecorder === "undefined") return "";
+  if (MediaRecorder.isTypeSupported("audio/webm")) return "audio/webm";
+  if (MediaRecorder.isTypeSupported("audio/mp4")) return "audio/mp4";
+  return "";
 }
 
 export function useChatAssistant(): UseChatAssistantReturn {
@@ -27,9 +27,13 @@ export function useChatAssistant(): UseChatAssistantReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState("");
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const sendMessage = useCallback((text: string) => {
     const trimmed = text.trim();
@@ -57,50 +61,79 @@ export function useChatAssistant(): UseChatAssistantReturn {
     }, 1500);
   }, []);
 
-  const startRecording = useCallback(() => {
-    setAudioError(null);
-    setTranscript("");
+  const startRecording = useCallback(async () => {
+    if (isRecording) return;
 
-    const RecognitionClass = getSpeechRecognitionClass();
-    if (!RecognitionClass) {
-      setAudioError("Reconhecimento de voz não suportado neste navegador");
+    setAudioError(null);
+    setAudioBlob(null);
+    chunksRef.current = [];
+
+    if (typeof MediaRecorder === "undefined") {
+      setAudioError("Gravação de áudio não suportada neste navegador");
       return;
     }
 
-    const recognition = new RecognitionClass();
-    recognition.lang = "pt-BR";
-    recognition.interimResults = true;
-    recognition.continuous = false;
-    recognitionRef.current = recognition;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const text = Array.from(event.results)
-        .map((r) => r[0].transcript)
-        .join("");
-      setTranscript(text);
-    };
+      const mimeType = getSupportedMimeType();
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      mediaRecorderRef.current = recorder;
 
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      if (event.error === "not-allowed") {
-        setAudioError("Permissão de microfone necessária");
-      } else {
-        setAudioError("Erro ao reconhecer voz. Tente novamente.");
-      }
-      setIsRecording(false);
-    };
+      recorder.ondataavailable = (e: BlobEvent) => {
+        if (e.data.size > 0) {
+          chunksRef.current.push(e.data);
+        }
+      };
 
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
+      recorder.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: mimeType || "audio/webm" });
+        if (blob.size > 0) {
+          setAudioBlob(blob);
+          console.log(`[Audio Blob] size: ${blob.size} bytes`);
+        }
+        setIsRecording(false);
+        setRecordingTime(0);
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      };
 
-    recognition.start();
-    setIsRecording(true);
-  }, []);
+      recorder.onerror = () => {
+        setAudioError("Erro na gravação. Tente novamente.");
+        setIsRecording(false);
+      };
+
+      recorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+      timerRef.current = setInterval(() => setRecordingTime((t) => t + 1), 1000);
+    } catch {
+      setAudioError("Permissão de microfone necessária");
+    }
+  }, [isRecording]);
 
   const stopRecording = useCallback(() => {
-    recognitionRef.current?.stop();
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    mediaRecorderRef.current?.stop();
+    streamRef.current?.getTracks().forEach((t) => t.stop());
     setIsRecording(false);
   }, []);
 
-  return { messages, isLoading, isRecording, audioError, transcript, sendMessage, startRecording, stopRecording };
+  return {
+    messages,
+    isLoading,
+    isRecording,
+    recordingTime,
+    audioBlob,
+    audioError,
+    sendMessage,
+    startRecording,
+    stopRecording,
+  };
 }

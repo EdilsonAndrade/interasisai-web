@@ -26,7 +26,7 @@ const mobileVariants: Variants = {
 
 export default function ChatWidget() {
   const { isOpen, open, close, toggle } = useChat();
-  const { messages, isLoading, isRecording, audioError, transcript, sendMessage, startRecording, stopRecording } =
+  const { messages, isLoading, isRecording, recordingTime, audioBlob: _audioBlob, audioError, sendMessage, startRecording, stopRecording } =
     useChatAssistant();
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -55,16 +55,12 @@ export default function ChatWidget() {
     }
   }, [isOpen]);
 
-  // Sync voice transcript → draft textarea
+  // Stop recording when panel closes to release microphone stream
   useEffect(() => {
-    if (!transcript) return;
-    setDraft(transcript);
-    const el = textareaRef.current;
-    if (el) {
-      el.style.height = "auto";
-      el.style.height = `${el.scrollHeight}px`;
+    if (!isOpen && isRecording) {
+      stopRecording();
     }
-  }, [transcript]);
+  }, [isOpen, isRecording, stopRecording]);
 
   // Auto-resize textarea
   const handleTextareaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -98,6 +94,12 @@ export default function ChatWidget() {
       void startRecording();
     }
   };
+
+  function formatTime(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  }
 
   const panelVariants = isMobile ? mobileVariants : desktopVariants;
 
@@ -212,22 +214,32 @@ export default function ChatWidget() {
                   style={{ height: "auto" }}
                 />
 
-                {/* Mic button */}
-                <button
-                  aria-label={isRecording ? "Parar gravação" : "Gravar mensagem de voz"}
-                  onClick={handleMicToggle}
-                  className={`flex-shrink-0 rounded-button p-2 transition ${
-                    isRecording
-                      ? "animate-pulse text-brand-primary motion-reduce:animate-none"
-                      : "text-text-body hover:text-text-strong"
-                  }`}
-                >
-                  {isRecording ? (
-                    <MicOff className="h-5 w-5" aria-hidden="true" />
-                  ) : (
-                    <Mic className="h-5 w-5" aria-hidden="true" />
+                {/* Mic button + recording timer */}
+                <div className="flex flex-shrink-0 items-center gap-1">
+                  {isRecording && (
+                    <span
+                      aria-label="Tempo de gravação"
+                      className="min-w-[2.5rem] text-center font-mono text-xs text-brand-primary"
+                    >
+                      {formatTime(recordingTime)}
+                    </span>
                   )}
-                </button>
+                  <button
+                    aria-label={isRecording ? "Parar gravação" : "Gravar mensagem de voz"}
+                    onClick={handleMicToggle}
+                    className={`rounded-button p-2 transition ${
+                      isRecording
+                        ? "animate-pulse text-brand-primary motion-reduce:animate-none"
+                        : "text-text-body hover:text-text-strong"
+                    }`}
+                  >
+                    {isRecording ? (
+                      <MicOff className="h-5 w-5" aria-hidden="true" />
+                    ) : (
+                      <Mic className="h-5 w-5" aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
 
                 {/* Send button */}
                 <button

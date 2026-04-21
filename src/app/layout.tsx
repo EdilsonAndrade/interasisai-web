@@ -5,6 +5,8 @@ import "./globals.css";
 import Footer from "@/components/layout/Footer";
 import Header from "@/components/layout/Header";
 import { rootThemeStyle } from "@/theme";
+import { ChatProvider } from "@/context/ChatContext";
+import ChatWidgetLoader from "@/components/chat/ChatWidgetLoader";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -30,9 +32,12 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className={spaceGrotesk.variable}>
       <body className="min-h-screen bg-deep text-main antialiased" style={rootThemeStyle}>
-        <Header />
-        <main id="top">{children}</main>
-        <Footer />
+        <ChatProvider>
+          <Header />
+          <main id="top">{children}</main>
+          <Footer />
+          <ChatWidgetLoader />
+        </ChatProvider>
       </body>
     </html>
   );

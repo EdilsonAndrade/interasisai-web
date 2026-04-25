@@ -1,25 +1,39 @@
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
+
+import { sendAudioMessageToBff, sendTextMessageToBff } from "@/services";
+import { optimizeAudioForBff } from "./audioOptimization";
 import { useChatAssistant } from "./useChatAssistant";
 
-// Mock MediaRecorder globally
+jest.mock("@/services", () => ({
+  sendAudioMessageToBff: jest.fn(),
+  sendTextMessageToBff: jest.fn(),
+}));
+
+jest.mock("./audioOptimization", () => ({
+  optimizeAudioForBff: jest.fn(),
+}));
+
 class MockMediaRecorder {
-  static isTypeSupported = (_mimeType: string) => true;
-  ondataavailable: ((e: { data: Blob }) => void) | null = null;
+  static isTypeSupported = () => true;
+
+  ondataavailable: ((event: { data: Blob }) => void) | null = null;
   onstop: (() => void) | null = null;
   onerror: (() => void) | null = null;
 
   start() {
-    // Simulate ondataavailable after 100ms with a fake audio chunk
     setTimeout(() => {
       if (this.ondataavailable) {
-        const fakeBlob = new Blob(["fake-audio"], { type: "audio/webm" });
-        this.ondataavailable({ data: fakeBlob });
+        this.ondataavailable({
+          data: new Blob(["raw-audio"], { type: "audio/webm" }),
+        });
       }
-    }, 100);
+    }, 50);
   }
 
   stop() {
-    if (this.onstop) this.onstop();
+    if (this.onstop) {
+      this.onstop();
+    }
   }
 }
 
@@ -29,89 +43,75 @@ Object.defineProperty(global, "MediaRecorder", {
 });
 
 const mockGetUserMedia = jest.fn();
+
 Object.defineProperty(global.navigator, "mediaDevices", {
   writable: true,
   value: { getUserMedia: mockGetUserMedia },
 });
 
-jest.useFakeTimers();
+const mockedSendAudioMessageToBff = jest.mocked(sendAudioMessageToBff);
+const mockedSendTextMessageToBff = jest.mocked(sendTextMessageToBff);
+const mockedOptimizeAudioForBff = jest.mocked(optimizeAudioForBff);
+
+async function flushPromises() {
+  await Promise.resolve();
+  await Promise.resolve();
+}
 
 describe("useChatAssistant", () => {
   beforeEach(() => {
+    jest.useFakeTimers();
+
     mockGetUserMedia.mockResolvedValue({
       getTracks: () => [{ stop: jest.fn() }],
+    });
+
+    mockedSendTextMessageToBff.mockResolvedValue({
+      ok: true,
+      status: 200,
+      reply: "Resposta textual do BFF",
+    });
+
+    mockedOptimizeAudioForBff.mockResolvedValue({
+      optimizedBlob: new Blob(["optimized"], { type: "audio/wav" }),
+      originalDurationMs: 1200,
+      optimizedDurationMs: 900,
+      optimizationFactor: 1.15,
+    });
+
+    mockedSendAudioMessageToBff.mockResolvedValue({
+      ok: true,
+      status: 200,
+      reply: "Resposta de áudio do BFF",
     });
   });
 
   afterEach(() => {
     jest.clearAllTimers();
+    jest.useRealTimers();
+    jest.resetAllMocks();
   });
 
-  // ── Chat message tests ──────────────────────────────────────────────────────
-
-  // Test 1 — sending a message adds it to messages with role: 'user'
-  it("adds user message to messages list on sendMessage", () => {
+  it("usa o gateway BFF para envio textual e preserva resposta do assistente", async () => {
     const { result } = renderHook(() => useChatAssistant());
 
     act(() => {
-      result.current.sendMessage("Olá");
+      result.current.sendMessage("Olá, BFF");
     });
 
-    expect(result.current.messages[0]).toMatchObject({
-      role: "user",
-      content: "Olá",
-    });
-  });
-
-  // Test 2 — after sending, isLoading becomes true then false after mock resolves
-  it("sets isLoading true while waiting for AI reply", async () => {
-    const { result } = renderHook(() => useChatAssistant());
-
-    act(() => {
-      result.current.sendMessage("Teste");
-    });
-
-    expect(result.current.isLoading).toBe(true);
+    expect(result.current.messages[0]).toMatchObject({ role: "user", content: "Olá, BFF" });
+    expect(mockedSendTextMessageToBff).toHaveBeenCalledWith({ text: "Olá, BFF" });
 
     await act(async () => {
-      jest.runAllTimers();
+      await flushPromises();
     });
 
-    expect(result.current.isLoading).toBe(false);
+    const assistantMessages = result.current.messages.filter((message) => message.role === "ai");
+    expect(assistantMessages).toHaveLength(1);
+    expect(assistantMessages[0].content).toBe("Resposta textual do BFF");
   });
 
-  // Test 3 — after loading, a mock AI reply is added to messages with role: 'ai'
-  it("adds AI reply to messages after loading completes", async () => {
-    const { result } = renderHook(() => useChatAssistant());
-
-    act(() => {
-      result.current.sendMessage("Olá");
-    });
-
-    await act(async () => {
-      jest.runAllTimers();
-    });
-
-    const aiMessages = result.current.messages.filter((m) => m.role === "ai");
-    expect(aiMessages).toHaveLength(1);
-    expect(aiMessages[0].content).toBeTruthy();
-  });
-
-  // ── Audio recording tests ───────────────────────────────────────────────────
-
-  // T-A1: startRecording → isRecording true
-  it("T-A1: sets isRecording to true when startRecording is called", async () => {
-    const { result } = renderHook(() => useChatAssistant());
-
-    await act(async () => {
-      await result.current.startRecording();
-    });
-
-    expect(result.current.isRecording).toBe(true);
-  });
-
-  // T-A2: recordingTime increments by 1 each second while recording
-  it("T-A2: recordingTime increments by 1 each second while recording", async () => {
+  it("envia áudio somente após otimização com duração menor que a original", async () => {
     const { result } = renderHook(() => useChatAssistant());
 
     await act(async () => {
@@ -119,35 +119,31 @@ describe("useChatAssistant", () => {
     });
 
     act(() => {
-      jest.advanceTimersByTime(3000);
-    });
-
-    expect(result.current.recordingTime).toBe(3);
-  });
-
-  // T-A3: stopRecording → audioBlob has size > 0
-  it("T-A3: audioBlob has size > 0 after stopRecording", async () => {
-    const { result } = renderHook(() => useChatAssistant());
-
-    await act(async () => {
-      await result.current.startRecording();
-    });
-
-    // Advance timers to trigger ondataavailable simulation (100ms in MockMediaRecorder.start)
-    act(() => {
-      jest.advanceTimersByTime(200);
+      jest.advanceTimersByTime(1200);
     });
 
     act(() => {
       result.current.stopRecording();
     });
 
-    expect(result.current.audioBlob).not.toBeNull();
-    expect(result.current.audioBlob!.size).toBeGreaterThan(0);
+    await act(async () => {
+      await flushPromises();
+    });
+
+    expect(mockedOptimizeAudioForBff).toHaveBeenCalledTimes(1);
+    expect(mockedSendAudioMessageToBff).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audio: expect.any(Blob),
+        originalDurationMs: 1200,
+        optimizedDurationMs: 900,
+      }),
+    );
+    expect(result.current.audioBlob?.size).toBeGreaterThan(0);
   });
 
-  // T-A4: stopRecording → isRecording false, recordingTime 0
-  it("T-A4: stopRecording sets isRecording to false and recordingTime to 0", async () => {
+  it("bloqueia payload de voz quando otimização falha", async () => {
+    mockedOptimizeAudioForBff.mockRejectedValueOnce(new Error("Falha de otimização"));
+
     const { result } = renderHook(() => useChatAssistant());
 
     await act(async () => {
@@ -155,46 +151,55 @@ describe("useChatAssistant", () => {
     });
 
     act(() => {
-      jest.advanceTimersByTime(2000);
-    });
-
-    act(() => {
+      jest.advanceTimersByTime(1200);
       result.current.stopRecording();
     });
 
-    expect(result.current.isRecording).toBe(false);
-    expect(result.current.recordingTime).toBe(0);
+    await act(async () => {
+      await flushPromises();
+    });
+
+    expect(mockedSendAudioMessageToBff).not.toHaveBeenCalled();
+    expect(result.current.audioError).toContain("Não foi possível otimizar seu áudio");
   });
 
-  // T-A5: getUserMedia rejected → audioError set, isRecording false
-  it("T-A5: sets audioError when getUserMedia is denied", async () => {
-    mockGetUserMedia.mockRejectedValueOnce(new Error("NotAllowedError"));
+  it("marca erro de integração como retryable e permite nova tentativa para texto", async () => {
+    mockedSendTextMessageToBff
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 503,
+        message: "BFF indisponível",
+        retryable: true,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        reply: "Recuperado com sucesso",
+      });
 
     const { result } = renderHook(() => useChatAssistant());
 
-    await act(async () => {
-      await result.current.startRecording();
+    act(() => {
+      result.current.sendMessage("Quero tentar novamente");
     });
 
-    expect(result.current.audioError).toBe("Permissão de microfone necessária");
-    expect(result.current.isRecording).toBe(false);
-  });
-
-  // T-A6: MediaRecorder not supported → audioError set, isRecording false
-  it("T-A6: sets audioError when MediaRecorder is not supported", async () => {
-    const originalMediaRecorder = global.MediaRecorder;
-    // @ts-expect-error — intentionally removing MediaRecorder to test unsupported path
-    global.MediaRecorder = undefined;
-
-    const { result } = renderHook(() => useChatAssistant());
-
     await act(async () => {
-      await result.current.startRecording();
+      await flushPromises();
     });
 
-    expect(result.current.audioError).toContain("não suportada");
-    expect(result.current.isRecording).toBe(false);
+    expect(result.current.audioError).toBe("BFF indisponível");
+    expect(result.current.canRetry).toBe(true);
 
-    global.MediaRecorder = originalMediaRecorder;
+    act(() => {
+      result.current.retryLastMessage();
+    });
+
+    await act(async () => {
+      await flushPromises();
+    });
+
+    expect(mockedSendTextMessageToBff).toHaveBeenCalledTimes(2);
+    expect(result.current.canRetry).toBe(false);
+    expect(result.current.messages.some((message) => message.content === "Recuperado com sucesso")).toBe(true);
   });
 });

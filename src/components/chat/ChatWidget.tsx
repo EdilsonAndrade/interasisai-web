@@ -25,19 +25,32 @@ const mobileVariants: Variants = {
 // ─── ChatWidget ───────────────────────────────────────────────────────────────
 
 export default function ChatWidget() {
-  const { isOpen, open, close, toggle } = useChat();
-  const { messages, isLoading, isRecording, recordingTime, audioBlob: _audioBlob, audioError, sendMessage, startRecording, stopRecording } =
+  const { isOpen, close, toggle } = useChat();
+  const {
+    messages,
+    isLoading,
+    isRecording,
+    recordingTime,
+    audioError,
+    canRetry,
+    sendMessage,
+    retryLastMessage,
+    startRecording,
+    stopRecording,
+  } =
     useChatAssistant();
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [draft, setDraft] = useState("");
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(max-width: 767px)").matches;
+  });
 
   // Detect mobile breakpoint
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 767px)");
-    setIsMobile(mq.matches);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
@@ -199,6 +212,16 @@ export default function ChatWidget() {
                 >
                   {audioError}
                 </p>
+              )}
+
+              {audioError && canRetry && (
+                <button
+                  type="button"
+                  onClick={retryLastMessage}
+                  className="mb-3 rounded-button border border-brand-primary/40 px-3 py-1 text-xs font-semibold text-brand-primary transition hover:bg-brand-primary/10"
+                >
+                  Tentar novamente
+                </button>
               )}
 
               <div className="flex items-end gap-2">

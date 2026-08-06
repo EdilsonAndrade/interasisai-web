@@ -1,9 +1,13 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import type { ChatMessage } from "@/context/ChatContext";
 import {
+  decodeAudioBase64,
   sendAudioMessageToBff,
-  sendTextMessageToBff,
   type ChatGatewayResult,
+  getThreadId,
+  getPythonBackendConfig,
+  sendChatMessage,
+  type PythonChatResult,
 } from "@/services";
 import { optimizeAudioForBff } from "./audioOptimization";
 
@@ -13,6 +17,8 @@ type UseChatAssistantReturn = {
   isRecording: boolean;
   recordingTime: number;
   audioBlob: Blob | null;
+  audioReplyBlob: Blob | null;
+  audioReplyUrl: string | null;
   audioError: string | null;
   canRetry: boolean;
   sendMessage: (text: string) => void;
@@ -49,6 +55,8 @@ export function useChatAssistant(): UseChatAssistantReturn {
   const [canRetry, setCanRetry] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioReplyBlob, setAudioReplyBlob] = useState<Blob | null>(null);
+  const [audioReplyUrl, setAudioReplyUrl] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -56,6 +64,33 @@ export function useChatAssistant(): UseChatAssistantReturn {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordingStartedAtRef = useRef<number | null>(null);
   const lastRetryPayloadRef = useRef<RetryPayload | null>(null);
+  const audioReplyUrlRef = useRef<string | null>(null);
+  const threadIdRef = useRef<string | null>(null);
+
+  const setAudioReply = useCallback((blob: Blob | null) => {
+    if (audioReplyUrlRef.current) {
+      URL.revokeObjectURL(audioReplyUrlRef.current);
+      audioReplyUrlRef.current = null;
+    }
+    if (blob) {
+      const url = URL.createObjectURL(blob);
+      audioReplyUrlRef.current = url;
+      setAudioReplyBlob(blob);
+      setAudioReplyUrl(url);
+    } else {
+      setAudioReplyBlob(null);
+      setAudioReplyUrl(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (audioReplyUrlRef.current) {
+        URL.revokeObjectURL(audioReplyUrlRef.current);
+        audioReplyUrlRef.current = null;
+      }
+    };
+  }, []);
 
   const appendAssistantReply = useCallback((reply: string) => {
     const aiMsg: ChatMessage = {
@@ -67,14 +102,44 @@ export function useChatAssistant(): UseChatAssistantReturn {
     setMessages((prev) => [...prev, aiMsg]);
   }, []);
 
-  const handleGatewayResult = useCallback(
-    (result: ChatGatewayResult, retryPayload: RetryPayload) => {
+  // Initialize thread_id once on mount
+  useEffect(() => {
+    if (threadIdRef.current === null) {
+      const isRestored = (() => {
+        try {
+          return localStorage.getItem("chat_thread_id") !== null;
+        } catch {
+          return false;
+        }
+      })();
+      threadIdRef.current = getThreadId();
+      console.info("[SessionManager:threadId]", {
+        thread_id: threadIdRef.current,
+        source: isRestored ? "restored" : "new",
+      });
+    }
+  }, []);
+
+  const handlePythonResult = useCallback(
+    (result: PythonChatResult, retryPayload: RetryPayload) => {
       if (result.ok) {
         appendAssistantReply(result.reply);
         setCanRetry(false);
         lastRetryPayloadRef.current = null;
+        setAudioReply(null);
+
+        console.info("[PythonBackend]", {
+          thread_id: threadIdRef.current,
+          status: result.status,
+        });
         return;
       }
+
+      console.error("[PythonBackend:error]", {
+        status: result.status,
+        message: result.message,
+        thread_id: threadIdRef.current,
+      });
 
       setAudioError(result.message);
       if (result.retryable) {
@@ -82,7 +147,56 @@ export function useChatAssistant(): UseChatAssistantReturn {
         setCanRetry(true);
       }
     },
-    [appendAssistantReply],
+    [appendAssistantReply, setAudioReply],
+  );
+
+  const handleGatewayResult = useCallback(
+    (result: ChatGatewayResult, retryPayload: RetryPayload) => {
+      if (result.ok) {
+        appendAssistantReply(result.reply);
+        setCanRetry(false);
+        lastRetryPayloadRef.current = null;
+
+        if (result.audio?.base64) {
+          try {
+            const blob = decodeAudioBase64(result.audio.base64, result.audio.mimeType);
+            setAudioReply(blob);
+          } catch (error) {
+            console.error("[ChatGateway:audioDecodeError]", {
+              correlationId: result.correlationId ?? null,
+              message: (error as Error).message,
+            });
+            setAudioReply(null);
+          }
+        } else {
+          setAudioReply(null);
+        }
+
+        console.info("[ChatGateway]", {
+          correlationId: result.correlationId ?? null,
+          responseId: result.responseId ?? null,
+          sessionId: result.sessionId ?? null,
+          status: result.status,
+          cacheable: result.cache?.cacheable ?? false,
+          cacheSource: result.cache?.source ?? null,
+        });
+        return;
+      }
+
+      console.error("[ChatGateway:error]", {
+        correlationId: result.correlationId ?? null,
+        status: result.status,
+        errorStatus: result.errorStatus ?? null,
+        message: result.message,
+      });
+
+      setAudioError(result.message);
+      if (result.retryable) {
+        lastRetryPayloadRef.current = retryPayload;
+        setCanRetry(true);
+      }
+    },
+    [appendAssistantReply, setAudioReply],
   );
 
   const sendOptimizedAudio = useCallback(
@@ -98,8 +212,6 @@ export function useChatAssistant(): UseChatAssistantReturn {
 
         const result = await sendAudioMessageToBff({
           audio: optimized.optimizedBlob,
-          originalDurationMs: optimized.originalDurationMs,
-          optimizedDurationMs: optimized.optimizedDurationMs,
         });
 
         console.info("[Audio Optimization]", {
@@ -124,43 +236,90 @@ export function useChatAssistant(): UseChatAssistantReturn {
     [handleGatewayResult],
   );
 
-  const sendMessage = useCallback((text: string) => {
-    const trimmedText = text.trim();
-    if (!trimmedText) return;
+  const sendMessage = useCallback(
+    (text: string) => {
+      const trimmedText = text.trim();
+      if (!trimmedText) return;
 
-    const userMsg: ChatMessage = {
-      id: `${Date.now()}-user`,
-      role: "user",
-      content: trimmedText,
-      timestamp: Date.now(),
-    };
-
-    setMessages((prev) => [...prev, userMsg]);
-    setIsLoading(true);
-    setAudioError(null);
-
-    void sendTextMessageToBff({ text: trimmedText })
-      .then((result) => {
-        handleGatewayResult(result, {
-          kind: "text",
-          text: trimmedText,
+      // Tenant validation guard — abort if config is missing
+      let tenantId: string;
+      try {
+        const cfg = getPythonBackendConfig();
+        tenantId = cfg.tenantId;
+      } catch (err) {
+        setAudioError(
+          "Configuração do tenant ausente. Contate o administrador.",
+        );
+        console.error("[Chat:configError]", {
+          message: (err as Error).message,
         });
-      })
-      .finally(() => {
-        setIsLoading(false);
+        return;
+      }
+
+      const userMsg: ChatMessage = {
+        id: `${Date.now()}-user`,
+        role: "user",
+        content: trimmedText,
+        timestamp: Date.now(),
+      };
+
+      const threadId = threadIdRef.current ?? getThreadId();
+      threadIdRef.current = threadId;
+
+      setMessages((prev) => [...prev, userMsg]);
+      setIsLoading(true);
+      setAudioError(null);
+
+      console.info("[PythonBackend:chat]", {
+        tenant_id: tenantId,
+        thread_id: threadId,
+        endpoint: "/api/v1/chat",
       });
-  }, [handleGatewayResult]);
+
+      void sendChatMessage(
+        { message: trimmedText, thread_id: threadId },
+        tenantId,
+      )
+        .then((result) => {
+          handlePythonResult(result, {
+            kind: "text",
+            text: trimmedText,
+          });
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    },
+    [handlePythonResult],
+  );
 
   const retryLastMessage = useCallback(() => {
     const payload = lastRetryPayloadRef.current;
     if (!payload) return;
 
     if (payload.kind === "text") {
+      let tenantId: string;
+      try {
+        const cfg = getPythonBackendConfig();
+        tenantId = cfg.tenantId;
+      } catch {
+        setAudioError(
+          "Configuração do tenant ausente. Contate o administrador.",
+        );
+        return;
+      }
+
+      const threadId = threadIdRef.current ?? getThreadId();
+      threadIdRef.current = threadId;
+
       setIsLoading(true);
       setAudioError(null);
-      void sendTextMessageToBff({ text: payload.text })
+      void sendChatMessage(
+        { message: payload.text, thread_id: threadId },
+        tenantId,
+      )
         .then((result) => {
-          handleGatewayResult(result, payload);
+          handlePythonResult(result, payload);
         })
         .finally(() => {
           setIsLoading(false);
@@ -169,9 +328,11 @@ export function useChatAssistant(): UseChatAssistantReturn {
     }
 
     void sendOptimizedAudio(payload.audioBlob, payload.originalDurationMs);
-  }, [handleGatewayResult, sendOptimizedAudio]);
+  }, [handlePythonResult, sendOptimizedAudio]);
 
   const startRecording = useCallback(async () => {
+    // Audio feature flag guard
+    if (process.env.NEXT_PUBLIC_ENABLE_AUDIO !== "true") return;
     if (isRecording) return;
 
     setAudioError(null);
@@ -202,7 +363,9 @@ export function useChatAssistant(): UseChatAssistantReturn {
         if (blob.size > 0) {
           setAudioBlob(blob);
           const startedAt = recordingStartedAtRef.current;
-          const originalDurationMs = startedAt ? Math.max(1, Date.now() - startedAt) : Math.max(1, recordingTime * 1000);
+          const originalDurationMs = startedAt
+            ? Math.max(1, Date.now() - startedAt)
+            : Math.max(1, recordingTime * 1000);
           void sendOptimizedAudio(blob, originalDurationMs);
         }
         setIsRecording(false);
@@ -246,6 +409,8 @@ export function useChatAssistant(): UseChatAssistantReturn {
     isRecording,
     recordingTime,
     audioBlob,
+    audioReplyBlob,
+    audioReplyUrl,
     audioError,
     canRetry,
     sendMessage,

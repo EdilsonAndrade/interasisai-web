@@ -4,20 +4,21 @@ export type NavigationItem = {
 };
 
 export const navigationItems: NavigationItem[] = [
-  { label: "Servicos", href: "#servicos" },
-  { label: "Portfolio", href: "#portfolio" },
-  { label: "Contato", href: "#contato" },
+  { label: "Serviços", href: "/#servicos" },
+  { label: "Portfólio", href: "/#portfolio" },
+  { label: "Contato", href: "/#contato" },
+  { label: "Admin", href: "/admin" },
 ];
 
 export const primaryCta = {
   label: "Fale com a IA",
-  href: "#contato",
+  href: "/#contato",
 };
 
 export const footerInstitutionalLinks: NavigationItem[] = [
-  { label: "Sobre", href: "#sobre" },
-  { label: "Politica de Privacidade", href: "#privacidade" },
-  { label: "Termos", href: "#termos" },
+  { label: "Sobre", href: "/#sobre" },
+  { label: "Política de Privacidade", href: "/#privacidade" },
+  { label: "Termos", href: "/#termos" },
 ];
 
 export const footerSocialLinks: NavigationItem[] = [

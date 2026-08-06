@@ -3,10 +3,14 @@
 import { useRef, useEffect, useState, useCallback, type KeyboardEvent, type ChangeEvent } from "react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { MessageCircle, X, Send, Mic, MicOff } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 import { useChat } from "@/context/ChatContext";
 import { useChatAssistant } from "@/hooks/useChatAssistant";
 import ChatStatus from "./ChatStatus";
+
+// ─── Feature flags ────────────────────────────────────────────────────────────
+const isAudioEnabled = process.env.NEXT_PUBLIC_ENABLE_AUDIO === "true";
 
 // ─── Animation variants ───────────────────────────────────────────────────────
 
@@ -171,15 +175,15 @@ export default function ChatWidget() {
                   key={msg.id}
                   className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                 >
-                  <p
-                    className={
-                      msg.role === "user"
-                        ? "max-w-[80%] rounded-card rounded-br-sm bg-brand-primary px-4 py-2 text-sm text-text-inverse"
-                        : "max-w-[80%] rounded-card rounded-bl-sm bg-surface-subtle px-4 py-2 text-sm text-text-strong"
-                    }
-                  >
-                    {msg.content}
-                  </p>
+                  {msg.role === "user" ? (
+                    <p className="max-w-[80%] rounded-card rounded-br-sm bg-brand-primary px-4 py-2 text-sm text-text-inverse">
+                      {msg.content}
+                    </p>
+                  ) : (
+                    <div className="max-w-[80%] rounded-card rounded-bl-sm bg-surface-subtle px-4 py-2 text-sm text-text-strong chat-message-content">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  )}
                 </div>
               ))}
 
@@ -237,7 +241,8 @@ export default function ChatWidget() {
                   style={{ height: "auto" }}
                 />
 
-                {/* Mic button + recording timer */}
+                {/* Mic button + recording timer — only when audio is enabled */}
+                {isAudioEnabled && (
                 <div className="flex flex-shrink-0 items-center gap-1">
                   {isRecording && (
                     <span
@@ -263,6 +268,7 @@ export default function ChatWidget() {
                     )}
                   </button>
                 </div>
+                )}
 
                 {/* Send button */}
                 <button

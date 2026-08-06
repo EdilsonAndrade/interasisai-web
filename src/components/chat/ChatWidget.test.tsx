@@ -13,6 +13,10 @@ jest.mock("@/hooks/useChatAssistant", () => ({
   useChatAssistant: () => mockUseChatAssistant(),
 }));
 
+jest.mock("react-markdown", () => ({
+  default: ({ children }: { children: string }) => <div>{children}</div>,
+}));
+
 describe("ChatWidget", () => {
   beforeEach(() => {
     Object.defineProperty(Element.prototype, "scrollIntoView", {

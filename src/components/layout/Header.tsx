@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Menu, Moon, Sun, X } from "lucide-react";
 
+import BrandLogo from "@/components/ui/BrandLogo";
+
 import { navigationItems, primaryCta } from "./navigation.config";
 
 export default function Header() {
@@ -29,9 +31,7 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-deep/80 backdrop-blur-md">
       <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between px-6 sm:px-8 lg:px-12">
-        <a href="#top" className="text-lg font-extrabold tracking-tight text-main" aria-label="Interasis AI">
-          Interasis AI
-        </a>
+        <BrandLogo variant="header" href="/" />
 
         <nav aria-label="Navegacao principal" className="hidden items-center gap-8 md:flex">
           {navigationItems.map((item) => (

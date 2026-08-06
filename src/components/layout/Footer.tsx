@@ -1,3 +1,5 @@
+import BrandLogo from "@/components/ui/BrandLogo";
+
 import { footerInstitutionalLinks, footerSocialLinks } from "./navigation.config";
 
 export default function Footer() {
@@ -5,7 +7,8 @@ export default function Footer() {
     <footer className="bg-brand-secondary text-text-inverse" id="contato">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-6 py-14 sm:px-8 lg:grid-cols-3 lg:px-12">
         <section>
-          <h2 className="text-xl font-bold">Interasis AI</h2>
+          <h2 className="sr-only">Interasis AI</h2>
+          <BrandLogo variant="footer" />
           <p className="mt-3 max-w-sm text-sm leading-7 text-text-inverse/80">
             Solucoes de IA para operacoes digitais com foco em clareza, previsibilidade e escala.
           </p>

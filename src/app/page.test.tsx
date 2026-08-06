@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 
-import Home from "./page";
+import Home, { metadata } from "./page";
 
 jest.mock("@/components/ui/animations/FadeIn", () => ({
   __esModule: true,
@@ -13,11 +13,12 @@ jest.mock("@/components/ui/animations/FadeIn", () => ({
 }));
 
 describe("Home", () => {
-  it("renders hero content with heading, value proposition and CTAs", () => {
+  it("renders hero content with heading, value proposition, CTAs and brand cover", () => {
     render(<Home />);
 
     expect(screen.getByTestId("landing-page")).toBeInTheDocument();
     expect(screen.getByTestId("hero-section")).toBeInTheDocument();
+    expect(screen.getByTestId("hero-grid")).toHaveClass("flex", "flex-col");
     expect(
       screen.getByRole("heading", { name: /inteligência artificial e engenharia de software sob medida/i }),
     ).toBeInTheDocument();
@@ -32,6 +33,12 @@ describe("Home", () => {
     expect(secondaryCta).toHaveAttribute("href", "#");
     expect(primaryCta).toHaveClass("bg-brand-primary");
     expect(secondaryCta).toHaveClass("border");
+
+    const cover = screen.getByRole("img", {
+      name: /inteligência que conecta\. tecnologia que transforma\./i,
+    });
+    expect(cover).toBeInTheDocument();
+    expect(screen.getByTestId("hero-cover")).toContainElement(cover);
   });
 
   it("renders services section with three required cards", () => {
@@ -55,4 +62,22 @@ describe("Home", () => {
     expect(wrappers[0]).toHaveAttribute("data-delay", "0");
     expect(wrappers[1]).toHaveAttribute("data-delay", "0.1");
   });
+
+  it("exposes Open Graph metadata pointing to brand cover", () => {
+    expect(metadata.openGraph?.images).toBeDefined();
+    const images = metadata.openGraph?.images as Array<{
+      url: string;
+      width: number;
+      height: number;
+      alt: string;
+    }>;
+    expect(images).toHaveLength(1);
+    expect(images[0].url).toBe("/images/interasisai_coverpage.png");
+    expect(images[0].width).toBe(1200);
+    expect(images[0].height).toBe(630);
+    expect(images[0].alt).toMatch(/Interasis AI/i);
+
+    expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
+  });
 });
+

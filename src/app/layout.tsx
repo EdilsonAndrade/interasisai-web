@@ -21,6 +21,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Interasis AI | Tema semântico sincronizado",
     description: "Landing page inicial sincronizada com a skill oficial de design tokens da Interasis AI.",
+    images: [
+      {
+        url: "/images/interasisai_coverpage.png",
+        width: 1200,
+        height: 630,
+        alt: "Interasis AI — Inteligência que conecta. Tecnologia que transforma.",
+      },
+    ],
   },
 };
 

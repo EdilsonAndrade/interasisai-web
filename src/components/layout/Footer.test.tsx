@@ -3,10 +3,11 @@ import { render, screen } from "@testing-library/react";
 import Footer from "./Footer";
 
 describe("Footer", () => {
-  it("renders institutional links, social links and contact information", () => {
+  it("renders brand logo, institutional links, social links and contact information", () => {
     render(<Footer />);
 
     expect(screen.getByRole("contentinfo")).toBeInTheDocument();
+    expect(screen.getByAltText("Interasis AI")).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Links institucionais" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Sobre" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Politica de Privacidade" })).toBeInTheDocument();

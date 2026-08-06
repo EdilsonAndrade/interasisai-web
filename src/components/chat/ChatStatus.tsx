@@ -1,30 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
-const STATUS_MESSAGES = [
-  "Analisando sua empresa...",
-  "Consultando especialistas...",
-  "Preparando sua resposta...",
-] as const;
+/**
+ * Three-dot typing indicator — similar to WhatsApp / iMessage.
+ * Each dot animates with a staggered bounce via framer-motion.
+ */
 
 export default function ChatStatus() {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setIndex((prev) => (prev + 1) % STATUS_MESSAGES.length);
-    }, 1500);
-    return () => clearInterval(id);
-  }, []);
-
   return (
-    <div className="flex items-center gap-2 rounded-card rounded-bl-sm bg-surface-subtle px-4 py-2">
-      <span
-        className="inline-block h-2 w-2 flex-shrink-0 rounded-full bg-brand-primary animate-pulse motion-reduce:animate-none"
-        aria-hidden="true"
-      />
-      <span className="text-sm text-text-body">{STATUS_MESSAGES[index]}</span>
+    <div
+      className="flex items-center gap-1 rounded-card rounded-bl-sm bg-surface-subtle px-4 py-3"
+      aria-label="IA está digitando"
+      role="status"
+    >
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="inline-block h-2 w-2 rounded-full bg-brand-primary"
+          style={{
+            animation: `chat-typing-bounce 1.4s ease-in-out ${i * 0.2}s infinite both`,
+          }}
+          aria-hidden="true"
+        />
+      ))}
     </div>
   );
 }
+

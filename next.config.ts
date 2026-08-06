@@ -1,12 +1,37 @@
 import type { NextConfig } from "next";
 
+function getBffOrigin(): string {
+  const endpoint = process.env.NEXT_PUBLIC_CHAT_BFF_ENDPOINT;
+  if (!endpoint) return "";
+  try {
+    return new URL(endpoint).origin;
+  } catch {
+    return "";
+  }
+}
+
+function getPythonBackendOrigin(): string {
+  const url = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL;
+  if (!url) return "";
+  try {
+    return new URL(url).origin;
+  } catch {
+    return "";
+  }
+}
+
+const bffOrigin = getBffOrigin();
+const pythonOrigin = getPythonBackendOrigin();
+const connectSrc = ["'self'", bffOrigin, pythonOrigin].filter(Boolean).join(" ");
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
+  "media-src 'self' blob:",
   "font-src 'self' data:",
-  "connect-src 'self'",
+  `connect-src ${connectSrc}`,
   "frame-ancestors 'none'",
 ].join("; ");
 

@@ -3,11 +3,15 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import Header from "./Header";
 
 describe("Header", () => {
-  it("renders brand, desktop navigation and primary CTA", () => {
+  it("renders brand logo with single accessible name, navigation and primary CTA", () => {
     render(<Header />);
 
     expect(screen.getByRole("banner")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Interasis AI" })).toBeInTheDocument();
+
+    const brandLinks = screen.getAllByRole("link", { name: "Interasis AI - Página inicial" });
+    expect(brandLinks).toHaveLength(1);
+    expect(brandLinks[0]).toHaveAttribute("href", "/");
+
     expect(screen.getByRole("link", { name: "Servicos" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Portfolio" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Contato" })[0]).toBeInTheDocument();

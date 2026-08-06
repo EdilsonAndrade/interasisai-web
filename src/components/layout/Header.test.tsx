@@ -12,8 +12,8 @@ describe("Header", () => {
     expect(brandLinks).toHaveLength(1);
     expect(brandLinks[0]).toHaveAttribute("href", "/");
 
-    expect(screen.getByRole("link", { name: "Servicos" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Portfolio" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Serviços" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Portfólio" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Contato" })[0]).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Fale com a IA" })[0]).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Ativar tema claro" })[0]).toBeInTheDocument();

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Menu, Moon, Sun, X } from "lucide-react";
 
 import BrandLogo from "@/components/ui/BrandLogo";
@@ -35,9 +36,9 @@ export default function Header() {
 
         <nav aria-label="Navegacao principal" className="hidden items-center gap-8 md:flex">
           {navigationItems.map((item) => (
-            <a key={item.href} href={item.href} className="text-sm font-semibold text-main/85 transition hover:text-brand-primary">
+            <Link key={item.href} href={item.href} className="text-sm font-semibold text-main/85 transition hover:text-brand-primary">
               {item.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -52,12 +53,12 @@ export default function Header() {
         </button>
 
         <div className="hidden md:block">
-          <a
+          <Link
             href={primaryCta.href}
             className="inline-flex items-center justify-center rounded-button bg-brand-primary px-5 py-2.5 text-sm font-semibold text-text-inverse transition hover:bg-brand-primary-hover"
           >
             {primaryCta.label}
-          </a>
+          </Link>
         </div>
 
         <button
@@ -76,22 +77,22 @@ export default function Header() {
         <div id="mobile-nav" className="border-t border-white/10 bg-deep/95 md:hidden">
           <nav aria-label="Navegacao mobile" className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-6 py-4 sm:px-8">
             {navigationItems.map((item) => (
-              <a
+              <Link
                 key={item.href}
                 href={item.href}
                 onClick={closeMenu}
                 className="rounded-lg px-3 py-3 text-sm font-semibold text-main/90 transition hover:bg-white/5 hover:text-brand-primary"
               >
                 {item.label}
-              </a>
+              </Link>
             ))}
-            <a
+            <Link
               href={primaryCta.href}
               onClick={closeMenu}
               className="mt-2 inline-flex items-center justify-center rounded-button bg-brand-primary px-4 py-3 text-sm font-semibold text-text-inverse transition hover:bg-brand-primary-hover"
             >
               {primaryCta.label}
-            </a>
+            </Link>
             <button
               type="button"
               onClick={toggleTheme}

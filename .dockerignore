@@ -6,6 +6,5 @@ build/
 dist/
 coverage/
 *.log*
-.env*
 Dockerfile*
 .dockerignore

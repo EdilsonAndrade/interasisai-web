@@ -3,6 +3,10 @@ export type NavigationItem = {
   href: string;
 };
 
+export type SocialNavigationItem = NavigationItem & {
+  isVisible: boolean;
+};
+
 export const navigationItems: NavigationItem[] = [
   { label: "Serviços", href: "/#servicos" },
   { label: "Portfólio", href: "/#portfolio" },
@@ -16,13 +20,17 @@ export const primaryCta = {
 };
 
 export const footerInstitutionalLinks: NavigationItem[] = [
-  { label: "Sobre", href: "/#sobre" },
-  { label: "Política de Privacidade", href: "/#privacidade" },
-  { label: "Termos", href: "/#termos" },
+  { label: "Sobre", href: "/sobre" },
+  { label: "Política de Privacidade", href: "/politica-de-privacidade" },
+  { label: "Termos", href: "/termos" },
 ];
 
-export const footerSocialLinks: NavigationItem[] = [
-  { label: "LinkedIn", href: "https://www.linkedin.com" },
-  { label: "Instagram", href: "https://www.instagram.com" },
-  { label: "YouTube", href: "https://www.youtube.com" },
+export const footerSocialLinks: SocialNavigationItem[] = [
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/company/115859702/admin/dashboard/",
+    isVisible: true,
+  },
+  { label: "Instagram", href: "https://www.instagram.com", isVisible: false },
+  { label: "YouTube", href: "https://www.youtube.com", isVisible: false },
 ];

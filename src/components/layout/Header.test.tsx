@@ -12,9 +12,9 @@ describe("Header", () => {
     expect(brandLinks).toHaveLength(1);
     expect(brandLinks[0]).toHaveAttribute("href", "/");
 
-    expect(screen.getByRole("link", { name: "Serviços" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Portfólio" })).toBeInTheDocument();
-    expect(screen.getAllByRole("link", { name: "Contato" })[0]).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Serviços" })).toHaveAttribute("href", "/#servicos");
+    expect(screen.getByRole("link", { name: "Portfólio" })).toHaveAttribute("href", "/#portfolio");
+    expect(screen.getAllByRole("link", { name: "Contato" })[0]).toHaveAttribute("href", "/#contato");
     expect(screen.getAllByRole("link", { name: "Fale com a IA" })[0]).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Ativar tema claro" })[0]).toBeInTheDocument();
   });

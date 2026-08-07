@@ -11,7 +11,7 @@ export default function Footer() {
           <h2 className="sr-only">Interasis AI</h2>
           <BrandLogo variant="footer" />
           <p className="mt-3 max-w-sm text-sm leading-7 text-text-inverse/80">
-            Solucoes de IA para operacoes digitais com foco em clareza, previsibilidade e escala.
+            Soluções de IA para operações digitais com foco em clareza, previsibilidade e escala.
           </p>
         </section>
 
@@ -33,7 +33,7 @@ export default function Footer() {
           <p className="mt-4 text-sm text-text-inverse/85">interasisai@gmail.com</p>
           <p className="mt-1 text-sm text-text-inverse/85">+55 (11) 97745-6057</p>
           <ul className="mt-5 flex gap-4" aria-label="Redes sociais">
-            {footerSocialLinks.map((item) => (
+            {footerSocialLinks.filter((item) => item.isVisible).map((item) => (
               <li key={item.label}>
                 <a href={item.href} target="_blank" rel="noreferrer" className="text-sm text-text-inverse/85 transition hover:text-brand-primary-soft">
                   {item.label}

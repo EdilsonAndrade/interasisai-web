@@ -80,6 +80,7 @@ export default function Home() {
     <div data-testid="landing-page" className="bg-surface-page text-text-strong">
       <FadeIn>
         <section
+          id="top"
           data-testid="hero-section"
           className="min-h-[80vh] bg-gradient-hero px-6 pt-10 pb-20 sm:px-8 lg:px-12"
         >
@@ -119,7 +120,7 @@ export default function Home() {
       </FadeIn>
 
       <FadeIn delay={0.1}>
-        <section data-testid="services-section" className="px-6 py-16 sm:px-8 lg:px-12">
+        <section id="servicos" data-testid="services-section" className="px-6 py-16 sm:px-8 lg:px-12">
           <div className="mx-auto max-w-6xl">
             <h2 className="text-3xl font-extrabold text-text-strong">Proposta de Valor</h2>
             <p className="mt-3 max-w-3xl text-text-body">
@@ -134,6 +135,15 @@ export default function Home() {
           </div>
         </section>
       </FadeIn>
+
+      <section id="portfolio" className="px-6 pb-16 sm:px-8 lg:px-12">
+        <div className="mx-auto max-w-6xl rounded-card border border-border-subtle/70 bg-surface-base/50 p-8 backdrop-blur-md">
+          <h2 className="text-2xl font-bold text-text-strong">Portfólio</h2>
+          <p className="mt-3 text-text-body">
+            Cases e demonstrações de projetos de IA e engenharia de software da Interasis AI.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

@@ -2,6 +2,9 @@ import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 
 import Home, { metadata } from "./page";
+import SobrePage from "./sobre/page";
+import PoliticaPrivacidadePage from "./politica-de-privacidade/page";
+import TermosPage from "./termos/page";
 
 jest.mock("@/components/ui/animations/FadeIn", () => ({
   __esModule: true,
@@ -52,6 +55,8 @@ describe("Home", () => {
     expect(screen.getByRole("heading", { level: 3, name: /automação de processos/i })).toBeInTheDocument();
 
     expect(screen.getAllByTestId("feature-card")).toHaveLength(3);
+    expect(document.querySelector("#servicos")).toBeInTheDocument();
+    expect(document.querySelector("#portfolio")).toBeInTheDocument();
   });
 
   it("wraps both main blocks with FadeIn", () => {
@@ -78,6 +83,19 @@ describe("Home", () => {
     expect(images[0].alt).toMatch(/Interasis AI/i);
 
     expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
+  });
+
+  it("renders legal pages smoke content", () => {
+    const { unmount } = render(<SobrePage />);
+    expect(screen.getByRole("heading", { level: 1, name: "Sobre a Interasis AI" })).toBeInTheDocument();
+    unmount();
+
+    render(<PoliticaPrivacidadePage />);
+    expect(screen.getByRole("heading", { level: 1, name: "Política de Privacidade" })).toBeInTheDocument();
+    unmount();
+
+    render(<TermosPage />);
+    expect(screen.getByRole("heading", { level: 1, name: "Termos de Uso" })).toBeInTheDocument();
   });
 });
 

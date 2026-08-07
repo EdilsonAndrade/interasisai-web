@@ -302,10 +302,13 @@ export function useChatAssistant(): UseChatAssistantReturn {
       try {
         const cfg = getPythonBackendConfig();
         tenantId = cfg.tenantId;
-      } catch {
+      } catch(ex: any){
         setAudioError(
           "Configuração do tenant ausente. Contate o administrador.",
         );
+        console.error("[Chat:configError]", {
+          message: ex.message,
+        });
         return;
       }
 

@@ -10,14 +10,11 @@ import { navigationItems, primaryCta } from "./navigation.config";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [themeMode, setThemeMode] = useState<"dark" | "light">("dark");
-
-  useEffect(() => {
+  const [themeMode, setThemeMode] = useState<"dark" | "light">(() => {
+    if (typeof window === "undefined") return "dark";
     const storedTheme = window.localStorage.getItem("theme-mode");
-    if (storedTheme === "light" || storedTheme === "dark") {
-      setThemeMode(storedTheme);
-    }
-  }, []);
+    return storedTheme === "light" || storedTheme === "dark" ? storedTheme : "dark";
+  });
 
   useEffect(() => {
     const shouldUseLight = themeMode === "light";

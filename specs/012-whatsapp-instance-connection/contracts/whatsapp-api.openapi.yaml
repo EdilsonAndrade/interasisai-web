@@ -1,0 +1,112 @@
+openapi: 3.1.0
+info:
+  title: Interasis AI WhatsApp Instance API Contract
+  version: 1.0.0
+  description: Contract consumed directly by the frontend through the official Python API.
+servers:
+  - url: https://api.interasisai.com.br
+paths:
+  /api/v1/whatsapp/instances:
+    post:
+      operationId: createWhatsAppInstance
+      summary: Create an instance and return its connection QR Code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInstanceRequest'
+      responses:
+        '201':
+          description: Instance created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateInstanceResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+  /api/v1/whatsapp/instances/{instance_name}/qrcode:
+    get:
+      operationId: getWhatsAppQrCode
+      summary: Return a current QR Code for an existing instance
+      parameters:
+        - name: instance_name
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: QR Code available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QrCodeResponse'
+        '404':
+          $ref: '#/components/responses/ErrorResponse'
+        '409':
+          $ref: '#/components/responses/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/ErrorResponse'
+components:
+  schemas:
+    CreateInstanceRequest:
+      type: object
+      additionalProperties: false
+      required: [tenant_id, instance_name]
+      properties:
+        tenant_id:
+          type: string
+          minLength: 1
+          examples: [barbearia_silva_123]
+        instance_name:
+          type: string
+          minLength: 1
+          examples: [wpp_barbearia_silva]
+    CreateInstanceResponse:
+      type: object
+      additionalProperties: false
+      required: [message, tenant_id, instance_name, qrcode_base64]
+      properties:
+        message:
+          type: string
+        tenant_id:
+          type: string
+        instance_name:
+          type: string
+        qrcode_base64:
+          $ref: '#/components/schemas/PngDataUrl'
+    QrCodeResponse:
+      type: object
+      additionalProperties: false
+      required: [instance_name, qrcode_base64]
+      properties:
+        instance_name:
+          type: string
+        qrcode_base64:
+          $ref: '#/components/schemas/PngDataUrl'
+    PngDataUrl:
+      type: string
+      pattern: '^data:image/png;base64,[A-Za-z0-9+/]+={0,2}$'
+    ErrorBody:
+      type: object
+      additionalProperties: true
+      properties:
+        detail:
+          type: string
+        message:
+          type: string
+  responses:
+    ErrorResponse:
+      description: Request rejected or service unavailable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorBody'

@@ -3,7 +3,9 @@
 // ============================================================================
 
 import {
+  createWhatsAppInstance,
   getPythonBackendConfig,
+  getWhatsAppQrCode,
   sendChatMessage,
   ingestKnowledge,
 } from "./pythonBackend";
@@ -371,6 +373,107 @@ describe("pythonBackend", () => {
       expect(result.status).toBe(500);
       expect(result.message).toBe(
         "Erro ao enviar texto para vetorização. Tente novamente.",
+      );
+    });
+  });
+
+  describe("WhatsApp instances", () => {
+    const qrCode = "data:image/png;base64,iVBORw0KGgo=";
+
+    it("creates an instance using the documented POST contract", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(201, {
+          message: "Criada",
+          tenant_id: "tenant-1",
+          instance_name: "instance-1",
+          qrcode_base64: qrCode,
+        }),
+      );
+
+      const result = await createWhatsAppInstance({
+        tenant_id: "tenant-1",
+        instance_name: "instance-1",
+      });
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://test-api.example.com/api/v1/whatsapp/instances",
+        expect.objectContaining({
+          method: "POST",
+          body: JSON.stringify({
+            tenant_id: "tenant-1",
+            instance_name: "instance-1",
+          }),
+        }),
+      );
+      expect(result).toEqual({
+        ok: true,
+        status: 201,
+        message: "Criada",
+        tenantId: "tenant-1",
+        instanceName: "instance-1",
+        qrCode,
+      });
+    });
+
+    it("rejects malformed QR content", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(201, {
+          message: "Criada",
+          tenant_id: "tenant-1",
+          instance_name: "instance-1",
+          qrcode_base64: "javascript:alert(1)",
+        }),
+      );
+
+      const result = await createWhatsAppInstance({
+        tenant_id: "tenant-1",
+        instance_name: "instance-1",
+      });
+
+      expect(result).toEqual(
+        expect.objectContaining({ ok: false, status: 502 }),
+      );
+    });
+
+    it("gets an encoded instance QR without requiring the default tenant", async () => {
+      delete process.env.NEXT_PUBLIC_TENANT_ID;
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(200, {
+          instance_name: "loja sul/01",
+          qrcode_base64: qrCode,
+        }),
+      );
+
+      const result = await getWhatsAppQrCode("loja sul/01");
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://test-api.example.com/api/v1/whatsapp/instances/loja%20sul%2F01/qrcode",
+        expect.objectContaining({ method: "GET" }),
+      );
+      expect(result).toEqual({
+        ok: true,
+        status: 200,
+        instanceName: "loja sul/01",
+        qrCode,
+      });
+    });
+
+    it("maps API and network errors without leaking QR data", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(404, { detail: "Instância não encontrada." }),
+      );
+      const apiError = await getWhatsAppQrCode("missing");
+      fetchMock.mockRejectedValueOnce(new Error("network"));
+      const networkError = await getWhatsAppQrCode("missing");
+
+      expect(apiError).toEqual({
+        ok: false,
+        status: 404,
+        message: "Instância não encontrada.",
+        retryable: false,
+      });
+      expect(networkError).toEqual(
+        expect.objectContaining({ ok: false, status: 0, retryable: true }),
       );
     });
   });

@@ -13,6 +13,11 @@ import type {
   IngestSuccessResponse,
   IngestErrorResponse,
   IngestResult,
+  CreateWhatsAppInstanceRequest,
+  CreateWhatsAppInstanceResponse,
+  CreateWhatsAppInstanceResult,
+  WhatsAppQrCodeResponse,
+  WhatsAppQrCodeResult,
 } from "./pythonBackend.types";
 
 // ---------------------------------------------------------------------------
@@ -26,14 +31,8 @@ import type {
  * @throws {Error} If NEXT_PUBLIC_PYTHON_BACKEND_URL or NEXT_PUBLIC_TENANT_ID is missing.
  */
 export function getPythonBackendConfig(): PythonBackendConfig {
-  const baseUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL?.trim();
+  const baseUrl = getPythonBackendBaseUrl();
   const tenantId = process.env.NEXT_PUBLIC_TENANT_ID?.trim();
-
-  if (!baseUrl) {
-    throw new Error(
-      "Configuração do backend Python ausente: NEXT_PUBLIC_PYTHON_BACKEND_URL não está definida. Verifique o arquivo .env.",
-    );
-  }
 
   if (!tenantId) {
     throw new Error(
@@ -42,6 +41,16 @@ export function getPythonBackendConfig(): PythonBackendConfig {
   }
 
   return { baseUrl, tenantId };
+}
+
+export function getPythonBackendBaseUrl(): string {
+  const baseUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL?.trim();
+  if (!baseUrl) {
+    throw new Error(
+      "Configuração do backend Python ausente: NEXT_PUBLIC_PYTHON_BACKEND_URL não está definida. Verifique o arquivo .env.",
+    );
+  }
+  return baseUrl.replace(/\/$/, "");
 }
 
 // ---------------------------------------------------------------------------
@@ -68,6 +77,27 @@ async function parseJsonSafely(response: Response): Promise<unknown | null> {
   } catch {
     return null;
   }
+}
+
+function isValidPngDataUrl(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^data:image\/png;base64,[A-Za-z0-9+/]+={0,2}$/.test(value)
+  );
+}
+
+function getOperationErrorMessage(payload: unknown): string {
+  if (!payload || typeof payload !== "object") {
+    return "Não foi possível concluir a operação. Tente novamente.";
+  }
+  const value = payload as { detail?: unknown; message?: unknown };
+  if (typeof value.detail === "string" && value.detail.trim()) {
+    return value.detail.trim();
+  }
+  if (typeof value.message === "string" && value.message.trim()) {
+    return value.message.trim();
+  }
+  return "Não foi possível concluir a operação. Tente novamente.";
 }
 
 function getErrorMessage(
@@ -223,5 +253,125 @@ export async function ingestKnowledge(
     message:
       errorPayload?.detail?.trim() ||
       "Erro ao enviar texto para vetorização. Tente novamente.",
+  };
+}
+
+// ---------------------------------------------------------------------------
+// WhatsApp instances
+// ---------------------------------------------------------------------------
+
+export async function createWhatsAppInstance(
+  request: CreateWhatsAppInstanceRequest,
+  signal?: AbortSignal,
+): Promise<CreateWhatsAppInstanceResult> {
+  let response: Response;
+  try {
+    response = await fetch(`${getPythonBackendBaseUrl()}/api/v1/whatsapp/instances`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request),
+      signal,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      message:
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Solicitação cancelada."
+          : "Não foi possível conectar ao serviço de WhatsApp.",
+      retryable: true,
+    };
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      message: getOperationErrorMessage(payload),
+      retryable: isRetryableStatus(response.status),
+    };
+  }
+
+  const success = payload as Partial<CreateWhatsAppInstanceResponse> | null;
+  if (
+    !success ||
+    typeof success.tenant_id !== "string" ||
+    typeof success.instance_name !== "string" ||
+    !isValidPngDataUrl(success.qrcode_base64)
+  ) {
+    return {
+      ok: false,
+      status: 502,
+      message: "O serviço retornou um QR Code inválido.",
+      retryable: true,
+    };
+  }
+
+  return {
+    ok: true,
+    status: response.status,
+    message:
+      typeof success.message === "string" && success.message.trim()
+        ? success.message.trim()
+        : "Instância cadastrada com sucesso.",
+    tenantId: success.tenant_id,
+    instanceName: success.instance_name,
+    qrCode: success.qrcode_base64,
+  };
+}
+
+export async function getWhatsAppQrCode(
+  instanceName: string,
+  signal?: AbortSignal,
+): Promise<WhatsAppQrCodeResult> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getPythonBackendBaseUrl()}/api/v1/whatsapp/instances/${encodeURIComponent(instanceName)}/qrcode`,
+      { method: "GET", signal },
+    );
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      message:
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Solicitação cancelada."
+          : "Não foi possível conectar ao serviço de WhatsApp.",
+      retryable: true,
+    };
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      message: getOperationErrorMessage(payload),
+      retryable: isRetryableStatus(response.status),
+    };
+  }
+
+  const success = payload as Partial<WhatsAppQrCodeResponse> | null;
+  if (
+    !success ||
+    typeof success.instance_name !== "string" ||
+    !isValidPngDataUrl(success.qrcode_base64)
+  ) {
+    return {
+      ok: false,
+      status: 502,
+      message: "O serviço retornou um QR Code inválido.",
+      retryable: true,
+    };
+  }
+
+  return {
+    ok: true,
+    status: response.status,
+    instanceName: success.instance_name,
+    qrCode: success.qrcode_base64,
   };
 }

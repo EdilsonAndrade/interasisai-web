@@ -15,7 +15,10 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://interasisai.com.br";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "Interasis AI | Tema semântico sincronizado",
   description: "Landing page inicial sincronizada com a skill oficial de design tokens da Interasis AI.",
   openGraph: {

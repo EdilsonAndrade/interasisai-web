@@ -16,8 +16,10 @@ class MockIntersectionObserver implements IntersectionObserver {
 	unobserve(): void {}
 }
 
-Object.defineProperty(window, "IntersectionObserver", {
-	writable: true,
-	configurable: true,
-	value: MockIntersectionObserver,
-});
+if (typeof window !== "undefined") {
+	Object.defineProperty(window, "IntersectionObserver", {
+		writable: true,
+		configurable: true,
+		value: MockIntersectionObserver,
+	});
+}

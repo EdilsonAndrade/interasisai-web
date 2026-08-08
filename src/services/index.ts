@@ -13,6 +13,8 @@ export {
   getPythonBackendConfig,
   sendChatMessage,
   ingestKnowledge,
+  createWhatsAppInstance,
+  getWhatsAppQrCode,
 } from "./pythonBackend";
 export type {
   PythonBackendConfig,
@@ -28,6 +30,12 @@ export type {
   IngestSuccess,
   IngestFailure,
   IngestResult,
+  CreateWhatsAppInstanceRequest,
+  CreateWhatsAppInstanceResponse,
+  CreateWhatsAppInstanceResult,
+  WhatsAppQrCodeResponse,
+  WhatsAppQrCodeResult,
+  WhatsAppOperationFailure,
 } from "./pythonBackend.types";
 
 // Session Manager — Thread ID

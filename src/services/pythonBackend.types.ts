@@ -102,3 +102,55 @@ export type IngestFailure = {
 };
 
 export type IngestResult = IngestSuccess | IngestFailure;
+
+// ---------------------------------------------------------------------------
+// WhatsApp instance API
+// ---------------------------------------------------------------------------
+
+export type CreateWhatsAppInstanceRequest = {
+  tenant_id: string;
+  instance_name: string;
+};
+
+export type CreateWhatsAppInstanceResponse = {
+  message: string;
+  tenant_id: string;
+  instance_name: string;
+  qrcode_base64: string;
+};
+
+export type WhatsAppQrCodeResponse = {
+  instance_name: string;
+  qrcode_base64: string;
+};
+
+export type WhatsAppInstanceSuccess = {
+  ok: true;
+  status: number;
+  message: string;
+  tenantId: string;
+  instanceName: string;
+  qrCode: string;
+};
+
+export type WhatsAppQrCodeSuccess = {
+  ok: true;
+  status: number;
+  instanceName: string;
+  qrCode: string;
+};
+
+export type WhatsAppOperationFailure = {
+  ok: false;
+  status: number;
+  message: string;
+  retryable: boolean;
+};
+
+export type CreateWhatsAppInstanceResult =
+  | WhatsAppInstanceSuccess
+  | WhatsAppOperationFailure;
+
+export type WhatsAppQrCodeResult =
+  | WhatsAppQrCodeSuccess
+  | WhatsAppOperationFailure;

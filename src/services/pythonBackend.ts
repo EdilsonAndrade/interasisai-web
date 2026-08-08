@@ -273,6 +273,9 @@ export async function createWhatsAppInstance(
       signal,
     });
   } catch (error) {
+    console.log("[PythonBackend:whatsapp:create:error]", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       ok: false,
       status: 0,
@@ -333,6 +336,9 @@ export async function getWhatsAppQrCode(
       { method: "GET", signal },
     );
   } catch (error) {
+    console.log("[PythonBackend:whatsapp:create:error]", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return {
       ok: false,
       status: 0,

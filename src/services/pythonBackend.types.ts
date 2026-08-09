@@ -154,3 +154,56 @@ export type CreateWhatsAppInstanceResult =
 export type WhatsAppQrCodeResult =
   | WhatsAppQrCodeSuccess
   | WhatsAppOperationFailure;
+
+// ---------------------------------------------------------------------------
+// Tenant management API
+// ---------------------------------------------------------------------------
+
+export type TenantWriteInput = {
+  name: string;
+  google_calendar_id: string;
+};
+
+export type TenantCreateInput = TenantWriteInput & {
+  tenant_id: string;
+};
+
+export type Tenant = {
+  id: string;
+  name: string;
+  google_calendar_id: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+};
+
+export type TenantFieldErrors = Partial<
+  Record<keyof TenantCreateInput, string>
+>;
+
+export type TenantOperationFailure = {
+  ok: false;
+  status: number;
+  message: string;
+  fieldErrors?: TenantFieldErrors;
+  retryable: boolean;
+};
+
+export type TenantOperationSuccess = {
+  ok: true;
+  status: number;
+  tenant: Tenant;
+};
+
+export type TenantDeleteSuccess = {
+  ok: true;
+  status: number;
+};
+
+export type TenantOperationResult =
+  | TenantOperationSuccess
+  | TenantOperationFailure;
+
+export type TenantDeleteResult =
+  | TenantDeleteSuccess
+  | TenantOperationFailure;

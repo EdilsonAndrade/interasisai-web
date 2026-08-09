@@ -18,6 +18,13 @@ import type {
   CreateWhatsAppInstanceResult,
   WhatsAppQrCodeResponse,
   WhatsAppQrCodeResult,
+  Tenant,
+  TenantCreateInput,
+  TenantDeleteResult,
+  TenantFieldErrors,
+  TenantOperationFailure,
+  TenantOperationResult,
+  TenantWriteInput,
 } from "./pythonBackend.types";
 
 // ---------------------------------------------------------------------------
@@ -380,4 +387,153 @@ export async function getWhatsAppQrCode(
     instanceName: success.instance_name,
     qrCode: success.qrcode_base64,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Tenants
+// ---------------------------------------------------------------------------
+
+const TENANT_OPERATION_ERROR =
+  "Não foi possível concluir a operação. Tente novamente.";
+
+function isTenant(value: unknown): value is Tenant {
+  if (!value || typeof value !== "object") return false;
+  const tenant = value as Partial<Tenant>;
+  return (
+    typeof tenant.id === "string" &&
+    typeof tenant.name === "string" &&
+    typeof tenant.google_calendar_id === "string" &&
+    typeof tenant.created_at === "string" &&
+    (typeof tenant.updated_at === "string" || tenant.updated_at === null) &&
+    (typeof tenant.deleted_at === "string" || tenant.deleted_at === null)
+  );
+}
+
+function getTenantFieldErrors(payload: unknown): TenantFieldErrors | undefined {
+  if (!payload || typeof payload !== "object") return undefined;
+  const detail = (payload as { detail?: unknown }).detail;
+  if (!Array.isArray(detail)) return undefined;
+
+  const fieldErrors: TenantFieldErrors = {};
+  for (const issue of detail) {
+    if (!issue || typeof issue !== "object") continue;
+    const { loc, msg } = issue as { loc?: unknown; msg?: unknown };
+    if (!Array.isArray(loc) || typeof msg !== "string") continue;
+    const field: unknown = loc.at(-1);
+    if (
+      field === "tenant_id" ||
+      field === "name" ||
+      field === "google_calendar_id"
+    ) {
+      fieldErrors[field] = msg;
+    }
+  }
+  return Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined;
+}
+
+function tenantFailure(
+  status: number,
+  payload?: unknown,
+): TenantOperationFailure {
+  if (status === 404) {
+    return {
+      ok: false,
+      status,
+      message: "Tenant não encontrado",
+      retryable: false,
+    };
+  }
+
+  const fieldErrors = getTenantFieldErrors(payload);
+  return {
+    ok: false,
+    status,
+    message: fieldErrors
+      ? "Revise os campos informados."
+      : status === 0 || status === 502
+        ? TENANT_OPERATION_ERROR
+        : getOperationErrorMessage(payload),
+    fieldErrors,
+    retryable: isRetryableStatus(status),
+  };
+}
+
+async function requestTenant(
+  path: string,
+  init: RequestInit,
+): Promise<TenantOperationResult> {
+  let response: Response;
+  try {
+    response = await fetch(`${getPythonBackendBaseUrl()}${path}`, init);
+  } catch {
+    return tenantFailure(0);
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) return tenantFailure(response.status, payload);
+  if (!isTenant(payload)) return tenantFailure(502);
+  return { ok: true, status: response.status, tenant: payload };
+}
+
+export function createTenant(
+  input: TenantCreateInput,
+  signal?: AbortSignal,
+): Promise<TenantOperationResult> {
+  return requestTenant("/api/v1/tenants/", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      tenant_id: input.tenant_id,
+      name: input.name,
+      google_calendar_id: input.google_calendar_id,
+    }),
+    signal,
+  });
+}
+
+export function getTenantById(
+  tenantId: string,
+  signal?: AbortSignal,
+): Promise<TenantOperationResult> {
+  return requestTenant(
+    `/api/v1/tenants/${encodeURIComponent(tenantId)}`,
+    { method: "GET", signal },
+  );
+}
+
+export function updateTenant(
+  tenantId: string,
+  input: TenantWriteInput,
+  signal?: AbortSignal,
+): Promise<TenantOperationResult> {
+  return requestTenant(
+    `/api/v1/tenants/${encodeURIComponent(tenantId)}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: input.name,
+        google_calendar_id: input.google_calendar_id,
+      }),
+      signal,
+    },
+  );
+}
+
+export async function deleteTenant(
+  tenantId: string,
+  signal?: AbortSignal,
+): Promise<TenantDeleteResult> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getPythonBackendBaseUrl()}/api/v1/tenants/${encodeURIComponent(tenantId)}`,
+      { method: "DELETE", signal },
+    );
+  } catch {
+    return tenantFailure(0);
+  }
+
+  if (response.ok) return { ok: true, status: response.status };
+  return tenantFailure(response.status, await parseJsonSafely(response));
 }

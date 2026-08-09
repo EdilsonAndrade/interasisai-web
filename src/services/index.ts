@@ -15,6 +15,10 @@ export {
   ingestKnowledge,
   createWhatsAppInstance,
   getWhatsAppQrCode,
+  createTenant,
+  getTenantById,
+  updateTenant,
+  deleteTenant,
 } from "./pythonBackend";
 export type {
   PythonBackendConfig,
@@ -36,6 +40,13 @@ export type {
   WhatsAppQrCodeResponse,
   WhatsAppQrCodeResult,
   WhatsAppOperationFailure,
+  Tenant,
+  TenantCreateInput,
+  TenantWriteInput,
+  TenantFieldErrors,
+  TenantOperationFailure,
+  TenantOperationResult,
+  TenantDeleteResult,
 } from "./pythonBackend.types";
 
 // Session Manager — Thread ID

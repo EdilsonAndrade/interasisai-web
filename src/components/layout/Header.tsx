@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Menu, Moon, Sun, X } from "lucide-react";
 
 import BrandLogo from "@/components/ui/BrandLogo";
+import { useChat } from "@/context/ChatContext";
 
 import { navigationItems, primaryCta } from "./navigation.config";
 
@@ -15,6 +16,7 @@ export default function Header() {
     const storedTheme = window.localStorage.getItem("theme-mode");
     return storedTheme === "light" || storedTheme === "dark" ? storedTheme : "dark";
   });
+  const { open } = useChat();
 
   useEffect(() => {
     const shouldUseLight = themeMode === "light";
@@ -25,6 +27,10 @@ export default function Header() {
   const toggleMenu = () => setIsMenuOpen((previous) => !previous);
   const closeMenu = () => setIsMenuOpen(false);
   const toggleTheme = () => setThemeMode((previous) => (previous === "dark" ? "light" : "dark"));
+  const openChatFromHeader = () => {
+    open();
+    closeMenu();
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-deep/80 backdrop-blur-md">
@@ -50,12 +56,14 @@ export default function Header() {
         </button>
 
         <div className="hidden md:block">
-          <Link
-            href={primaryCta.href}
-            className="inline-flex items-center justify-center rounded-button bg-brand-primary px-5 py-2.5 text-sm font-semibold text-text-inverse transition hover:bg-brand-primary-hover"
+          <button
+            type="button"
+            data-testid="header-chat-cta"
+            onClick={open}
+            className="inline-flex items-center justify-center rounded-button bg-brand-primary px-5 py-2.5 text-sm font-semibold text-text-inverse transition hover:bg-brand-primary-hover focus:outline-none focus:ring-2 focus:ring-brand-primary/60"
           >
             {primaryCta.label}
-          </Link>
+          </button>
         </div>
 
         <button
@@ -83,13 +91,14 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
-            <Link
-              href={primaryCta.href}
-              onClick={closeMenu}
-              className="mt-2 inline-flex items-center justify-center rounded-button bg-brand-primary px-4 py-3 text-sm font-semibold text-text-inverse transition hover:bg-brand-primary-hover"
+            <button
+              type="button"
+              data-testid="header-chat-cta-mobile"
+              onClick={openChatFromHeader}
+              className="mt-2 inline-flex items-center justify-center rounded-button bg-brand-primary px-4 py-3 text-sm font-semibold text-text-inverse transition hover:bg-brand-primary-hover focus:outline-none focus:ring-2 focus:ring-brand-primary/60"
             >
               {primaryCta.label}
-            </Link>
+            </button>
             <button
               type="button"
               onClick={toggleTheme}

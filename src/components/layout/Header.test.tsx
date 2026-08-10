@@ -2,6 +2,15 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import Header from "./Header";
 
+jest.mock("@/context/ChatContext", () => ({
+  useChat: () => ({
+    isOpen: false,
+    open: jest.fn(),
+    close: jest.fn(),
+    toggle: jest.fn(),
+  }),
+}));
+
 describe("Header", () => {
   it("renders brand logo with single accessible name, navigation and primary CTA", () => {
     render(<Header />);
@@ -15,7 +24,7 @@ describe("Header", () => {
     expect(screen.getByRole("link", { name: "Serviços" })).toHaveAttribute("href", "/#servicos");
     expect(screen.getByRole("link", { name: "Portfólio" })).toHaveAttribute("href", "/#portfolio");
     expect(screen.getAllByRole("link", { name: "Contato" })[0]).toHaveAttribute("href", "/#contato");
-    expect(screen.getAllByRole("link", { name: "Fale com a IA" })[0]).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Fale conosco 24/7" })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "Ativar tema claro" })[0]).toBeInTheDocument();
   });
 

@@ -15,7 +15,7 @@ export const navigationItems: NavigationItem[] = [
 ];
 
 export const primaryCta = {
-  label: "Fale com a IA",
+  label: "Fale conosco 24/7",
   href: "/#contato",
 };
 

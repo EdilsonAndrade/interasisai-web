@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import { Brain, Code, Cog } from "lucide-react";
 
 import FadeIn from "@/components/ui/animations/FadeIn";
+import HeroChatCta from "@/components/ui/HeroChatCta";
 import HeroCover from "@/components/ui/HeroCover";
 
 const OG_IMAGE_ALT =
@@ -90,7 +91,8 @@ export default function Home() {
           >
             <HeroCover />
             <div className="flex flex-col justify-center gap-8">
-              <p className="text-sm font-semibold tracking-[0.14em] uppercase text-text-body">Interasis AI</p>
+             
+
               <h1 className="max-w-4xl font-space-grotesk text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
                 <span className="text-brand-primary">Inteligência Artificial</span> e Engenharia de Software sob Medida.
               </h1>
@@ -106,6 +108,7 @@ export default function Home() {
                 >
                   Explorar Soluções
                 </a>
+                <HeroChatCta />
                 <a
                   data-testid="cta-secondary"
                   href="#"
@@ -113,6 +116,7 @@ export default function Home() {
                 >
                   Conhecer Portfólio
                 </a>
+
               </div>
             </div>
           </div>

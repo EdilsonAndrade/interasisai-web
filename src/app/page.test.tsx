@@ -6,6 +6,15 @@ import SobrePage from "./sobre/page";
 import PoliticaPrivacidadePage from "./politica-de-privacidade/page";
 import TermosPage from "./termos/page";
 
+jest.mock("@/context/ChatContext", () => ({
+  useChat: () => ({
+    isOpen: false,
+    open: jest.fn(),
+    close: jest.fn(),
+    toggle: jest.fn(),
+  }),
+}));
+
 jest.mock("@/components/ui/animations/FadeIn", () => ({
   __esModule: true,
   default: ({ children, delay = 0 }: { children: ReactNode; delay?: number }) => (

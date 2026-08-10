@@ -21,9 +21,9 @@
 
 **Purpose**: Instalar dependências e criar estrutura de diretórios
 
-- [ ] T001 Instalar novas dependências (`sonner` e `rehype-sanitize`) executando `npm install sonner rehype-sanitize` no diretório raiz
-- [ ] T002 [P] Criar diretório `src/hooks/` (novo diretório para custom hooks conforme Constitution I)
-- [ ] T003 [P] Criar diretório `src/components/admin/prompt-manager/` e `src/app/[locale]/admin/prompt-manager/`
+- [x] T001 Instalar novas dependências (`sonner` e `rehype-sanitize`) executando `npm install sonner rehype-sanitize` no diretório raiz
+- [x] T002 [P] Criar diretório `src/hooks/` (novo diretório para custom hooks conforme Constitution I)
+- [x] T003 [P] Criar diretório `src/components/admin/prompt-manager/` e `src/app/[locale]/admin/prompt-manager/`
 
 ---
 
@@ -33,12 +33,12 @@
 
 **⚠️ CRITICAL**: Nenhuma user story pode iniciar antes desta fase ser concluída
 
-- [ ] T004 [P] Criar tipos de API em `src/services/promptManager.types.ts` — interfaces `Guardrail`, `Prompt`, `GuardrailCreateInput`, `PromptCreateInput`, `TenantLinkInput` e union types `PromptManagerResult<T>` conforme data-model.md
-- [ ] T005 [P] Criar schemas Zod e tipos inferidos em `src/lib/promptManagerSchemas.ts` — schemas `guardrailFormSchema`, `promptFormSchema`, `tenantLinkSchema` usando Zod v4 (`.trim().min(1, "mensagem")` — `.trim()` antes de `.min()` é obrigatório para normalizar espaços, FR-030)
-- [ ] T006 Criar camada de serviço em `src/services/promptManager.ts` — funções `fetchGuardrails`, `createGuardrail`, `updateGuardrail`, `deleteGuardrail`, `fetchPrompts`, `createPrompt`, `updatePrompt`, `deletePrompt`, `linkTenantToPrompt` seguindo padrão union type de `pythonBackend.ts` (base URL: `NEXT_PUBLIC_PYTHON_BACKEND_URL/prompt-manager`); **importante**: `console.error` NÃO deve logar valores de `conteudo` ou `custom_content_override` (FR-045); suporte a `AbortController` via parâmetro `signal?: AbortSignal` para descarte de respostas obsoletas (edge case: respostas atrasadas)
-- [ ] T007 [P] Criar componente reutilizável `Tabs` em `src/components/admin/prompt-manager/Tabs.tsx` — props: `tabs: { id, label, icon }[]`, `activeTab`, `onTabChange`; animação de underline via framer-motion `layoutId`; responsivo com scroll horizontal em mobile
-- [ ] T008 [P] Criar editor Markdown customizado `MarkdownEditorCustom` em `src/components/admin/prompt-manager/MarkdownEditorCustom.tsx` — 3 modos (edit/preview/split) via textarea + `react-markdown` + `rehype-sanitize`; controles toggle com ícones `Code`, `Eye`, `Columns` do lucide-react; atualização em tempo real; props: `value`, `onChange`, `label?`
-- [ ] T009 [P] Criar tipos de componentes em `src/components/admin/prompt-manager/types.ts` — tipos locais: `EditorMode`, `ModalMode`, `TabId`, etc.
+- [x] T004 [P] Criar tipos de API em `src/services/promptManager.types.ts` — interfaces `Guardrail`, `Prompt`, `GuardrailCreateInput`, `PromptCreateInput`, `TenantLinkInput` e union types `PromptManagerResult<T>` conforme data-model.md
+- [x] T005 [P] Criar schemas Zod e tipos inferidos em `src/lib/promptManagerSchemas.ts` — schemas `guardrailFormSchema`, `promptFormSchema`, `tenantLinkSchema` usando Zod v4 (`.trim().min(1, "mensagem")` — `.trim()` antes de `.min()` é obrigatório para normalizar espaços, FR-030)
+- [x] T006 Criar camada de serviço em `src/services/promptManager.ts` — funções `fetchGuardrails`, `createGuardrail`, `updateGuardrail`, `deleteGuardrail`, `fetchPrompts`, `createPrompt`, `updatePrompt`, `deletePrompt`, `linkTenantToPrompt` seguindo padrão union type de `pythonBackend.ts` (base URL: `NEXT_PUBLIC_PYTHON_BACKEND_URL/prompt-manager`); **importante**: `console.error` NÃO deve logar valores de `conteudo` ou `custom_content_override` (FR-045); suporte a `AbortController` via parâmetro `signal?: AbortSignal` para descarte de respostas obsoletas (edge case: respostas atrasadas)
+- [x] T007 [P] Criar componente reutilizável `Tabs` em `src/components/admin/prompt-manager/Tabs.tsx` — props: `tabs: { id, label, icon }[]`, `activeTab`, `onTabChange`; animação de underline via framer-motion `layoutId`; responsivo com scroll horizontal em mobile
+- [x] T008 [P] Criar editor Markdown customizado `MarkdownEditorCustom` em `src/components/admin/prompt-manager/MarkdownEditorCustom.tsx` — 3 modos (edit/preview/split) via textarea + `react-markdown` + `rehype-sanitize`; controles toggle com ícones `Code`, `Eye`, `Columns` do lucide-react; atualização em tempo real; props: `value`, `onChange`, `label?`
+- [x] T009 [P] Criar tipos de componentes em `src/components/admin/prompt-manager/types.ts` — tipos locais: `EditorMode`, `ModalMode`, `TabId`, etc.
 
 **Checkpoint**: Fundação pronta — implementação das user stories pode começar em paralelo
 
@@ -52,11 +52,11 @@
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Criar hook `useGuardrails` em `src/hooks/useGuardrails.ts` — gerencia estado da lista de guardrails (idle/loading/success/error/empty), funções `createGuardrail`, `updateGuardrail`, `removeGuardrail` (com confirmação), `refreshGuardrails`; todas as operações retornam feedback para toast
-- [ ] T011 [P] [US1] Criar componente `GuardrailList` em `src/components/admin/prompt-manager/GuardrailList.tsx` — consome `useGuardrails`; exibe lista de guardrails com título, badge "Global"/"Específico", ações editar/excluir; estado vazio com mensagem "Nenhum guardrail cadastrado"; loading com "Carregando guardrails..."; cards com design tokens (`bg-surface-base`, `border-border-subtle`, `rounded-card`)
-- [ ] T012 [P] [US1] Criar componente `GuardrailFormModal` em `src/components/admin/prompt-manager/GuardrailFormModal.tsx` — modal via `AdminDialog` existente; formulário com `react-hook-form` + `guardrailFormSchema`; campos: `titulo` (text input), `conteudo` (`MarkdownEditorCustom`), `is_global` (toggle switch); suporta modo criar e editar (pré-preenche valores); validação com mensagens de erro por campo; botão "Salvando..." com `isSubmitting`; fecha modal e dispara refresh ao sucesso
-- [ ] T013 [US1] Implementar diálogo de confirmação de exclusão no `GuardrailList` — usa `AdminDialog` com título "Excluir guardrail?", nome do guardrail, mensagem "Esta ação não poderá ser desfeita.", ações "Cancelar" e "Excluir" (estilo destrutivo)
-- [ ] T014 [US1] Integrar feedback toast no `useGuardrails` — ao criar: "Guardrail criado com sucesso"; ao editar: "Guardrail atualizado com sucesso"; ao excluir: "Guardrail excluído com sucesso"; erro 409 (conflito): "Este guardrail está vinculado a prompts ativos. Remova os vínculos antes de excluir."; demais erros: mensagem descritiva da API; falha de rede: "Não foi possível conectar ao servidor. Verifique sua conexão."
+- [x] T010 [US1] Criar hook `useGuardrails` em `src/hooks/useGuardrails.ts` — gerencia estado da lista de guardrails (idle/loading/success/error/empty), funções `createGuardrail`, `updateGuardrail`, `removeGuardrail` (com confirmação), `refreshGuardrails`; todas as operações retornam feedback para toast
+- [x] T011 [P] [US1] Criar componente `GuardrailList` em `src/components/admin/prompt-manager/GuardrailList.tsx` — consome `useGuardrails`; exibe lista de guardrails com título, badge "Global"/"Específico", ações editar/excluir; estado vazio com mensagem "Nenhum guardrail cadastrado"; loading com "Carregando guardrails..."; cards com design tokens (`bg-surface-base`, `border-border-subtle`, `rounded-card`)
+- [x] T012 [P] [US1] Criar componente `GuardrailFormModal` em `src/components/admin/prompt-manager/GuardrailFormModal.tsx` — modal via `AdminDialog` existente; formulário com `react-hook-form` + `guardrailFormSchema`; campos: `titulo` (text input), `conteudo` (`MarkdownEditorCustom`), `is_global` (toggle switch); suporta modo criar e editar (pré-preenche valores); validação com mensagens de erro por campo; botão "Salvando..." com `isSubmitting`; fecha modal e dispara refresh ao sucesso
+- [x] T013 [US1] Implementar diálogo de confirmação de exclusão no `GuardrailList` — usa `AdminDialog` com título "Excluir guardrail?", nome do guardrail, mensagem "Esta ação não poderá ser desfeita.", ações "Cancelar" e "Excluir" (estilo destrutivo)
+- [x] T014 [US1] Integrar feedback toast no `useGuardrails` — ao criar: "Guardrail criado com sucesso"; ao editar: "Guardrail atualizado com sucesso"; ao excluir: "Guardrail excluído com sucesso"; erro 409 (conflito): "Este guardrail está vinculado a prompts ativos. Remova os vínculos antes de excluir."; demais erros: mensagem descritiva da API; falha de rede: "Não foi possível conectar ao servidor. Verifique sua conexão."
 
 **Checkpoint**: User Story 1 funcional — guardrails podem ser gerenciados independentemente com feedback visual completo
 
@@ -72,11 +72,11 @@
 
 ### Implementation for User Story 2
 
-- [ ] T015 [US2] Criar hook `usePrompts` em `src/hooks/usePrompts.ts` — gerencia estado da lista de prompts (idle/loading/success/error/empty); funções `createPrompt`, `updatePrompt`, `removePrompt` (com confirmação), `refreshPrompts`; também expõe `guardrails` (lista para o seletor N:N carregada via `fetchGuardrails` do serviço); todas as operações retornam feedback para toast
-- [ ] T016 [P] [US2] Criar componente `PromptList` em `src/components/admin/prompt-manager/PromptList.tsx` — consome `usePrompts`; exibe lista de prompts com título, badge "Padrão" se `is_default`, chips com nomes dos guardrails vinculados, ações editar/excluir; estado vazio "Nenhum prompt cadastrado"; loading "Carregando prompts..."; design tokens consistentes
-- [ ] T017 [P] [US2] Criar componente `PromptFormModal` em `src/components/admin/prompt-manager/PromptFormModal.tsx` — modal via `AdminDialog`; formulário com `react-hook-form` + `promptFormSchema`; campos: `titulo` (text), `conteudo` (`MarkdownEditorCustom`), `is_default` (toggle), seletor N:N de `guardrail_ids` (checkboxes custom estilizados com `accent-brand-primary`, cada um mostrando título do guardrail + badge "Global" se aplicável); suporte criar/editar; checkbox marcados pré-selecionados na edição; validação, loading, fechamento e refresh ao sucesso
-- [ ] T018 [US2] Implementar diálogo de confirmação de exclusão no `PromptList` — mesmo padrão do `GuardrailList` com título "Excluir prompt?", nome, mensagem e ações Cancelar/Excluir
-- [ ] T019 [US2] Integrar feedback toast no `usePrompts` — criar: "Prompt criado com sucesso"; editar: "Prompt atualizado com sucesso"; excluir: "Prompt excluído com sucesso"; erro 409: "Operação conflitante. Verifique os vínculos."; demais erros e falhas de rede seguem mesmo padrão do US1
+- [x] T015 [US2] Criar hook `usePrompts` em `src/hooks/usePrompts.ts` — gerencia estado da lista de prompts (idle/loading/success/error/empty); funções `createPrompt`, `updatePrompt`, `removePrompt` (com confirmação), `refreshPrompts`; também expõe `guardrails` (lista para o seletor N:N carregada via `fetchGuardrails` do serviço); todas as operações retornam feedback para toast
+- [x] T016 [P] [US2] Criar componente `PromptList` em `src/components/admin/prompt-manager/PromptList.tsx` — consome `usePrompts`; exibe lista de prompts com título, badge "Padrão" se `is_default`, chips com nomes dos guardrails vinculados, ações editar/excluir; estado vazio "Nenhum prompt cadastrado"; loading "Carregando prompts..."; design tokens consistentes
+- [x] T017 [P] [US2] Criar componente `PromptFormModal` em `src/components/admin/prompt-manager/PromptFormModal.tsx` — modal via `AdminDialog`; formulário com `react-hook-form` + `promptFormSchema`; campos: `titulo` (text), `conteudo` (`MarkdownEditorCustom`), `is_default` (toggle), seletor N:N de `guardrail_ids` (checkboxes custom estilizados com `accent-brand-primary`, cada um mostrando título do guardrail + badge "Global" se aplicável); suporte criar/editar; checkbox marcados pré-selecionados na edição; validação, loading, fechamento e refresh ao sucesso
+- [x] T018 [US2] Implementar diálogo de confirmação de exclusão no `PromptList` — mesmo padrão do `GuardrailList` com título "Excluir prompt?", nome, mensagem e ações Cancelar/Excluir
+- [x] T019 [US2] Integrar feedback toast no `usePrompts` — criar: "Prompt criado com sucesso"; editar: "Prompt atualizado com sucesso"; excluir: "Prompt excluído com sucesso"; erro 409: "Operação conflitante. Verifique os vínculos."; demais erros e falhas de rede seguem mesmo padrão do US1
 
 **Checkpoint**: User Story 2 funcional — prompts podem ser gerenciados com vínculo N:N a guardrails
 
@@ -92,9 +92,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] Criar hook `useTenantLink` em `src/hooks/useTenantLink.ts` — gerencia estado do formulário de vínculo; carrega lista de prompts via `fetchPrompts` para o seletor; função `linkTenant(input: TenantLinkInput)` que chama `linkTenantToPrompt` do serviço; retorna `{ prompts, loading, submitting, linkTenant, error }` com feedback para toast
-- [ ] T021 [US3] Criar componente `TenantLinkSection` em `src/components/admin/prompt-manager/TenantLinkSection.tsx` — formulário com `react-hook-form` + `tenantLinkSchema`; campos: `tenant_id` (text input obrigatório), `prompt_id` (select dropdown com prompts disponíveis, obrigatório — se lista vazia exibir "Nenhum prompt cadastrado" e desabilitar submit), `custom_content_override` (`MarkdownEditorCustom` opcional, exibido com label "Customização de Conteúdo (opcional)"); botão "Vincular Tenant" com estado de loading "Vinculando..."; validação bloqueia envio se campos obrigatórios vazios
-- [ ] T022 [US3] Integrar feedback toast no `TenantLinkSection` — sucesso: "Vínculo criado com sucesso"; erro de API: mensagem descritiva; erro de rede: "Não foi possível conectar ao servidor"; campo `tenant_id` preservado após erro, formulário permanece aberto
+- [x] T020 [US3] Criar hook `useTenantLink` em `src/hooks/useTenantLink.ts` — gerencia estado do formulário de vínculo; carrega lista de prompts via `fetchPrompts` para o seletor; função `linkTenant(input: TenantLinkInput)` que chama `linkTenantToPrompt` do serviço; retorna `{ prompts, loading, submitting, linkTenant, error }` com feedback para toast
+- [x] T021 [US3] Criar componente `TenantLinkSection` em `src/components/admin/prompt-manager/TenantLinkSection.tsx` — formulário com `react-hook-form` + `tenantLinkSchema`; campos: `tenant_id` (text input obrigatório), `prompt_id` (select dropdown com prompts disponíveis, obrigatório — se lista vazia exibir "Nenhum prompt cadastrado" e desabilitar submit), `custom_content_override` (`MarkdownEditorCustom` opcional, exibido com label "Customização de Conteúdo (opcional)"); botão "Vincular Tenant" com estado de loading "Vinculando..."; validação bloqueia envio se campos obrigatórios vazios
+- [x] T022 [US3] Integrar feedback toast no `TenantLinkSection` — sucesso: "Vínculo criado com sucesso"; erro de API: mensagem descritiva; erro de rede: "Não foi possível conectar ao servidor"; campo `tenant_id` preservado após erro, formulário permanece aberto
 
 **Checkpoint**: User Story 3 funcional — tenants podem ser vinculados a prompts com override opcional
 
@@ -104,10 +104,10 @@
 
 **Purpose**: Orquestrador da página, rota server component, item de navegação, e refinamentos finais
 
-- [ ] T023 Criar componente orquestrador `PromptManagerPage` em `src/components/admin/prompt-manager/PromptManagerPage.tsx` — `"use client"`; renderiza `<Toaster richColors />` do sonner com `aria-live="polite"` wrapper para acessibilidade; renderiza `<Tabs />` com 3 abas (Prompts Base, Guardrails, Vincular Tenant) usando ícones `MessageSquare`, `Shield`, `Link`; tab ativa default: "prompts"; renderiza condicionalmente `PromptList` / `GuardrailList` / `TenantLinkSection` conforme aba ativa; estado de cada aba preservado durante troca (componentes não são desmontados — usar CSS `display` ou conditional rendering que mantém estado)
-- [ ] T024 Criar rota server component em `src/app/[locale]/admin/prompt-manager/page.tsx` — async server component; verifica sessão admin via `hasValidAdminSession(cookies)` e redireciona para `/admin` se não autenticado; exporta `metadata` com `title: "Prompts & Guardrails | Interasis AI"`, `description` e `openGraph`; renderiza `<PromptManagerPage />`
-- [ ] T025 Modificar `AdminNavigation` em `src/components/admin/AdminNavigation.tsx` — adicionar item ao array de navegação: `{ href: "/admin/prompt-manager", label: "Prompts & Guardrails", icon: ShieldCheck }` (importar `ShieldCheck` de `lucide-react`)
-- [ ] T026 [P] Validar edge cases e usabilidade — verificar listagem vazia (mensagens amigáveis em vez de tela branca), formulário preserva dados ao alternar abas, envio duplicado bloqueado, conteúdo Markdown extenso não quebra layout, modais fecham com Escape e clique fora, teclado navega em todos os controles
+- [x] T023 Criar componente orquestrador `PromptManagerPage` em `src/components/admin/prompt-manager/PromptManagerPage.tsx` — `"use client"`; renderiza `<Toaster richColors />` do sonner com `aria-live="polite"` wrapper para acessibilidade; renderiza `<Tabs />` com 3 abas (Prompts Base, Guardrails, Vincular Tenant) usando ícones `MessageSquare`, `Shield`, `Link`; tab ativa default: "prompts"; renderiza condicionalmente `PromptList` / `GuardrailList` / `TenantLinkSection` conforme aba ativa; estado de cada aba preservado durante troca (componentes não são desmontados — usar CSS `display` ou conditional rendering que mantém estado)
+- [x] T024 Criar rota server component em `src/app/[locale]/admin/prompt-manager/page.tsx` — async server component; verifica sessão admin via `hasValidAdminSession(cookies)` e redireciona para `/admin` se não autenticado; exporta `metadata` com `title: "Prompts & Guardrails | Interasis AI"`, `description` e `openGraph`; renderiza `<PromptManagerPage />`
+- [x] T025 Modificar `AdminNavigation` em `src/components/admin/AdminNavigation.tsx` — adicionar item ao array de navegação: `{ href: "/admin/prompt-manager", label: "Prompts & Guardrails", icon: ShieldCheck }` (importar `ShieldCheck` de `lucide-react`)
+- [x] T026 [P] Validar edge cases e usabilidade — verificar listagem vazia (mensagens amigáveis em vez de tela branca), formulário preserva dados ao alternar abas, envio duplicado bloqueado, conteúdo Markdown extenso não quebra layout, modais fecham com Escape e clique fora, teclado navega em todos os controles
 
 **Checkpoint**: Feature completa — `/admin/prompt-manager` funcional com as 3 abas integradas
 

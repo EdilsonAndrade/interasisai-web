@@ -49,5 +49,37 @@ export type {
   TenantDeleteResult,
 } from "./pythonBackend.types";
 
+// Prompt Manager — Prompts & Guardrails
+export {
+  fetchGuardrails,
+  createGuardrail,
+  updateGuardrail,
+  deleteGuardrail,
+  fetchPrompts,
+  createPrompt,
+  updatePrompt,
+  deletePrompt,
+  linkTenantToPrompt,
+  fetchTenantPromptDetail,
+} from "./promptManager";
+export type {
+  Guardrail,
+  Prompt,
+  GuardrailCreateInput,
+  GuardrailUpdateInput,
+  PromptCreateInput,
+  PromptUpdateInput,
+  TenantLinkInput,
+  TenantPromptDetail,
+  PromptManagerResult,
+  GuardrailListResult,
+  GuardrailSingleResult,
+  PromptListResult,
+  PromptSingleResult,
+  TenantLinkResult,
+  TenantPromptDetailResult,
+  DeleteResult,
+} from "./promptManager.types";
+
 // Session Manager — Thread ID
 export { getThreadId, resetThreadId } from "./sessionManager";

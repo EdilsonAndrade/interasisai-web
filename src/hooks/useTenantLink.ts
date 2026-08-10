@@ -1,0 +1,86 @@
+// ============================================================================
+// useTenantLink — Hook: tenant-prompt link management
+// ============================================================================
+
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import {
+  fetchPrompts,
+  fetchTenantPromptDetail,
+  linkTenantToPrompt,
+} from "@/services/promptManager";
+import type { Prompt, TenantLinkInput, TenantPromptDetail } from "@/services/promptManager.types";
+
+interface UseTenantLinkReturn {
+  prompts: Prompt[];
+  loading: boolean;
+  submitting: boolean;
+  fetchingDetail: boolean;
+  error: string | null;
+  tenantDetail: TenantPromptDetail | null;
+  linkTenant: (input: TenantLinkInput) => Promise<boolean>;
+  fetchDetail: (tenantId: string) => Promise<void>;
+  clearDetail: () => void;
+}
+
+export function useTenantLink(): UseTenantLinkReturn {
+  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [fetchingDetail, setFetchingDetail] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [tenantDetail, setTenantDetail] = useState<TenantPromptDetail | null>(null);
+
+  const loadPrompts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const result = await fetchPrompts();
+    if (result.ok) {
+      setPrompts(result.data);
+    } else {
+      setError(result.message);
+    }
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadPrompts();
+  }, [loadPrompts]);
+
+  const linkTenant = useCallback(async (input: TenantLinkInput): Promise<boolean> => {
+    setSubmitting(true);
+    const result = await linkTenantToPrompt(input);
+    setSubmitting(false);
+
+    if (result.ok) {
+      toast.success("Vínculo criado com sucesso");
+      return true;
+    }
+    toast.error(result.message);
+    return false;
+  }, []);
+
+  const fetchDetail = useCallback(async (tenantId: string) => {
+    setFetchingDetail(true);
+    setTenantDetail(null);
+    setError(null);
+    const result = await fetchTenantPromptDetail(tenantId);
+    setFetchingDetail(false);
+
+    if (result.ok) {
+      setTenantDetail(result.data);
+    } else {
+      setError(result.message);
+      toast.error(result.message);
+    }
+  }, []);
+
+  const clearDetail = useCallback(() => {
+    setTenantDetail(null);
+    setError(null);
+  }, []);
+
+  return { prompts, loading, submitting, fetchingDetail, error, tenantDetail, linkTenant, fetchDetail, clearDetail };
+}

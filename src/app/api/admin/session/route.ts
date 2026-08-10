@@ -10,7 +10,7 @@ const cookieOptions = {
   httpOnly: true,
   sameSite: "strict" as const,
   secure: process.env.NODE_ENV === "production",
-  path: "/admin",
+  path: "/",
 };
 
 export async function POST(request: Request): Promise<NextResponse> {

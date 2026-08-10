@@ -8,9 +8,10 @@ type AdminDialogProps = {
   title: string;
   children: ReactNode;
   onClose: () => void;
+  className?: string;
 };
 
-export function AdminDialog({ open, title, children, onClose }: AdminDialogProps) {
+export function AdminDialog({ open, title, children, onClose, className }: AdminDialogProps) {
   const titleId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
@@ -35,7 +36,7 @@ export function AdminDialog({ open, title, children, onClose }: AdminDialogProps
         event.preventDefault();
         onClose();
       }}
-      className="fixed inset-0 z-50 m-auto w-[calc(100%-2rem)] max-w-xl rounded-card border border-brand-primary/30 bg-surface-base/95 p-0 text-text-body shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+      className={`fixed inset-0 z-50 m-auto w-[calc(100%-2rem)] max-w-xl rounded-card border border-brand-primary/30 bg-surface-base/95 p-0 text-text-body shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm ${className ?? ""}`}
     >
       <header className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
         <h2 id={titleId} className="text-xl font-bold text-text-strong">{title}</h2>

@@ -13,6 +13,9 @@ const config = {
   },
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   testPathIgnorePatterns: ["<rootDir>/.next/", "<rootDir>/node_modules/"],
+  transformIgnorePatterns: [
+    "node_modules/(?!(next-intl|use-intl|intl-messageformat|@formatjs)/)",
+  ],
 };
 
 export default createJestConfig(config);

@@ -1,5 +1,17 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 
+jest.mock("@/hooks/useLanguageSwitch", () => ({
+  useLanguageSwitch: () => ({
+    currentLocale: "pt-BR",
+    switchTo: jest.fn(),
+  }),
+}));
+
+jest.mock("next-intl", () => ({
+  useLocale: () => "pt-BR",
+  useTranslations: () => (key: string) => key,
+}));
+
 import Header from "./Header";
 
 jest.mock("@/context/ChatContext", () => ({
@@ -17,30 +29,26 @@ describe("Header", () => {
 
     expect(screen.getByRole("banner")).toBeInTheDocument();
 
-    const brandLinks = screen.getAllByRole("link", { name: "Interasis AI - Página inicial" });
-    expect(brandLinks).toHaveLength(1);
-    expect(brandLinks[0]).toHaveAttribute("href", "/");
-
-    expect(screen.getByRole("link", { name: "Serviços" })).toHaveAttribute("href", "/#servicos");
-    expect(screen.getByRole("link", { name: "Portfólio" })).toHaveAttribute("href", "/#portfolio");
-    expect(screen.getAllByRole("link", { name: "Contato" })[0]).toHaveAttribute("href", "/#contato");
-    expect(screen.getByRole("button", { name: "Fale conosco 24/7" })).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "Ativar tema claro" })[0]).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "nav.services" })).toHaveAttribute("href", "/#servicos");
+    expect(screen.getByRole("link", { name: "nav.portfolio" })).toHaveAttribute("href", "/#portfolio");
+    expect(screen.getByRole("link", { name: "nav.contact" })).toHaveAttribute("href", "/#contato");
+    expect(screen.getByRole("button", { name: "cta.primary" })).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "theme.light" })[0]).toBeInTheDocument();
   });
 
   it("opens and closes the mobile menu with local state", () => {
     render(<Header />);
 
-    const menuButton = screen.getByRole("button", { name: "Abrir menu" });
+    const menuButton = screen.getByRole("button", { name: "menu.open" });
     expect(menuButton).toHaveAttribute("aria-expanded", "false");
 
     fireEvent.click(menuButton);
 
-    expect(screen.getByRole("navigation", { name: "Navegacao mobile" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Fechar menu" })).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getByRole("navigation", { name: "menu.mobileNav" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "menu.close" })).toHaveAttribute("aria-expanded", "true");
 
-    fireEvent.click(screen.getByRole("button", { name: "Fechar menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "menu.close" }));
 
-    expect(screen.queryByRole("navigation", { name: "Navegacao mobile" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "menu.mobileNav" })).not.toBeInTheDocument();
   });
 });

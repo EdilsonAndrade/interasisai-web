@@ -1,4 +1,4 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
-shell commands, and other important information, read specs/014-i18n-language-switcher/plan.md
+shell commands, and other important information, read specs/015-admin-prompt-guardrails/plan.md
 <!-- SPECKIT END -->

@@ -11,6 +11,7 @@ export {
 // Python Backend — Agendamento IA
 export {
   getPythonBackendConfig,
+  initializeChatSession,
   sendChatMessage,
   ingestKnowledge,
   createWhatsAppInstance,
@@ -28,6 +29,11 @@ export type {
   PythonChatSuccess,
   PythonChatFailure,
   PythonChatResult,
+  PythonChatInitSuccessResponse,
+  PythonChatInitErrorResponse,
+  PythonChatInitSuccess,
+  PythonChatInitFailure,
+  PythonChatInitResult,
   IngestRequest,
   IngestSuccessResponse,
   IngestErrorResponse,

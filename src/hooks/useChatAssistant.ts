@@ -6,7 +6,9 @@ import {
   type ChatGatewayResult,
   getThreadId,
   getPythonBackendConfig,
+  initializeChatSession,
   sendChatMessage,
+  type PythonChatInitResult,
   type PythonChatResult,
 } from "@/services";
 import { optimizeAudioForBff } from "./audioOptimization";
@@ -66,6 +68,7 @@ export function useChatAssistant(): UseChatAssistantReturn {
   const lastRetryPayloadRef = useRef<RetryPayload | null>(null);
   const audioReplyUrlRef = useRef<string | null>(null);
   const threadIdRef = useRef<string | null>(null);
+  const accessTokenRef = useRef<string | null>(null);
 
   const setAudioReply = useCallback((blob: Blob | null) => {
     if (audioReplyUrlRef.current) {
@@ -119,6 +122,64 @@ export function useChatAssistant(): UseChatAssistantReturn {
       });
     }
   }, []);
+
+  const ensureAccessToken = useCallback(
+    async (tenantId: string): Promise<PythonChatInitResult> => {
+      if (accessTokenRef.current) {
+        return {
+          ok: true,
+          accessToken: accessTokenRef.current,
+          tokenType: "bearer",
+          status: 200,
+        };
+      }
+
+      const result = await initializeChatSession(tenantId);
+      if (result.ok) {
+        accessTokenRef.current = result.accessToken;
+      }
+      return result;
+    },
+    [],
+  );
+
+  const sendChatMessageWithAuth = useCallback(
+    async (
+      request: { message: string; thread_id: string },
+      tenantId: string,
+    ): Promise<PythonChatResult> => {
+      const init = await ensureAccessToken(tenantId);
+      if (!init.ok) {
+        return {
+          ok: false,
+          status: init.status,
+          message: init.message,
+          retryable: init.retryable,
+        };
+      }
+
+      let result = await sendChatMessage(request, init.accessToken);
+
+      // Token expirado (401) — renova uma única vez e reenvia a mensagem.
+      if (!result.ok && result.status === 401) {
+        accessTokenRef.current = null;
+        const renewed = await initializeChatSession(tenantId);
+        if (!renewed.ok) {
+          return {
+            ok: false,
+            status: renewed.status,
+            message: renewed.message,
+            retryable: renewed.retryable,
+          };
+        }
+        accessTokenRef.current = renewed.accessToken;
+        result = await sendChatMessage(request, renewed.accessToken);
+      }
+
+      return result;
+    },
+    [ensureAccessToken],
+  );
 
   const handlePythonResult = useCallback(
     (result: PythonChatResult, retryPayload: RetryPayload) => {
@@ -276,21 +337,16 @@ export function useChatAssistant(): UseChatAssistantReturn {
         endpoint: "/api/v1/chat",
       });
 
-      void sendChatMessage(
-        { message: trimmedText, thread_id: threadId },
-        tenantId,
-      )
-        .then((result) => {
-          handlePythonResult(result, {
-            kind: "text",
-            text: trimmedText,
-          });
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+      void (async () => {
+        const result = await sendChatMessageWithAuth(
+          { message: trimmedText, thread_id: threadId },
+          tenantId,
+        );
+        handlePythonResult(result, { kind: "text", text: trimmedText });
+        setIsLoading(false);
+      })();
     },
-    [handlePythonResult],
+    [handlePythonResult, sendChatMessageWithAuth],
   );
 
   const retryLastMessage = useCallback(() => {
@@ -302,12 +358,12 @@ export function useChatAssistant(): UseChatAssistantReturn {
       try {
         const cfg = getPythonBackendConfig();
         tenantId = cfg.tenantId;
-      } catch(ex: any){
+      } catch (ex) {
         setAudioError(
           "Configuração do tenant ausente. Contate o administrador.",
         );
         console.error("[Chat:configError]", {
-          message: ex.message,
+          message: (ex as Error).message,
         });
         return;
       }
@@ -317,21 +373,19 @@ export function useChatAssistant(): UseChatAssistantReturn {
 
       setIsLoading(true);
       setAudioError(null);
-      void sendChatMessage(
-        { message: payload.text, thread_id: threadId },
-        tenantId,
-      )
-        .then((result) => {
-          handlePythonResult(result, payload);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+      void (async () => {
+        const result = await sendChatMessageWithAuth(
+          { message: payload.text, thread_id: threadId },
+          tenantId,
+        );
+        handlePythonResult(result, payload);
+        setIsLoading(false);
+      })();
       return;
     }
 
     void sendOptimizedAudio(payload.audioBlob, payload.originalDurationMs);
-  }, [handlePythonResult, sendOptimizedAudio]);
+  }, [handlePythonResult, sendChatMessageWithAuth, sendOptimizedAudio]);
 
   const startRecording = useCallback(async () => {
     // Audio feature flag guard

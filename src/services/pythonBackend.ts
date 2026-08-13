@@ -1,6 +1,6 @@
 // ============================================================================
 // Python Backend HTTP Client — Agendamento IA
-// Wraps fetch for POST /api/v1/chat and POST /api/v1/ingest/text
+// Wraps fetch for GET /api/v1/chat/init, POST /api/v1/chat and POST /api/v1/ingest/text
 // ============================================================================
 
 import type {
@@ -9,6 +9,9 @@ import type {
   PythonChatSuccessResponse,
   PythonChatErrorResponse,
   PythonChatResult,
+  PythonChatInitSuccessResponse,
+  PythonChatInitErrorResponse,
+  PythonChatInitResult,
   IngestRequest,
   IngestSuccessResponse,
   IngestErrorResponse,
@@ -119,6 +122,86 @@ function getErrorMessage(
 }
 
 // ---------------------------------------------------------------------------
+// Chat Init API — GET /api/v1/chat/init
+// ---------------------------------------------------------------------------
+
+/**
+ * Initializes a chat session for the given tenant and returns an access token.
+ *
+ * @param tenantId - The tenant identifier for the X-Tenant-ID header.
+ * @returns {Promise<PythonChatInitResult>} Success (with access token) or failure.
+ */
+export async function initializeChatSession(
+  tenantId: string,
+): Promise<PythonChatInitResult> {
+  let response: Response;
+  try {
+    response = await fetch(`${getPythonBackendBaseUrl()}/api/v1/chat/init`, {
+      method: "GET",
+      headers: {
+        "X-Tenant-ID": tenantId,
+      },
+    });
+  } catch {
+    return {
+      ok: false,
+      status: 0,
+      message: NETWORK_ERROR_MSG,
+      retryable: true,
+    };
+  }
+
+  const payload = await parseJsonSafely(response);
+
+  if (response.ok) {
+    const success = payload as Partial<PythonChatInitSuccessResponse> | null;
+    const accessToken = success?.access_token?.trim();
+
+    if (!accessToken) {
+      console.error("[PythonBackend:init:error]", {
+        status: 502,
+        message: "O serviço não retornou um token de acesso válido.",
+      });
+      return {
+        ok: false,
+        status: 502,
+        message: "O serviço não retornou um token de acesso válido.",
+        retryable: true,
+      };
+    }
+
+    console.info("[PythonBackend:init]", {
+      tenant_id: tenantId,
+      token_type: success?.token_type?.trim() || "bearer",
+      endpoint: "/api/v1/chat/init",
+      status: response.status,
+    });
+
+    return {
+      ok: true,
+      accessToken,
+      tokenType: success?.token_type?.trim() || "bearer",
+      status: response.status,
+    };
+  }
+
+  const errorPayload = payload as PythonChatInitErrorResponse | null;
+  const message = getErrorMessage(response.status, errorPayload);
+
+  console.error("[PythonBackend:init:error]", {
+    status: response.status,
+    message,
+  });
+
+  return {
+    ok: false,
+    status: response.status,
+    message,
+    retryable: isRetryableStatus(response.status),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Chat API — POST /api/v1/chat
 // ---------------------------------------------------------------------------
 
@@ -126,22 +209,20 @@ function getErrorMessage(
  * Sends a text message to the Python backend chat endpoint.
  *
  * @param request - The chat request containing message and thread_id.
- * @param tenantId - The tenant identifier for the X-Tenant-ID header.
+ * @param accessToken - The access token obtained from /api/v1/chat/init.
  * @returns {Promise<PythonChatResult>} Success or failure result.
  */
 export async function sendChatMessage(
   request: PythonChatRequest,
-  tenantId: string,
+  accessToken: string,
 ): Promise<PythonChatResult> {
-  const config = getPythonBackendConfig();
-
   let response: Response;
   try {
-    response = await fetch(`${config.baseUrl}/api/v1/chat`, {
+    response = await fetch(`${getPythonBackendBaseUrl()}/api/v1/chat`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Tenant-ID": tenantId,
+        "Authorization": `Bearer ${accessToken}`,
       },
       body: JSON.stringify(request),
     });
@@ -162,7 +243,6 @@ export async function sendChatMessage(
       successPayload?.response?.trim() || FALLBACK_REPLY;
 
     console.info("[PythonBackend:chat]", {
-      tenant_id: successPayload?.tenant_id ?? tenantId,
       thread_id: request.thread_id,
       endpoint: "/api/v1/chat",
       status: response.status,

@@ -1,6 +1,6 @@
 // ============================================================================
 // Python Backend API — TypeScript types (Agendamento IA)
-// Contract: POST /api/v1/chat and POST /api/v1/ingest/text
+// Contract: GET /api/v1/chat/init, POST /api/v1/chat and POST /api/v1/ingest/text
 // Source: specs/010-integrate-python-backend/contracts/
 // ============================================================================
 
@@ -58,6 +58,45 @@ export type PythonChatFailure = {
 };
 
 export type PythonChatResult = PythonChatSuccess | PythonChatFailure;
+
+// ---------------------------------------------------------------------------
+// Chat Init API — Success Response (HTTP 200)
+// ---------------------------------------------------------------------------
+
+export type PythonChatInitSuccessResponse = {
+  access_token: string;
+  token_type: string;
+};
+
+// ---------------------------------------------------------------------------
+// Chat Init API — Error Response (HTTP 4xx / 5xx)
+// ---------------------------------------------------------------------------
+
+export type PythonChatInitErrorResponse = {
+  detail: string;
+};
+
+// ---------------------------------------------------------------------------
+// Chat Init API — Union result type
+// ---------------------------------------------------------------------------
+
+export type PythonChatInitSuccess = {
+  ok: true;
+  accessToken: string;
+  tokenType: string;
+  status: number;
+};
+
+export type PythonChatInitFailure = {
+  ok: false;
+  status: number;
+  message: string;
+  retryable: boolean;
+};
+
+export type PythonChatInitResult =
+  | PythonChatInitSuccess
+  | PythonChatInitFailure;
 
 // ---------------------------------------------------------------------------
 // Ingest API — Request

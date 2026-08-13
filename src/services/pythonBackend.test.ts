@@ -6,6 +6,7 @@ import {
   createWhatsAppInstance,
   getPythonBackendConfig,
   getWhatsAppQrCode,
+  initializeChatSession,
   sendChatMessage,
   ingestKnowledge,
 } from "./pythonBackend";
@@ -95,7 +96,7 @@ describe("pythonBackend", () => {
 
       const result = await sendChatMessage(
         { message: "Oi", thread_id: "550e8400-e29b-41d4-a716-446655440000" },
-        "test-tenant-123",
+        "test-access-token",
       );
 
       const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
@@ -104,7 +105,7 @@ describe("pythonBackend", () => {
       expect(options.method).toBe("POST");
       expect(options.headers).toEqual({
         "Content-Type": "application/json",
-        "X-Tenant-ID": "test-tenant-123",
+        "Authorization": "Bearer test-access-token",
       });
 
       const body = JSON.parse(options.body as string);
@@ -259,6 +260,89 @@ describe("pythonBackend", () => {
       expect(result.status).toBe(400);
       expect(result.message).toBe("Mensagem inválida.");
       expect(result.retryable).toBe(false);
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // initializeChatSession
+  // -----------------------------------------------------------------------
+
+  describe("initializeChatSession", () => {
+    it("sends GET with X-Tenant-ID header and returns the access token", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(200, {
+          access_token: "eyJhbGciOi...",
+          token_type: "bearer",
+        }),
+      );
+
+      const result = await initializeChatSession("test-tenant-123");
+
+      const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+
+      expect(url).toBe("http://test-api.example.com/api/v1/chat/init");
+      expect(options.method).toBe("GET");
+      expect(options.headers).toEqual({ "X-Tenant-ID": "test-tenant-123" });
+      expect(result).toEqual({
+        ok: true,
+        accessToken: "eyJhbGciOi...",
+        tokenType: "bearer",
+        status: 200,
+      });
+    });
+
+    it("falls back token_type to bearer when missing", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(200, { access_token: "abc" }),
+      );
+
+      const result = await initializeChatSession("t");
+
+      expect(result).toEqual({
+        ok: true,
+        accessToken: "abc",
+        tokenType: "bearer",
+        status: 200,
+      });
+    });
+
+    it("rejects a response without access_token", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, {}));
+
+      const result = await initializeChatSession("t");
+
+      expect(result).toEqual(
+        expect.objectContaining({ ok: false, status: 502, retryable: true }),
+      );
+    });
+
+    it("handles HTTP 401 error with detail from body", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(401, { detail: "Tenant inválido." }),
+      );
+
+      const result = await initializeChatSession("t");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 401,
+        message: "Tenant inválido.",
+        retryable: false,
+      });
+    });
+
+    it("handles network failure", async () => {
+      fetchMock.mockRejectedValueOnce(new Error("Network error"));
+
+      const result = await initializeChatSession("t");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 0,
+        message:
+          "Não foi possível se conectar ao serviço de mensagens.",
+        retryable: true,
+      });
     });
   });
 

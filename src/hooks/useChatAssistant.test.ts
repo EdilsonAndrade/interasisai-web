@@ -5,6 +5,7 @@ import {
   sendAudioMessageToBff,
   sendTextMessageToBff,
   getThreadId,
+  initializeChatSession,
   sendChatMessage,
 } from "@/services";
 import { optimizeAudioForBff } from "./audioOptimization";
@@ -17,6 +18,7 @@ jest.mock("@/services", () => {
     sendAudioMessageToBff: jest.fn(),
     sendTextMessageToBff: jest.fn(),
     sendChatMessage: jest.fn(),
+    initializeChatSession: jest.fn(),
     decodeAudioBase64: jest.fn(),
     getThreadId: jest.fn(),
   };
@@ -65,6 +67,7 @@ Object.defineProperty(global.navigator, "mediaDevices", {
 const mockedSendAudioMessageToBff = jest.mocked(sendAudioMessageToBff);
 const mockedSendTextMessageToBff = jest.mocked(sendTextMessageToBff);
 const mockedSendChatMessage = jest.mocked(sendChatMessage);
+const mockedInitializeChatSession = jest.mocked(initializeChatSession);
 const mockedOptimizeAudioForBff = jest.mocked(optimizeAudioForBff);
 const mockedDecodeAudioBase64 = jest.mocked(decodeAudioBase64);
 const mockedGetThreadId = jest.mocked(getThreadId);
@@ -131,6 +134,13 @@ describe("useChatAssistant", () => {
       reply: "Resposta do Python Backend",
     });
 
+    mockedInitializeChatSession.mockResolvedValue({
+      ok: true,
+      accessToken: "test-access-token",
+      tokenType: "bearer",
+      status: 200,
+    });
+
     mockedOptimizeAudioForBff.mockResolvedValue({
       optimizedBlob: new Blob(["optimized"], { type: "audio/wav" }),
       originalDurationMs: 1200,
@@ -171,14 +181,15 @@ describe("useChatAssistant", () => {
     });
 
     expect(result.current.messages[0]).toMatchObject({ role: "user", content: "Olá, Python" });
-    expect(mockedSendChatMessage).toHaveBeenCalledWith(
-      { message: "Olá, Python", thread_id: "test-thread-550e8400-e29b-41d4-a716-446655440000" },
-      "test-tenant-id",
-    );
 
     await act(async () => {
       await flushPromises();
     });
+
+    expect(mockedSendChatMessage).toHaveBeenCalledWith(
+      { message: "Olá, Python", thread_id: "test-thread-550e8400-e29b-41d4-a716-446655440000" },
+      "test-access-token",
+    );
 
     const assistantMessages = result.current.messages.filter((m) => m.role === "ai");
     expect(assistantMessages).toHaveLength(1);
@@ -478,12 +489,16 @@ describe("useChatAssistant", () => {
       result.current.sendMessage("Mensagem Python");
     });
 
+    await act(async () => {
+      await flushPromises();
+    });
+
     expect(mockedSendChatMessage).toHaveBeenCalledWith(
       {
         message: "Mensagem Python",
         thread_id: "test-thread-550e8400-e29b-41d4-a716-446655440000",
       },
-      "test-tenant-id",
+      "test-access-token",
     );
   });
 
@@ -571,6 +586,100 @@ describe("useChatAssistant", () => {
     expect(result.current.audioError).toBe(
       "O serviço de atendimento demorou para responder. Por favor, tente novamente em instantes.",
     );
+  });
+
+  it("renova o token e reenvia a mensagem uma única vez ao receber 401", async () => {
+    mockedInitializeChatSession
+      .mockResolvedValueOnce({
+        ok: true,
+        accessToken: "token-inicial",
+        tokenType: "bearer",
+        status: 200,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        accessToken: "token-renovado",
+        tokenType: "bearer",
+        status: 200,
+      });
+
+    mockedSendChatMessage
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        message: "Token expirado.",
+        retryable: false,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        reply: "Resposta após renovação",
+      });
+
+    const { result } = renderHook(() => useChatAssistant());
+
+    act(() => {
+      result.current.sendMessage("mensagem com token expirado");
+    });
+
+    await act(async () => {
+      await flushPromises();
+    });
+
+    expect(mockedInitializeChatSession).toHaveBeenCalledTimes(2);
+    expect(mockedSendChatMessage).toHaveBeenCalledTimes(2);
+    expect(mockedSendChatMessage).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ message: "mensagem com token expirado" }),
+      "token-inicial",
+    );
+    expect(mockedSendChatMessage).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({ message: "mensagem com token expirado" }),
+      "token-renovado",
+    );
+
+    const assistantMessages = result.current.messages.filter((m) => m.role === "ai");
+    expect(assistantMessages).toHaveLength(1);
+    expect(assistantMessages[0].content).toBe("Resposta após renovação");
+  });
+
+  it("não entra em loop quando a renovação do token falha (401 persistente)", async () => {
+    mockedInitializeChatSession
+      .mockResolvedValueOnce({
+        ok: true,
+        accessToken: "token-inicial",
+        tokenType: "bearer",
+        status: 200,
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        accessToken: "token-renovado",
+        tokenType: "bearer",
+        status: 200,
+      });
+
+    mockedSendChatMessage.mockResolvedValue({
+      ok: false,
+      status: 401,
+      message: "Token expirado.",
+      retryable: false,
+    });
+
+    const { result } = renderHook(() => useChatAssistant());
+
+    act(() => {
+      result.current.sendMessage("mensagem inválida");
+    });
+
+    await act(async () => {
+      await flushPromises();
+    });
+
+    // Uma inicialização inicial + uma única renovação; sem loop.
+    expect(mockedInitializeChatSession).toHaveBeenCalledTimes(2);
+    expect(mockedSendChatMessage).toHaveBeenCalledTimes(2);
+    expect(result.current.audioError).toBe("Token expirado.");
   });
 
   // -----------------------------------------------------------------------

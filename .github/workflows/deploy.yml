@@ -61,3 +61,4 @@ jobs:
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose pull interasisai-web
             docker compose up -d interasisai-web
+            docker image prune -f

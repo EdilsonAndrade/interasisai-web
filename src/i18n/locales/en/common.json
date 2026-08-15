@@ -1,1 +1,38 @@
-{"nav":{"services":"Services","portfolio":"Portfolio","contact":"Contact","admin":"Admin"},"cta":{"primary":"Contact us 24/7","exploreSolutions":"Explore Solutions","viewPortfolio":"View Portfolio"},"footer":{"institutional":"Institutional","contact":"Contact","social":"Social Media","description":"AI solutions for digital operations focused on clarity, predictability, and scale.","copyright":"© {year} Interasis AI. All rights reserved.","about":"About","privacy":"Privacy Policy","terms":"Terms"},"brand":{"name":"Interasis AI","homepageAriaLabel":"Interasis AI - Home page","coverAlt":"Interasis AI — Intelligence that connects. Technology that transforms. Illustration of a stylized human head in circuits."},"theme":{"light":"Switch to light mode","dark":"Switch to dark mode"},"menu":{"open":"Open menu","close":"Close menu","mainNav":"Main navigation","mobileNav":"Mobile navigation"}}
+{
+  "nav": {
+    "services": "Services",
+    "portfolio": "Cases",
+    "contact": "Contact",
+    "admin": "Admin"
+  },
+  "cta": {
+    "primary": "Contact us 24/7",
+    "exploreSolutions": "Explore Solutions",
+    "viewPortfolio": "View Cases"
+  },
+  "footer": {
+    "institutional": "Institutional",
+    "contact": "Contact",
+    "social": "Social Media",
+    "description": "AI solutions for digital operations focused on clarity, predictability, and scale.",
+    "copyright": "© {year} Interasis AI. All rights reserved.",
+    "about": "About",
+    "privacy": "Privacy Policy",
+    "terms": "Terms"
+  },
+  "brand": {
+    "name": "Interasis AI",
+    "homepageAriaLabel": "Interasis AI - Home page",
+    "coverAlt": "Interasis AI — Intelligence that connects. Technology that transforms. Illustration of a stylized human head in circuits."
+  },
+  "theme": {
+    "light": "Switch to light mode",
+    "dark": "Switch to dark mode"
+  },
+  "menu": {
+    "open": "Open menu",
+    "close": "Close menu",
+    "mainNav": "Main navigation",
+    "mobileNav": "Mobile navigation"
+  }
+}

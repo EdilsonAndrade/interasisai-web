@@ -1,1 +1,38 @@
-{"nav":{"services":"Servicios","portfolio":"Portafolio","contact":"Contacto","admin":"Admin"},"cta":{"primary":"Contáctenos 24/7","exploreSolutions":"Explorar Soluciones","viewPortfolio":"Ver Portafolio"},"footer":{"institutional":"Institucional","contact":"Contacto","social":"Redes sociales","description":"Soluciones de IA para operaciones digitales con enfoque en claridad, previsibilidad y escala.","copyright":"© {year} Interasis AI. Todos los derechos reservados.","about":"Sobre","privacy":"Política de Privacidad","terms":"Términos"},"brand":{"name":"Interasis AI","homepageAriaLabel":"Interasis AI - Página principal","coverAlt":"Interasis AI — Inteligencia que conecta. Tecnología que transforma. Ilustración de cabeza humana estilizada en circuitos."},"theme":{"light":"Activar tema claro","dark":"Activar tema oscuro"},"menu":{"open":"Abrir menú","close":"Cerrar menú","mainNav":"Navegación principal","mobileNav":"Navegación móvil"}}
+{
+  "nav": {
+    "services": "Servicios",
+    "portfolio": "Casos",
+    "contact": "Contacto",
+    "admin": "Admin"
+  },
+  "cta": {
+    "primary": "Contáctenos 24/7",
+    "exploreSolutions": "Explorar Soluciones",
+    "viewPortfolio": "Ver Casos"
+  },
+  "footer": {
+    "institutional": "Institucional",
+    "contact": "Contacto",
+    "social": "Redes sociales",
+    "description": "Soluciones de IA para operaciones digitales con enfoque en claridad, previsibilidad y escala.",
+    "copyright": "© {year} Interasis AI. Todos los derechos reservados.",
+    "about": "Sobre",
+    "privacy": "Política de Privacidad",
+    "terms": "Términos"
+  },
+  "brand": {
+    "name": "Interasis AI",
+    "homepageAriaLabel": "Interasis AI - Página principal",
+    "coverAlt": "Interasis AI — Inteligencia que conecta. Tecnología que transforma. Ilustración de cabeza humana estilizada en circuitos."
+  },
+  "theme": {
+    "light": "Activar tema claro",
+    "dark": "Activar tema oscuro"
+  },
+  "menu": {
+    "open": "Abrir menú",
+    "close": "Cerrar menú",
+    "mainNav": "Navegación principal",
+    "mobileNav": "Navegación móvil"
+  }
+}

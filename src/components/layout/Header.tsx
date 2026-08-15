@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, Moon, Sun, X } from "lucide-react";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import BrandLogo from "@/components/ui/BrandLogo";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 import { useChat } from "@/context/ChatContext";
 
 export default function Header() {
   const t = useTranslations("common");
+  const locale = useLocale();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [themeMode, setThemeMode] = useState<"dark" | "light">(() => {
     if (typeof window === "undefined") return "dark";
@@ -36,16 +37,16 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-deep/80 backdrop-blur-md">
       <div className="mx-auto flex h-20 w-full max-w-6xl items-center justify-between px-6 sm:px-8 lg:px-12">
-        <BrandLogo variant="header" href="/" />
+        <BrandLogo variant="header" href={`/${locale}`} />
 
         <nav aria-label={t("menu.mainNav")} className="hidden items-center gap-8 md:flex">
-          <Link href="/#servicos" className="text-sm font-semibold text-main/85 transition hover:text-brand-primary">
+          <Link href={`/${locale}#servicos`} className="text-sm font-semibold text-main/85 transition hover:text-brand-primary">
             {t("nav.services")}
           </Link>
-          <Link href="/#portfolio" className="text-sm font-semibold text-main/85 transition hover:text-brand-primary">
+          <Link href={`/${locale}#portfolio`} className="text-sm font-semibold text-main/85 transition hover:text-brand-primary">
             {t("nav.portfolio")}
           </Link>
-          <Link href="/#contato" className="text-sm font-semibold text-main/85 transition hover:text-brand-primary">
+          <Link href={`/${locale}#contato`} className="text-sm font-semibold text-main/85 transition hover:text-brand-primary">
             {t("nav.contact")}
           </Link>
           <Link href="/admin" className="text-sm font-semibold text-main/85 transition hover:text-brand-primary">
@@ -93,13 +94,13 @@ export default function Header() {
       {isMenuOpen && (
         <div id="mobile-nav" className="border-t border-white/10 bg-deep/95 md:hidden">
           <nav aria-label={t("menu.mobileNav")} className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-6 py-4 sm:px-8">
-            <Link href="/#servicos" onClick={closeMenu} className="rounded-lg px-3 py-3 text-sm font-semibold text-main/90 transition hover:bg-white/5 hover:text-brand-primary">
+            <Link href={`/${locale}#servicos`} onClick={closeMenu} className="rounded-lg px-3 py-3 text-sm font-semibold text-main/90 transition hover:bg-white/5 hover:text-brand-primary">
               {t("nav.services")}
             </Link>
-            <Link href="/#portfolio" onClick={closeMenu} className="rounded-lg px-3 py-3 text-sm font-semibold text-main/90 transition hover:bg-white/5 hover:text-brand-primary">
+            <Link href={`/${locale}#portfolio`} onClick={closeMenu} className="rounded-lg px-3 py-3 text-sm font-semibold text-main/90 transition hover:bg-white/5 hover:text-brand-primary">
               {t("nav.portfolio")}
             </Link>
-            <Link href="/#contato" onClick={closeMenu} className="rounded-lg px-3 py-3 text-sm font-semibold text-main/90 transition hover:bg-white/5 hover:text-brand-primary">
+            <Link href={`/${locale}#contato`} onClick={closeMenu} className="rounded-lg px-3 py-3 text-sm font-semibold text-main/90 transition hover:bg-white/5 hover:text-brand-primary">
               {t("nav.contact")}
             </Link>
             <Link href="/admin" onClick={closeMenu} className="rounded-lg px-3 py-3 text-sm font-semibold text-main/90 transition hover:bg-white/5 hover:text-brand-primary">

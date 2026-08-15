@@ -9,7 +9,7 @@ export type SocialNavigationItem = NavigationItem & {
 
 export const navigationItems: NavigationItem[] = [
   { label: "Serviços", href: "/#servicos" },
-  { label: "Portfólio", href: "/#portfolio" },
+  { label: "Cases", href: "/#portfolio" },
   { label: "Contato", href: "/#contato" },
   { label: "Admin", href: "/admin" },
 ];

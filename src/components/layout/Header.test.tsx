@@ -29,9 +29,9 @@ describe("Header", () => {
 
     expect(screen.getByRole("banner")).toBeInTheDocument();
 
-    expect(screen.getByRole("link", { name: "nav.services" })).toHaveAttribute("href", "/#servicos");
-    expect(screen.getByRole("link", { name: "nav.portfolio" })).toHaveAttribute("href", "/#portfolio");
-    expect(screen.getByRole("link", { name: "nav.contact" })).toHaveAttribute("href", "/#contato");
+    expect(screen.getByRole("link", { name: "nav.services" })).toHaveAttribute("href", "/pt-BR#servicos");
+    expect(screen.getByRole("link", { name: "nav.portfolio" })).toHaveAttribute("href", "/pt-BR#portfolio");
+    expect(screen.getByRole("link", { name: "nav.contact" })).toHaveAttribute("href", "/pt-BR#contato");
     expect(screen.getByRole("button", { name: "cta.primary" })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: "theme.light" })[0]).toBeInTheDocument();
   });

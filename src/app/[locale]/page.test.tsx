@@ -34,6 +34,11 @@ jest.mock("@/components/ui/HeroChatCta", () => ({
   default: () => <button data-testid="hero-chat-cta">CTA</button>,
 }));
 
+jest.mock("@/components/ui/PortfolioSection", () => ({
+  __esModule: true,
+  default: () => <div data-testid="portfolio-section">PortfolioSection</div>,
+}));
+
 describe("Home", () => {
   it("renders hero content with heading, CTAs and brand cover", async () => {
     const element = await Home();
@@ -64,13 +69,14 @@ describe("Home", () => {
     expect(screen.getAllByTestId("feature-card")).toHaveLength(3);
   });
 
-  it("wraps both main blocks with FadeIn", async () => {
+  it("renders portfolio section and wraps all main blocks with FadeIn", async () => {
     const element = await Home();
     await act(async () => {
       render(element);
     });
 
+    expect(screen.getByTestId("portfolio-section")).toBeInTheDocument();
     const wrappers = screen.getAllByTestId("fade-in");
-    expect(wrappers).toHaveLength(2);
+    expect(wrappers).toHaveLength(3);
   });
 });

@@ -47,6 +47,7 @@ html.theme-light body {
   }
 
   html {
+    scroll-behavior: smooth;
     background-color: rgb(var(--color-surface-page, 11 16 32) / 1);
   }
 

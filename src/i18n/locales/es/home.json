@@ -1,1 +1,69 @@
-{"metadata":{"title":"Interasis AI | Inteligencia Artificial e Ingeniería de Software a Medida","description":"Automatice procesos, escale operaciones y resuelva cuellos de botella con soluciones en la nube y agentes de IA integrados en su negocio."},"hero":{"heading1":"Inteligencia Artificial","heading2":"e Ingeniería de Software a Medida.","subtitle":"Automatice procesos, escale operaciones y resuelva cuellos de botella complejos con soluciones en la nube y agentes de IA integrados en su negocio."},"services":{"heading":"Propuesta de Valor","subtitle":"Combinamos ingeniería moderna e inteligencia artificial aplicada para desbloquear eficiencia real en operaciones digitales.","items":{"engineering":{"title":"Ingeniería de Software","description":"Arquitectura Cloud, Next.js y NestJS para productos escalables y confiables."},"ai":{"title":"Integración de IA","description":"Agentes autónomos, LLMs y visión computacional conectados a su flujo de negocio."},"automation":{"title":"Automatización de Procesos","description":"Reducción de costos operativos con flujos de trabajo inteligentes y orientados por datos."}}},"portfolio":{"heading":"Portafolio","subtitle":"Casos y demostraciones de proyectos de IA e ingeniería de software de Interasis AI."}}
+{
+  "metadata": {
+    "title": "Interasis AI | Inteligencia Artificial e Ingeniería de Software a Medida",
+    "description": "Automatice procesos, escale operaciones y resuelva cuellos de botella con soluciones en la nube y agentes de IA integrados en su negocio."
+  },
+  "hero": {
+    "heading1": "Inteligencia Artificial",
+    "heading2": "e Ingeniería de Software a Medida.",
+    "subtitle": "Automatice procesos, escale operaciones y resuelva cuellos de botella complejos con soluciones en la nube y agentes de IA integrados en su negocio."
+  },
+  "services": {
+    "heading": "Propuesta de Valor",
+    "subtitle": "Combinamos ingeniería moderna e inteligencia artificial aplicada para desbloquear eficiencia real en operaciones digitales.",
+    "items": {
+      "engineering": {
+        "title": "Ingeniería de Software",
+        "description": "Arquitectura Cloud, Next.js y NestJS para productos escalables y confiables."
+      },
+      "ai": {
+        "title": "Integración de IA",
+        "description": "Agentes autónomos, LLMs y visión computacional conectados a su flujo de negocio."
+      },
+      "automation": {
+        "title": "Automatización de Procesos",
+        "description": "Reducción de costos operativos con flujos de trabajo inteligentes y orientados por datos."
+      }
+    }
+  },
+  "portfolio": {
+    "badge": "Casos en Producción",
+    "heading": "Casos de Éxito y Soluciones",
+    "subtitle": "Productos y sistemas reales desarrollados por Interasis AI con inteligencia artificial aplicada, alto rendimiento y arquitectura escalable.",
+    "status": {
+      "live": "En Producción",
+      "omnichannel": "Omnicanal Activo"
+    },
+    "actions": {
+      "visitSite": "Visitar Plataforma",
+      "testAssistant": "Probar Asistente en Vivo",
+      "featuresLabel": "Diferenciales y Recursos"
+    },
+    "projects": {
+      "simplificandoai": {
+        "title": "SimplificandoAI",
+        "category": "SaaS • Marketing con IA & Eventos",
+        "description": "Plataforma integral de automatización de marketing y venta de entradas con IA. Crea artes y copys sensoriales con Vision AI, programa publicaciones en Instagram y gestiona boletería con división automática de pagos.",
+        "highlights": [
+          "Vision AI para análisis de imágenes y copys de alta conversión",
+          "Programación automatizada en Instagram y gestión de contenido",
+          "Boletería digital con split de pagos automático",
+          "+500 emprendedores y productores activos"
+        ],
+        "tags": ["Next.js", "Vision AI", "Meta API", "TailwindCSS", "Node.js"]
+      },
+      "chatAssistant": {
+        "title": "Asistente IA Omnicanal (RAG)",
+        "category": "IA Conversacional • Widget Web & WhatsApp",
+        "description": "Agente inteligente entrenado en la ingestión de datos y reglas de negocio del cliente. Atiende 24/7 sin alucinaciones, ejecuta agendamientos y se integra directamente en WhatsApp y Widget web.",
+        "highlights": [
+          "Respuestas precisas y sin alucinación ancladas en RAG",
+          "Widget flotante incrustable en sitios web de clientes",
+          "Integración nativa con WhatsApp Business 24/7",
+          "Agendamiento automático sincronizado con Google Calendar"
+        ],
+        "tags": ["RAG", "LLM Ingestion", "WhatsApp API", "Web Widget", "NestJS"]
+      }
+    }
+  }
+}

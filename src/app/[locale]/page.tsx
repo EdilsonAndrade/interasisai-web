@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import FadeIn from "@/components/ui/animations/FadeIn";
 import HeroChatCta from "@/components/ui/HeroChatCta";
 import HeroCover from "@/components/ui/HeroCover";
+import PortfolioSection from "@/components/ui/PortfolioSection";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("home");
@@ -104,7 +105,7 @@ export default async function Home() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <a
                   data-testid="cta-primary"
-                  href="#"
+                  href="#servicos"
                   className="inline-flex items-center justify-center rounded-button bg-brand-primary px-6 py-3 text-base font-semibold text-text-inverse transition hover:bg-brand-primary-hover"
                 >
                   {tc("cta.exploreSolutions")}
@@ -112,7 +113,7 @@ export default async function Home() {
                 <HeroChatCta />
                 <a
                   data-testid="cta-secondary"
-                  href="#"
+                  href="#portfolio"
                   className="inline-flex items-center justify-center rounded-button border border-border-subtle bg-surface-base/55 px-6 py-3 text-base font-semibold text-text-strong backdrop-blur-md transition hover:bg-surface-subtle/70"
                 >
                   {tc("cta.viewPortfolio")}
@@ -125,7 +126,7 @@ export default async function Home() {
       </FadeIn>
 
       <FadeIn delay={0.1}>
-        <section id="servicos" data-testid="services-section" className="px-6 py-16 sm:px-8 lg:px-12">
+        <section id="servicos" data-testid="services-section" className="scroll-mt-24 px-6 py-16 sm:px-8 lg:px-12">
           <div className="mx-auto max-w-6xl">
             <h2 className="text-3xl font-extrabold text-text-strong">{t("services.heading")}</h2>
             <p className="mt-3 max-w-3xl text-text-body">
@@ -140,14 +141,9 @@ export default async function Home() {
         </section>
       </FadeIn>
 
-      <section id="portfolio" className="px-6 pb-16 sm:px-8 lg:px-12">
-        <div className="mx-auto max-w-6xl rounded-card border border-border-subtle/70 bg-surface-base/50 p-8 backdrop-blur-md">
-          <h2 className="text-2xl font-bold text-text-strong">{t("portfolio.heading")}</h2>
-          <p className="mt-3 text-text-body">
-            {t("portfolio.subtitle")}
-          </p>
-        </div>
-      </section>
+      <FadeIn delay={0.2}>
+        <PortfolioSection />
+      </FadeIn>
     </div>
   );
 }

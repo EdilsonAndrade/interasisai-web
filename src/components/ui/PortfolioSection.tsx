@@ -15,7 +15,6 @@ export default async function PortfolioSection() {
         t("portfolio.projects.simplificandoai.highlights.0"),
         t("portfolio.projects.simplificandoai.highlights.1"),
         t("portfolio.projects.simplificandoai.highlights.2"),
-        t("portfolio.projects.simplificandoai.highlights.3"),
       ],
       tags: ["Next.js", "Vision AI", "Meta API", "TailwindCSS", "Node.js"],
       status: t("portfolio.status.live"),

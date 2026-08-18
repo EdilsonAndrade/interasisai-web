@@ -41,6 +41,9 @@ export async function generateMetadata({
     title: t("metadata.title"),
     description: t("metadata.description"),
     keywords: t.raw("metadata.keywords") as string[],
+    verification: {
+      google: "4dlJLjzyiNxh1qwPfVEgko943OiiiyUVbAKPW3W-toY",
+    },
     robots: {
       index: true,
       follow: true,

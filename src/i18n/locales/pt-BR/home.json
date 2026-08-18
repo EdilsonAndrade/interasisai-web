@@ -27,11 +27,11 @@
     }
   },
   "portfolio": {
-    "badge": "Cases em Produção",
+    "badge": "Cases",
     "heading": "Cases de Sucesso & Soluções",
     "subtitle": "Produtos e sistemas desenvolvidos pela Interasis AI com inteligência artificial de ponta, foco em conversão e arquitetura robusta.",
     "status": {
-      "live": "Em Produção",
+      "live": "Live",
       "omnichannel": "Omnichannel Ativo"
     },
     "actions": {
@@ -47,8 +47,7 @@
         "highlights": [
           "Vision AI para análise de imagem e criação de legendas de alta conversão",
           "Agendamento automatizado no Instagram e gestão de cronograma",
-          "Bilheteria digital com split de pagamentos automático",
-          "+500 empreendedores e produtores utilizando a plataforma"
+          "Bilheteria digital com split de pagamentos automático"
         ],
         "tags": ["Next.js", "Vision AI", "Meta API", "TailwindCSS", "Node.js"]
       },

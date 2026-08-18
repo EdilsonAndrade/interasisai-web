@@ -27,11 +27,11 @@
     }
   },
   "portfolio": {
-    "badge": "Cases in Production",
+    "badge": "Cases",
     "heading": "Success Cases & Solutions",
     "subtitle": "Real products and systems engineered by Interasis AI with applied artificial intelligence, high conversion, and robust cloud architecture.",
     "status": {
-      "live": "In Production",
+      "live": "Live",
       "omnichannel": "Active Omnichannel"
     },
     "actions": {
@@ -47,8 +47,7 @@
         "highlights": [
           "Vision AI for contextual image analysis and high-converting copy",
           "Automated Instagram scheduling and publishing workflow",
-          "Digital ticketing with automated payment split",
-          "+500 active entrepreneurs and event organizers"
+          "Digital ticketing with automated payment split"
         ],
         "tags": ["Next.js", "Vision AI", "Meta API", "TailwindCSS", "Node.js"]
       },

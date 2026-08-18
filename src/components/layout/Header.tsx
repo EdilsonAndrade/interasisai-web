@@ -14,9 +14,9 @@ export default function Header() {
   const locale = useLocale();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [themeMode, setThemeMode] = useState<"dark" | "light">(() => {
-    if (typeof window === "undefined") return "dark";
+    if (typeof window === "undefined") return "light";
     const storedTheme = window.localStorage.getItem("theme-mode");
-    return storedTheme === "light" || storedTheme === "dark" ? storedTheme : "dark";
+    return storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
   });
   const { open } = useChat();
 

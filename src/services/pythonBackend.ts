@@ -483,6 +483,8 @@ function isTenant(value: unknown): value is Tenant {
     typeof tenant.id === "string" &&
     typeof tenant.name === "string" &&
     typeof tenant.google_calendar_id === "string" &&
+    Array.isArray(tenant.allowed_domains) &&
+    tenant.allowed_domains.every((domain) => typeof domain === "string") &&
     typeof tenant.created_at === "string" &&
     (typeof tenant.updated_at === "string" || tenant.updated_at === null) &&
     (typeof tenant.deleted_at === "string" || tenant.deleted_at === null)
@@ -503,7 +505,8 @@ function getTenantFieldErrors(payload: unknown): TenantFieldErrors | undefined {
     if (
       field === "tenant_id" ||
       field === "name" ||
-      field === "google_calendar_id"
+      field === "google_calendar_id" ||
+      field === "allowed_domains"
     ) {
       fieldErrors[field] = msg;
     }
@@ -566,6 +569,7 @@ export function createTenant(
       tenant_id: input.tenant_id,
       name: input.name,
       google_calendar_id: input.google_calendar_id,
+      allowed_domains: input.allowed_domains,
     }),
     signal,
   });
@@ -594,6 +598,7 @@ export function updateTenant(
       body: JSON.stringify({
         name: input.name,
         google_calendar_id: input.google_calendar_id,
+        allowed_domains: input.allowed_domains,
       }),
       signal,
     },

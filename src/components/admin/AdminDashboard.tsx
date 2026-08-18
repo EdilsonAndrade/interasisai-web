@@ -10,7 +10,7 @@ export function AdminDashboard() {
     <section className="mx-auto w-full max-w-2xl space-y-8 px-4 py-16 sm:px-6">
       <header className="space-y-3 text-center">
         <h1 className="text-3xl font-bold text-text-strong sm:text-4xl">
-          Painel Administrador
+          Painel Administrador - Adicionar Novo Tenant
         </h1>
         <p className="text-sm text-text-body">
           Gerencie a base de conhecimento e os canais de atendimento.

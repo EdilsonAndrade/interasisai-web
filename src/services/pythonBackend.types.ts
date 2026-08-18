@@ -201,6 +201,7 @@ export type WhatsAppQrCodeResult =
 export type TenantWriteInput = {
   name: string;
   google_calendar_id: string;
+  allowed_domains: string[];
 };
 
 export type TenantCreateInput = TenantWriteInput & {
@@ -214,6 +215,7 @@ export type Tenant = {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  allowed_domains: string[];
 };
 
 export type TenantFieldErrors = Partial<

@@ -5,6 +5,7 @@ const tenant = {
   id: "tenant-1",
   name: "Tenant One",
   google_calendar_id: "calendar",
+  allowed_domains: ["example.com"],
   created_at: "2026-08-08T10:00:00Z",
   updated_at: "2026-08-08T11:00:00Z",
   deleted_at: null,

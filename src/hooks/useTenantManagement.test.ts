@@ -22,6 +22,7 @@ const tenant = {
   id: "tenant-1",
   name: "Tenant One",
   google_calendar_id: "calendar",
+  allowed_domains: ["example.com"],
   created_at: "2026-08-08T10:00:00Z",
   updated_at: "2026-08-08T10:00:00Z",
   deleted_at: null,
@@ -32,6 +33,9 @@ describe("useTenantManagement", () => {
 
   it("creates and stores the returned tenant", async () => {
     createMock.mockResolvedValue({ ok: true, status: 201, tenant });
+    getMock
+      .mockResolvedValueOnce({ ok: true, status: 200, tenant })
+      .mockResolvedValueOnce({ ok: true, status: 200, tenant: { ...tenant, name: "Updated" } });
     const { result } = renderHook(() => useTenantManagement());
 
     await act(async () => {
@@ -39,6 +43,7 @@ describe("useTenantManagement", () => {
         tenant_id: tenant.id,
         name: tenant.name,
         google_calendar_id: tenant.google_calendar_id,
+        allowed_domains: tenant.allowed_domains,
       });
     });
 
@@ -60,6 +65,7 @@ describe("useTenantManagement", () => {
       tenant_id: "tenant-1",
       name: "Tenant",
       google_calendar_id: "calendar",
+      allowed_domains: ["example.com"],
     };
 
     let firstRequest: Promise<boolean> = Promise.resolve(false);
@@ -69,6 +75,7 @@ describe("useTenantManagement", () => {
     await act(async () => {
       expect(await result.current.create(input)).toBe(false);
       resolveRequest({ ok: true, status: 201, tenant });
+      getMock.mockResolvedValue({ ok: true, status: 200, tenant });
       await firstRequest;
     });
 
@@ -76,7 +83,9 @@ describe("useTenantManagement", () => {
   });
 
   it("looks up, updates and deletes the current tenant", async () => {
-    getMock.mockResolvedValue({ ok: true, status: 200, tenant });
+    getMock
+      .mockResolvedValueOnce({ ok: true, status: 200, tenant })
+      .mockResolvedValueOnce({ ok: true, status: 200, tenant: { ...tenant, name: "Updated" } });
     updateMock.mockResolvedValue({
       ok: true,
       status: 200,
@@ -87,7 +96,7 @@ describe("useTenantManagement", () => {
 
     await act(async () => { await result.current.lookup("tenant-1"); });
     await act(async () => {
-      await result.current.update({ name: "Updated", google_calendar_id: "calendar" });
+      await result.current.update({ name: "Updated", google_calendar_id: "calendar", allowed_domains: ["example.com"] });
     });
     expect(result.current.tenant?.name).toBe("Updated");
     expect(result.current.feedback).toBe("Tenant atualizado com sucesso");
@@ -110,7 +119,7 @@ describe("useTenantManagement", () => {
 
     await act(async () => { await result.current.lookup("tenant-1"); });
     await act(async () => {
-      await result.current.update({ name: "Existing", google_calendar_id: "calendar" });
+      await result.current.update({ name: "Existing", google_calendar_id: "calendar", allowed_domains: ["example.com"] });
     });
 
     expect(result.current.tenant).toEqual(tenant);

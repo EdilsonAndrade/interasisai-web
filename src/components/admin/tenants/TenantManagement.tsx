@@ -80,6 +80,7 @@ export function TenantManagement() {
             tenant_id: editing.id,
             name: editing.name,
             google_calendar_id: editing.google_calendar_id,
+            allowed_domains: editing.allowed_domains,
           } : undefined}
           isLoading={management.operation === "create" || management.operation === "update"}
           fieldErrors={management.fieldErrors}

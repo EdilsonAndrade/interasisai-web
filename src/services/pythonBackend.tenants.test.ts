@@ -9,6 +9,7 @@ const tenant = {
   id: "tenant/one",
   name: "Tenant One",
   google_calendar_id: "agenda@group.calendar.google.com",
+  allowed_domains: ["example.com"],
   created_at: "2026-08-08T10:00:00Z",
   updated_at: "2026-08-08T10:00:00Z",
   deleted_at: null,
@@ -39,6 +40,7 @@ describe("tenant API", () => {
       tenant_id: tenant.id,
       name: tenant.name,
       google_calendar_id: tenant.google_calendar_id,
+      allowed_domains: tenant.allowed_domains,
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -49,6 +51,7 @@ describe("tenant API", () => {
           tenant_id: tenant.id,
           name: tenant.name,
           google_calendar_id: tenant.google_calendar_id,
+          allowed_domains: tenant.allowed_domains,
         }),
       }),
     );
@@ -72,6 +75,7 @@ describe("tenant API", () => {
     const result = await updateTenant("tenant/one", {
       name: "New",
       google_calendar_id: tenant.google_calendar_id,
+      allowed_domains: tenant.allowed_domains,
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -81,6 +85,7 @@ describe("tenant API", () => {
         body: JSON.stringify({
           name: "New",
           google_calendar_id: tenant.google_calendar_id,
+          allowed_domains: tenant.allowed_domains,
         }),
       }),
     );
@@ -141,6 +146,7 @@ describe("tenant API", () => {
         tenant_id: "tenant-1",
         name: "Existing",
         google_calendar_id: "calendar",
+        allowed_domains: ["example.com"],
       }),
     ).resolves.toEqual(
       expect.objectContaining({

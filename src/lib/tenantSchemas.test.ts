@@ -10,10 +10,12 @@ describe("tenant schemas", () => {
       tenantWriteSchema.parse({
         name: "  Tenant Alpha  ",
         google_calendar_id: "  agenda@group.calendar.google.com  ",
+        allowed_domains: ["  example.com  "],
       }),
     ).toEqual({
       name: "Tenant Alpha",
       google_calendar_id: "agenda@group.calendar.google.com",
+      allowed_domains: ["example.com"],
     });
   });
 
@@ -21,6 +23,7 @@ describe("tenant schemas", () => {
     const result = tenantWriteSchema.safeParse({
       name: "   ",
       google_calendar_id: "",
+      allowed_domains: [],
     });
 
     expect(result.success).toBe(false);
@@ -28,6 +31,7 @@ describe("tenant schemas", () => {
       expect(result.error.flatten().fieldErrors).toEqual({
         name: ["O nome do tenant é obrigatório."],
         google_calendar_id: ["O ID do Google Calendar é obrigatório."],
+        allowed_domains: ["Adicione pelo menos um domínio permitido."],
       });
     }
   });
@@ -38,19 +42,40 @@ describe("tenant schemas", () => {
         tenant_id: "  tenant-1  ",
         name: "  Tenant One  ",
         google_calendar_id: "  calendar  ",
+        allowed_domains: ["  example.com  "],
       }),
     ).toEqual({
       tenant_id: "tenant-1",
       name: "Tenant One",
       google_calendar_id: "calendar",
+      allowed_domains: ["example.com"],
     });
     expect(
       tenantCreateSchema.safeParse({
         tenant_id: "   ",
         name: "Tenant One",
         google_calendar_id: "calendar",
+        allowed_domains: ["example.com"],
       }).success,
     ).toBe(false);
+  });
+
+  it("accepts domains without protocols or ports only", () => {
+    expect(tenantWriteSchema.safeParse({
+      name: "Tenant One",
+      google_calendar_id: "calendar",
+      allowed_domains: ["localhost"],
+    }).success).toBe(true);
+    expect(tenantWriteSchema.safeParse({
+      name: "Tenant One",
+      google_calendar_id: "calendar",
+      allowed_domains: ["https://example.com"],
+    }).success).toBe(false);
+    expect(tenantWriteSchema.safeParse({
+      name: "Tenant One",
+      google_calendar_id: "calendar",
+      allowed_domains: ["example.com:8080"],
+    }).success).toBe(false);
   });
 
   it("trims and requires a tenant lookup id", () => {

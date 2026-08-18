@@ -58,8 +58,9 @@ export function useTenantManagement() {
     if (!request) return false;
     const result = await createTenant(input, request.signal);
     if (!result.ok) return fail(request.id, result);
+    const refreshed = await getTenantById(result.tenant.id, request.signal);
     if (!finish(request.id)) return false;
-    setTenant(result.tenant);
+    setTenant(refreshed.ok ? refreshed.tenant : result.tenant);
     setFeedback("Tenant cadastrado com sucesso");
     return true;
   };
@@ -84,8 +85,9 @@ export function useTenantManagement() {
     if (!request) return false;
     const result = await updateTenant(tenant.id, input, request.signal);
     if (!result.ok) return fail(request.id, result);
+    const refreshed = await getTenantById(result.tenant.id, request.signal);
     if (!finish(request.id)) return false;
-    setTenant(result.tenant);
+    setTenant(refreshed.ok ? refreshed.tenant : result.tenant);
     setFeedback("Tenant atualizado com sucesso");
     return true;
   };

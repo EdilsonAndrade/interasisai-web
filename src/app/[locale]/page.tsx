@@ -97,10 +97,7 @@ export default async function Home() {
             data-testid="hero-grid"
             className="mx-auto flex max-w-6xl flex-col gap-10"
           >
-            <HeroCover />
             <div className="flex flex-col justify-center gap-8">
-             
-
               <h1 className="max-w-4xl font-space-grotesk text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
                 <span className="text-brand-primary">{t("hero.heading1")}</span>{" "}
                 <span className="text-text-inverse">{t("hero.heading2")}</span>
@@ -127,6 +124,7 @@ export default async function Home() {
 
               </div>
             </div>
+            <HeroCover />
           </div>
         </section>
       </FadeIn>

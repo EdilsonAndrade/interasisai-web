@@ -1,28 +1,61 @@
 {
   "metadata": {
     "title": "Interasis AI | Artificial Intelligence and Custom Software Engineering",
-    "description": "Automate processes, scale operations, and solve bottlenecks with cloud solutions and AI agents integrated into your business."
+    "description": "Custom software engineering: architecture, integrations, and AI agents when it makes sense for your business.",
+    "keywords": [
+      "custom software development",
+      "software engineering company",
+      "systems architecture consulting",
+      "systems integration",
+      "AI agents for business",
+      "artificial intelligence automation",
+      "24/7 AI customer support",
+      "AI chatbot for clinics",
+      "automated support for hospitals",
+      "delivery automation",
+      "barbershop automation",
+      "pet shop automation",
+      "event business automation"
+    ]
   },
   "hero": {
     "heading1": "Artificial Intelligence",
     "heading2": "and Custom Software Engineering.",
-    "subtitle": "Automate processes, scale operations, and solve complex bottlenecks with cloud solutions and AI agents integrated into your business."
+    "subtitle": "We don't just sell AI. We build the complete system for your business: architecture, integrations, and, when it makes sense, AI agents.",
+    "flow": {
+      "eyebrow": "How a project comes to life",
+      "steps": {
+        "client": { "label": "Client & Requirements", "detail": "Scope and business rules" },
+        "backend": { "label": "Architecture & Backend", "detail": "Next.js, Node.js, NestJS, Python" },
+        "ai": { "label": "AI & Automation", "detail": "LangChain, LangGraph" },
+        "data": { "label": "Data & Integrations", "detail": "PostgreSQL, MySQL, Oracle" },
+        "cloud": { "label": "Cloud & Delivery", "detail": "AWS, Oracle Cloud" }
+      }
+    }
   },
   "services": {
     "heading": "Value Proposition",
     "subtitle": "We combine modern engineering and applied artificial intelligence to unlock real efficiency in digital operations.",
+    "engagement": {
+      "project": "Fixed-scope projects",
+      "saas": "In-house SaaS products",
+      "consulting": "Hourly consulting"
+    },
     "items": {
       "engineering": {
         "title": "Software Engineering",
-        "description": "Cloud Architecture, Next.js and NestJS for scalable and reliable products."
+        "description": "Cloud Architecture, Next.js and NestJS for scalable and reliable products.",
+        "audience": "For companies that need to build a system from scratch or modernize a legacy one."
       },
       "ai": {
         "title": "AI Integration",
-        "description": "Autonomous agents, LLMs, and computer vision connected to your business workflow."
+        "description": "Autonomous agents, LLMs, and computer vision connected to your business workflow.",
+        "audience": "For companies with an existing operation looking to automate support and processes with AI."
       },
       "automation": {
         "title": "Process Automation",
-        "description": "Operational cost reduction with intelligent, data-driven workflows."
+        "description": "Operational cost reduction with intelligent, data-driven workflows.",
+        "audience": "For operations with repetitive manual tasks."
       }
     }
   },
@@ -34,6 +67,7 @@
       "live": "Live",
       "omnichannel": "Active Omnichannel"
     },
+    "ownershipLabel": "In-house Interasis AI product",
     "actions": {
       "visitSite": "Visit Platform",
       "testAssistant": "Test Live Assistant",
@@ -42,12 +76,11 @@
     "projects": {
       "simplificandoai": {
         "title": "SimplificandoAI",
-        "category": "SaaS • AI Marketing & Event Management",
-        "description": "All-in-one platform for AI marketing automation and ticketing. Creates sensory copy and visuals with Vision AI, schedules Instagram posts, and manages ticketing with automatic payment split.",
+        "category": "SaaS • AI Marketing",
+        "description": "AI-powered marketing automation platform. Creates sensory copy and visuals with Vision AI and schedules Instagram posts automatically.",
         "highlights": [
           "Vision AI for contextual image analysis and high-converting copy",
-          "Automated Instagram scheduling and publishing workflow",
-          "Digital ticketing with automated payment split"
+          "Automated Instagram scheduling and publishing workflow"
         ],
         "tags": ["Next.js", "Vision AI", "Meta API", "TailwindCSS", "Node.js"]
       },

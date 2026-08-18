@@ -1,7 +1,7 @@
 import { type Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import type { LocaleCode } from "@/i18n/config";
@@ -34,29 +34,38 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "home" });
 
   return {
     metadataBase: new URL(siteUrl),
-    title: "Interasis AI | Tema semântico sincronizado",
-    description:
-      "Landing page inicial sincronizada com a skill oficial de design tokens da Interasis AI.",
+    title: t("metadata.title"),
+    description: t("metadata.description"),
+    keywords: t.raw("metadata.keywords") as string[],
+    robots: {
+      index: true,
+      follow: true,
+    },
     alternates: {
+      canonical: `/${locale}`,
       languages: {
         "pt-BR": "/pt-BR",
         en: "/en",
         es: "/es",
+        "x-default": "/en",
       },
     },
     openGraph: {
-      title: "Interasis AI | Tema semântico sincronizado",
-      description:
-        "Landing page inicial sincronizada com a skill oficial de design tokens da Interasis AI.",
+      title: t("metadata.title"),
+      description: t("metadata.description"),
+      url: `/${locale}`,
+      type: "website",
+      locale,
       images: [
         {
           url: "/images/interasisai_coverpage.png",
           width: 1200,
           height: 630,
-          alt: "Interasis AI — Inteligência que conecta. Tecnologia que transforma.",
+          alt: "Interasis AI",
         },
       ],
     },
@@ -71,6 +80,21 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
   }
 
   const messages = await getMessages();
+  const t = await getTranslations({ locale, namespace: "home" });
+
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Interasis AI",
+    legalName: "Edilson Augusto de Andrade Desenvolvimento de Software LTDA",
+    url: siteUrl,
+    logo: `${siteUrl}/images/interasis_ai_logo.png`,
+    description: t("metadata.description"),
+    email: "contato@interasisai.com.br",
+    telephone: "+55-11-97745-6057",
+    areaServed: ["BR", "US", "Europe"],
+    knowsAbout: t.raw("metadata.keywords") as string[],
+  };
 
   return (
     <html lang={locale} className={spaceGrotesk.variable}>
@@ -78,6 +102,11 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
         className="min-h-screen bg-deep text-main antialiased"
         style={rootThemeStyle}
       >
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ChatProvider>
             <Header />

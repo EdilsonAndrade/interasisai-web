@@ -1,28 +1,61 @@
 {
   "metadata": {
     "title": "Interasis AI | Inteligência Artificial e Engenharia de Software sob Medida",
-    "description": "Automatize processos, escale operações e resolva gargalos com soluções em nuvem e agentes de IA integrados ao seu negócio."
+    "description": "Engenharia de software sob medida: arquitetura, integrações e agentes de IA quando fizer sentido para o seu negócio.",
+    "keywords": [
+      "desenvolvimento de software sob medida",
+      "engenharia de software",
+      "consultoria em arquitetura de sistemas",
+      "integração de sistemas",
+      "agentes de IA para empresas",
+      "automação com inteligência artificial",
+      "atendimento 24/7 com IA",
+      "chatbot com IA para clínicas",
+      "atendimento automatizado para hospitais",
+      "automação para delivery",
+      "automação para barbearia",
+      "automação para petshop",
+      "automação para eventos"
+    ]
   },
   "hero": {
     "heading1": "Inteligência Artificial",
     "heading2": "e Engenharia de Software sob Medida.",
-    "subtitle": "Automatize processos, escale operações e resolva gargalos complexos com soluções em nuvem e agentes de IA integrados ao seu negócio."
+    "subtitle": "Não vendemos só IA. Construímos o sistema completo sob medida pro seu negócio: arquitetura, integrações e, quando faz sentido, agentes de IA.",
+    "flow": {
+      "eyebrow": "Como um projeto sai do papel",
+      "steps": {
+        "client": { "label": "Cliente & Requisitos", "detail": "Escopo e regras de negócio" },
+        "backend": { "label": "Arquitetura & Backend", "detail": "Next.js, Node.js, NestJS, Python" },
+        "ai": { "label": "IA & Automação", "detail": "LangChain, LangGraph" },
+        "data": { "label": "Dados & Integrações", "detail": "PostgreSQL, MySQL, Oracle" },
+        "cloud": { "label": "Cloud & Entrega", "detail": "AWS, Oracle Cloud" }
+      }
+    }
   },
   "services": {
     "heading": "Proposta de Valor",
     "subtitle": "Unimos engenharia moderna e inteligência artificial aplicada para destravar eficiência real em operações digitais.",
+    "engagement": {
+      "project": "Projeto de escopo fechado",
+      "saas": "Produtos próprios (SaaS)",
+      "consulting": "Consultoria por hora"
+    },
     "items": {
       "engineering": {
         "title": "Engenharia de Software",
-        "description": "Arquitetura Cloud, Next.js e NestJS para produtos escaláveis e confiáveis."
+        "description": "Arquitetura Cloud, Next.js e NestJS para produtos escaláveis e confiáveis.",
+        "audience": "Para empresas que precisam construir um sistema do zero ou modernizar um legado."
       },
       "ai": {
         "title": "Integração de IA",
-        "description": "Agentes autônomos, LLMs e visão computacional conectados ao seu fluxo de negócio."
+        "description": "Agentes autônomos, LLMs e visão computacional conectados ao seu fluxo de negócio.",
+        "audience": "Para empresas que já têm operação rodando e querem automatizar atendimento e processos com IA."
       },
       "automation": {
         "title": "Automação de Processos",
-        "description": "Redução de custos operacionais com workflows inteligentes e orientados por dados."
+        "description": "Redução de custos operacionais com workflows inteligentes e orientados por dados.",
+        "audience": "Para operações com tarefas manuais repetitivas."
       }
     }
   },
@@ -34,6 +67,7 @@
       "live": "Live",
       "omnichannel": "Omnichannel Ativo"
     },
+    "ownershipLabel": "Produto próprio da Interasis AI",
     "actions": {
       "visitSite": "Conhecer Plataforma",
       "testAssistant": "Testar Assistente ao Vivo",
@@ -42,12 +76,11 @@
     "projects": {
       "simplificandoai": {
         "title": "SimplificandoAI",
-        "category": "SaaS • Marketing com IA & Eventos",
-        "description": "Plataforma completa de automação de marketing e vendas de ingressos com IA. Gera artes e legendas sensoriais com Vision AI, agenda posts no Instagram e gerencia bilheteria com split financeiro automático.",
+        "category": "SaaS • Marketing com IA",
+        "description": "Plataforma de automação de marketing com IA. Gera artes e legendas sensoriais com Vision AI e agenda posts no Instagram automaticamente.",
         "highlights": [
           "Vision AI para análise de imagem e criação de legendas de alta conversão",
-          "Agendamento automatizado no Instagram e gestão de cronograma",
-          "Bilheteria digital com split de pagamentos automático"
+          "Agendamento automatizado no Instagram e gestão de cronograma"
         ],
         "tags": ["Next.js", "Vision AI", "Meta API", "TailwindCSS", "Node.js"]
       },

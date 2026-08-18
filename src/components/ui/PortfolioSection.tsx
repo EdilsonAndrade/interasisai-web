@@ -14,7 +14,6 @@ export default async function PortfolioSection() {
       highlights: [
         t("portfolio.projects.simplificandoai.highlights.0"),
         t("portfolio.projects.simplificandoai.highlights.1"),
-        t("portfolio.projects.simplificandoai.highlights.2"),
       ],
       tags: ["Next.js", "Vision AI", "Meta API", "TailwindCSS", "Node.js"],
       status: t("portfolio.status.live"),
@@ -23,6 +22,7 @@ export default async function PortfolioSection() {
       actionHref: "https://simplificandoai.com.br",
       isInteractiveChat: false,
       featuresLabel: t("portfolio.actions.featuresLabel"),
+      ownershipLabel: t("portfolio.ownershipLabel"),
     },
     {
       title: t("portfolio.projects.chatAssistant.title"),
@@ -40,6 +40,7 @@ export default async function PortfolioSection() {
       actionText: t("portfolio.actions.testAssistant"),
       isInteractiveChat: true,
       featuresLabel: t("portfolio.actions.featuresLabel"),
+      ownershipLabel: t("portfolio.ownershipLabel"),
     },
   ];
 

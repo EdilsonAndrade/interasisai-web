@@ -3,6 +3,12 @@ import BrandLogo from "@/components/ui/BrandLogo";
 
 import { footerInstitutionalLinks, footerSocialLinks } from "./navigation.config";
 
+const CONTACT_EMAIL = "contato@interasisai.com.br";
+const CONTACT_PHONE = "+55 (11) 97745-6057";
+const LEGAL_NAME = "Edilson Augusto de Andrade Desenvolvimento de Software LTDA";
+const CNPJ = "62.168.089/0001-57";
+const LEGAL_LOCATION = "Piracicaba, SP";
+
 export default function Footer() {
   return (
     <footer className="bg-brand-secondary text-text-inverse" id="contato">
@@ -30,8 +36,16 @@ export default function Footer() {
 
         <section>
           <h3 className="text-sm font-semibold uppercase tracking-[0.12em] text-text-inverse/70">Contato</h3>
-          <p className="mt-4 text-sm text-text-inverse/85">interasisai@gmail.com</p>
-          <p className="mt-1 text-sm text-text-inverse/85">+55 (11) 97745-6057</p>
+          <p className="mt-4 text-sm text-text-inverse/85">
+            <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-brand-primary-soft">
+              {CONTACT_EMAIL}
+            </a>
+          </p>
+          <p className="mt-1 text-sm text-text-inverse/85">
+            <a href={`tel:${CONTACT_PHONE.replace(/\s|\(|\)/g, "")}`} className="transition hover:text-brand-primary-soft">
+              {CONTACT_PHONE}
+            </a>
+          </p>
           <ul className="mt-5 flex gap-4" aria-label="Redes sociais">
             {footerSocialLinks.filter((item) => item.isVisible).map((item) => (
               <li key={item.label}>
@@ -45,8 +59,11 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-white/15">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5 text-xs text-text-inverse/70 sm:px-8 lg:px-12">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-6 py-5 text-xs text-text-inverse/70 sm:px-8 lg:px-12">
           <p>© {new Date().getFullYear()} Interasis AI. Todos os direitos reservados.</p>
+          <p className="text-text-inverse/55">
+            {LEGAL_NAME} · CNPJ {CNPJ} · {LEGAL_LOCATION}
+          </p>
         </div>
       </div>
     </footer>

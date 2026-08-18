@@ -1,7 +1,3 @@
-"use client";
-
-import { useState, type CSSProperties } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -14,87 +10,59 @@ export interface BrandLogoProps {
   href?: string;
 }
 
-const LOGO_SRC = "/images/interasis_ai_logo.png";
-const LOGO_NATIVE_WIDTH = 1536;
-const LOGO_NATIVE_HEIGHT = 1024;
-const LOGO_ASPECT = LOGO_NATIVE_WIDTH / LOGO_NATIVE_HEIGHT;
-
-const VARIANT_HEIGHT_PX: Record<BrandLogoVariant, number> = {
-  header: 56,
-  footer: 64,
-};
-
-const FALLBACK_TEXT = "Interasis AI";
 const LINK_ARIA_LABEL = "Interasis AI - Página inicial";
 
-function getDisplayDimensions(variant: BrandLogoVariant) {
-  const height = VARIANT_HEIGHT_PX[variant];
-  const width = Math.round(height * LOGO_ASPECT);
-  return { width, height };
-}
+const VARIANT_STYLES: Record<BrandLogoVariant, { mark: string; wordmark: string }> = {
+  header: {
+    mark: "h-8 w-8 text-main",
+    wordmark: "text-xl text-main",
+  },
+  footer: {
+    mark: "h-10 w-10 text-text-inverse",
+    wordmark: "text-2xl text-text-inverse",
+  },
+};
 
-function FallbackText({ variant }: { variant: BrandLogoVariant }) {
-  const baseClass =
-    variant === "header"
-      ? "text-lg font-extrabold tracking-tight text-main"
-      : "text-xl font-bold text-text-inverse";
-  return <span className={baseClass}>{FALLBACK_TEXT}</span>;
+function LogoMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" fill="none" aria-hidden="true" className={className}>
+      <path
+        d="M9.5 22.5 14 10M18 10l4.5 12.5M10 24h12"
+        stroke="currentColor"
+        strokeOpacity="0.35"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+      <circle cx="7" cy="24" r="3" className="fill-brand-primary" />
+      <circle cx="16" cy="8" r="3" fill="currentColor" />
+      <circle cx="25" cy="24" r="3" className="fill-brand-primary" />
+    </svg>
+  );
 }
 
 export default function BrandLogo({ variant, className, href }: BrandLogoProps) {
-  const [errored, setErrored] = useState(false);
-  const { width, height } = getDisplayDimensions(variant);
+  const styles = VARIANT_STYLES[variant];
 
-  const insideLink = Boolean(href);
-  const altText = insideLink ? "" : FALLBACK_TEXT;
-
-  const imageClassName = twMerge(
-    clsx(
-      "h-auto w-auto select-none",
-      variant === "header" ? "max-h-14" : "max-h-16",
-      className,
-    ),
-  );
-
-  const imageStyle: CSSProperties = { height: `${height}px`, width: "auto" };
-
-  const content = errored ? (
-    <FallbackText variant={variant} />
-  ) : (
-    <Image
-      src={LOGO_SRC}
-      alt={altText}
-      width={width}
-      height={height}
-      priority={variant === "header"}
-      className={imageClassName}
-      style={imageStyle}
-      data-testid="brand-logo-image"
+  const content = (
+    <span
+      data-testid="brand-logo"
       data-variant={variant}
-      onError={() => setErrored(true)}
-    />
+      className={twMerge(clsx("inline-flex items-center gap-2.5", className))}
+    >
+      <LogoMark className={styles.mark} />
+      <span
+        data-testid="brand-logo-text"
+        className={clsx("font-space-grotesk font-extrabold tracking-tight", styles.wordmark)}
+      >
+        Interasis<span className="text-brand-primary"> AI</span>
+      </span>
+    </span>
   );
 
-  if (insideLink && !errored) {
+  if (href) {
     return (
-      <Link
-        href={href ?? "/"}
-        aria-label={LINK_ARIA_LABEL}
-        className="inline-flex items-center"
-      >
+      <Link href={href} aria-label={LINK_ARIA_LABEL} className="inline-flex items-center">
         {content}
-      </Link>
-    );
-  }
-
-  if (insideLink && errored) {
-    return (
-      <Link
-        href={href ?? "/"}
-        aria-label={LINK_ARIA_LABEL}
-        className="inline-flex items-center"
-      >
-        <FallbackText variant={variant} />
       </Link>
     );
   }

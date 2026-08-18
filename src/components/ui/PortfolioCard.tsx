@@ -17,6 +17,7 @@ export type PortfolioCardProps = {
   actionHref?: string;
   isInteractiveChat?: boolean;
   featuresLabel?: string;
+  ownershipLabel?: string;
   extraBadge?: ReactNode;
 };
 
@@ -32,6 +33,7 @@ export default function PortfolioCard({
   actionHref,
   isInteractiveChat,
   featuresLabel = "Diferenciais & Recursos",
+  ownershipLabel,
 }: PortfolioCardProps) {
   return (
     <article
@@ -45,12 +47,22 @@ export default function PortfolioCard({
             <Icon aria-hidden="true" className="h-6 w-6" />
           </div>
 
-          <div className="inline-flex items-center gap-1.5 rounded-pill border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
-            </span>
-            <span>{status}</span>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {ownershipLabel && (
+              <span
+                data-testid="portfolio-ownership-badge"
+                className="inline-flex items-center rounded-pill border border-brand-primary/30 bg-brand-primary/10 px-3 py-1 text-xs font-semibold text-brand-primary"
+              >
+                {ownershipLabel}
+              </span>
+            )}
+            <div className="inline-flex items-center gap-1.5 rounded-pill border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+              </span>
+              <span>{status}</span>
+            </div>
           </div>
         </div>
 
@@ -59,7 +71,7 @@ export default function PortfolioCard({
           <span className="text-xs font-semibold uppercase tracking-wider text-brand-primary">
             {category}
           </span>
-          <h3 className="mt-1 text-2xl font-bold text-text-strong group-hover:text-brand-primary-soft transition-colors">
+          <h3 className="mt-1 text-2xl font-bold text-text-strong group-hover:text-brand-primary transition-colors">
             {title}
           </h3>
           <p className="mt-3 text-sm leading-relaxed text-text-body sm:text-base">

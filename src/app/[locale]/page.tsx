@@ -38,12 +38,13 @@ export async function generateMetadata(): Promise<Metadata> {
 type Feature = {
   title: string;
   description: string;
+  audience: string;
   Icon: LucideIcon;
 };
 
 type FeatureCardProps = Feature;
 
-function FeatureCard({ title, description, Icon }: FeatureCardProps) {
+function FeatureCard({ title, description, audience, Icon }: FeatureCardProps) {
   return (
     <article
       data-testid="feature-card"
@@ -54,6 +55,7 @@ function FeatureCard({ title, description, Icon }: FeatureCardProps) {
       </div>
       <h3 className="text-xl font-bold text-text-strong">{title}</h3>
       <p className="mt-3 text-text-body">{description}</p>
+      <p className="mt-3 border-t border-border-subtle/50 pt-3 text-sm text-text-body/70">{audience}</p>
     </article>
   );
 }
@@ -66,16 +68,19 @@ export default async function Home() {
     {
       title: t("services.items.engineering.title"),
       description: t("services.items.engineering.description"),
+      audience: t("services.items.engineering.audience"),
       Icon: Code,
     },
     {
       title: t("services.items.ai.title"),
       description: t("services.items.ai.description"),
+      audience: t("services.items.ai.audience"),
       Icon: Brain,
     },
     {
       title: t("services.items.automation.title"),
       description: t("services.items.automation.description"),
+      audience: t("services.items.automation.audience"),
       Icon: Cog,
     },
   ];
@@ -97,9 +102,10 @@ export default async function Home() {
              
 
               <h1 className="max-w-4xl font-space-grotesk text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
-                <span className="text-brand-primary">{t("hero.heading1")}</span> {t("hero.heading2")}
+                <span className="text-brand-primary">{t("hero.heading1")}</span>{" "}
+                <span className="text-text-inverse">{t("hero.heading2")}</span>
               </h1>
-              <p className="max-w-3xl text-lg text-text-body">
+              <p className="max-w-3xl text-lg text-text-inverse/80">
                 {t("hero.subtitle")}
               </p>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -132,6 +138,20 @@ export default async function Home() {
             <p className="mt-3 max-w-3xl text-text-body">
               {t("services.subtitle")}
             </p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {[
+                t("services.engagement.project"),
+                t("services.engagement.saas"),
+                t("services.engagement.consulting"),
+              ].map((label) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center rounded-pill border border-border-subtle/70 bg-surface-base/60 px-3.5 py-1.5 text-xs font-semibold text-text-strong"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
             <div data-testid="services-grid" className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">
               {features.map((feature) => (
                 <FeatureCard key={feature.title} {...feature} />

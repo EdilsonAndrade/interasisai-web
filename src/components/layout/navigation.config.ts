@@ -28,7 +28,7 @@ export const footerInstitutionalLinks: NavigationItem[] = [
 export const footerSocialLinks: SocialNavigationItem[] = [
   {
     label: "LinkedIn",
-    href: "https://www.linkedin.com/company/115859702/admin/dashboard/",
+    href: "https://www.linkedin.com/company/interasis-ai",
     isVisible: true,
   },
   { label: "Instagram", href: "https://www.instagram.com", isVisible: false },

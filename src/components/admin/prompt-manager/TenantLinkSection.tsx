@@ -18,6 +18,8 @@ interface TenantLinkSectionProps {
   error: string | null;
   submitting: boolean;
   fetchingDetail: boolean;
+  detailError: string | null;
+  tenantNotFound: boolean;
   tenantDetail: TenantPromptDetail | null;
   onLink: (input: TenantLinkInput) => Promise<boolean>;
   onFetchDetail: (tenantId: string) => Promise<void>;
@@ -30,6 +32,8 @@ export function TenantLinkSection({
   error,
   submitting,
   fetchingDetail,
+  detailError,
+  tenantNotFound,
   tenantDetail,
   onLink,
   onFetchDetail,
@@ -81,9 +85,7 @@ export function TenantLinkSection({
       input.custom_content_override = data.custom_content_override.trim();
     }
     const ok = await onLink(input);
-    if (ok) {
-      reset({ tenant_id: "", prompt_id: "", custom_content_override: "" });
-    } else {
+    if (!ok) {
       // Keep tenant_id and prompt_id on error
       reset(
         (prev) => ({
@@ -94,7 +96,11 @@ export function TenantLinkSection({
         }),
         { keepDefaultValues: false },
       );
+      return;
     }
+    // On success, onLink already refreshed tenantDetail — the effect above
+    // re-populates the form from it, so the "Vínculo Atual" card reflects
+    // the change immediately without needing another search or page refresh.
   };
 
   if (loading) {
@@ -163,6 +169,27 @@ export function TenantLinkSection({
             </p>
           )}
         </div>
+
+        {/* Tenant sem vínculo ainda — estado esperado, não bloqueia o formulário */}
+        {tenantNotFound && !tenantDetail && (
+          <div className="rounded-card border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+            Nenhum prompt vinculado a este tenant ainda. Selecione um prompt abaixo para criar o primeiro vínculo.
+          </div>
+        )}
+
+        {/* Falha real ao buscar o vínculo (rede/servidor) — não bloqueia, permite tentar de novo */}
+        {detailError && (
+          <div className="flex items-center justify-between gap-3 rounded-card border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            <span>{detailError}</span>
+            <button
+              type="button"
+              onClick={handleFetchDetail}
+              className="shrink-0 font-semibold underline hover:no-underline"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        )}
 
         {/* Tenant Detail Card (when found) */}
         {tenantDetail && (

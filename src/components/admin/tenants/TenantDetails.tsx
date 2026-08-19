@@ -1,5 +1,6 @@
 import { CalendarDays, Globe2, Pencil, Trash2 } from "lucide-react";
 import type { Tenant } from "@/services";
+import { TenantSnippet } from "./TenantSnippet";
 
 type TenantDetailsProps = {
   tenant: Tenant;
@@ -43,6 +44,7 @@ export function TenantDetails({ tenant, onEdit, onDelete }: TenantDetailsProps) 
         <div><dt className="text-xs font-semibold uppercase text-text-muted">Atualizado em</dt><dd className="mt-1 text-sm text-text-strong">{formatDate(tenant.updated_at)}</dd></div>
         {tenant.deleted_at && <div><dt className="text-xs font-semibold uppercase text-text-muted">Excluído em</dt><dd className="mt-1 text-sm text-text-strong">{formatDate(tenant.deleted_at)}</dd></div>}
       </dl>
+      {active && <TenantSnippet tenant={tenant} />}
     </article>
   );
 }

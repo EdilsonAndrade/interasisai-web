@@ -131,6 +131,8 @@ export function PromptManagerPage() {
             error={tenantLinkHook.error}
             submitting={tenantLinkHook.submitting}
             fetchingDetail={tenantLinkHook.fetchingDetail}
+            detailError={tenantLinkHook.detailError}
+            tenantNotFound={tenantLinkHook.tenantNotFound}
             tenantDetail={tenantLinkHook.tenantDetail}
             onLink={tenantLinkHook.linkTenant}
             onFetchDetail={tenantLinkHook.fetchDetail}

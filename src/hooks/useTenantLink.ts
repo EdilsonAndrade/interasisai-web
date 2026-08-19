@@ -19,6 +19,8 @@ interface UseTenantLinkReturn {
   submitting: boolean;
   fetchingDetail: boolean;
   error: string | null;
+  detailError: string | null;
+  tenantNotFound: boolean;
   tenantDetail: TenantPromptDetail | null;
   linkTenant: (input: TenantLinkInput) => Promise<boolean>;
   fetchDetail: (tenantId: string) => Promise<void>;
@@ -31,6 +33,8 @@ export function useTenantLink(): UseTenantLinkReturn {
   const [submitting, setSubmitting] = useState(false);
   const [fetchingDetail, setFetchingDetail] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [tenantNotFound, setTenantNotFound] = useState(false);
   const [tenantDetail, setTenantDetail] = useState<TenantPromptDetail | null>(null);
 
   const loadPrompts = useCallback(async () => {
@@ -49,38 +53,68 @@ export function useTenantLink(): UseTenantLinkReturn {
     loadPrompts();
   }, [loadPrompts]);
 
-  const linkTenant = useCallback(async (input: TenantLinkInput): Promise<boolean> => {
-    setSubmitting(true);
-    const result = await linkTenantToPrompt(input);
-    setSubmitting(false);
-
-    if (result.ok) {
-      toast.success("Vínculo criado com sucesso");
-      return true;
-    }
-    toast.error(result.message);
-    return false;
-  }, []);
-
   const fetchDetail = useCallback(async (tenantId: string) => {
     setFetchingDetail(true);
     setTenantDetail(null);
-    setError(null);
+    setDetailError(null);
+    setTenantNotFound(false);
+
     const result = await fetchTenantPromptDetail(tenantId);
     setFetchingDetail(false);
 
     if (result.ok) {
       setTenantDetail(result.data);
-    } else {
-      setError(result.message);
-      toast.error(result.message);
+      return;
     }
+
+    // 404 here means "este tenant ainda não tem prompt vinculado" — um estado
+    // esperado, não um erro que deva impedir o restante do formulário de
+    // funcionar (o usuário pode seguir e criar o primeiro vínculo).
+    if (result.status === 404) {
+      setTenantNotFound(true);
+      return;
+    }
+
+    setDetailError(result.message);
+    toast.error(result.message);
   }, []);
+
+  const linkTenant = useCallback(
+    async (input: TenantLinkInput): Promise<boolean> => {
+      setSubmitting(true);
+      const result = await linkTenantToPrompt(input);
+      setSubmitting(false);
+
+      if (result.ok) {
+        toast.success("Vínculo criado com sucesso");
+        // Atualiza o card "Vínculo Atual" com o resultado recém-criado, sem
+        // exigir que o usuário busque o tenant novamente.
+        await fetchDetail(input.tenant_id);
+        return true;
+      }
+      toast.error(result.message);
+      return false;
+    },
+    [fetchDetail],
+  );
 
   const clearDetail = useCallback(() => {
     setTenantDetail(null);
-    setError(null);
+    setDetailError(null);
+    setTenantNotFound(false);
   }, []);
 
-  return { prompts, loading, submitting, fetchingDetail, error, tenantDetail, linkTenant, fetchDetail, clearDetail };
+  return {
+    prompts,
+    loading,
+    submitting,
+    fetchingDetail,
+    error,
+    detailError,
+    tenantNotFound,
+    tenantDetail,
+    linkTenant,
+    fetchDetail,
+    clearDetail,
+  };
 }

@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# generated widget bundle (produced by `npm run build:widget`)
+/public/widget/
+
 # production
 /build
 /dist

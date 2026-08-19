@@ -16,6 +16,7 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "**/*.min.js",
     "next-env.d.ts",
+    "public/widget/**",
   ]),
 ]);
 

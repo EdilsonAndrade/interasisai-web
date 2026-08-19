@@ -66,9 +66,13 @@ function detectFromGeoIp(request: NextRequest): LocaleCode | null {
 export default function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip API routes, Next.js internals, and static files
+  // Skip API routes, the embeddable widget distribution route, Next.js
+  // internals, and static files — these are not localized pages and must
+  // never be redirected to a locale-prefixed path (breaks the widget
+  // installation snippet, see specs/016-embeddable-chat-widget).
   if (
     pathname.startsWith("/api/") ||
+    pathname.startsWith("/widget/") ||
     pathname.startsWith("/_next/") ||
     pathname.match(/\.\w+$/)
   ) {
@@ -105,5 +109,5 @@ export default function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|api|favicon.ico|images).*)"],
+  matcher: ["/((?!_next|api|widget|favicon.ico|images).*)"],
 };

@@ -98,9 +98,9 @@
         "tags": ["RAG", "LLM Ingestion", "WhatsApp API", "Web Widget", "NestJS"]
       },
       "feijoadaDelivery": {
-        "title": "Feijoada Delivery Platform",
+        "title": "Delivery Platform",
         "category": "Delivery • Food Tech",
-        "description": "Complete ordering system for a delivery service specialized in feijoada (Brazilian bean stew), with real-time order and inventory management via WebSockets. Mobile and web apps designed to simplify the customer journey, from order to delivery.",
+        "description": "Complete ordering system for a delivery service, with real-time order and inventory management via WebSockets. Mobile and web apps designed to simplify the customer journey, from order to delivery.",
         "highlights": [
           "Real-time order and inventory management via WebSockets",
           "Mobile and web apps (React, React Native) with a simplified ordering flow",

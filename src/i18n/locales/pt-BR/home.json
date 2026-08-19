@@ -98,9 +98,9 @@
         "tags": ["RAG", "LLM Ingestion", "WhatsApp API", "Web Widget", "NestJS"]
       },
       "feijoadaDelivery": {
-        "title": "Plataforma de Delivery de Feijoada",
+        "title": "Plataforma de Delivery",
         "category": "Delivery • Food Tech",
-        "description": "Sistema completo de pedidos para um delivery especializado em feijoada, com gestão de pedidos e estoque em tempo real via WebSockets. Apps mobile e web desenhados para simplificar o fluxo do cliente, do pedido à entrega.",
+        "description": "Sistema completo de pedidos para um delivery, com gestão de pedidos e estoque em tempo real via WebSockets. Apps mobile e web desenhados para simplificar o fluxo do cliente, do pedido à entrega.",
         "highlights": [
           "Gestão de pedidos e estoque em tempo real via WebSockets",
           "Apps mobile e web (React, React Native) com fluxo de pedido simplificado",

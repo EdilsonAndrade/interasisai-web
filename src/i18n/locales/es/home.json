@@ -65,7 +65,8 @@
     "subtitle": "Productos y sistemas reales desarrollados por Interasis AI con inteligencia artificial aplicada, alto rendimiento y arquitectura escalable.",
     "status": {
       "live": "Live",
-      "omnichannel": "Omnicanal Activo"
+      "omnichannel": "Omnicanal Activo",
+      "delivered": "Proyecto Entregado"
     },
     "ownershipLabel": "Producto propio de Interasis AI",
     "actions": {
@@ -95,6 +96,50 @@
           "Agendamiento automático sincronizado con Google Calendar"
         ],
         "tags": ["RAG", "LLM Ingestion", "WhatsApp API", "Web Widget", "NestJS"]
+      },
+      "feijoadaDelivery": {
+        "title": "Plataforma de Delivery de Feijoada",
+        "category": "Delivery • Food Tech",
+        "description": "Sistema completo de pedidos para un delivery especializado en feijoada (guiso brasileño de frijoles), con gestión de pedidos e inventario en tiempo real vía WebSockets. Apps móvil y web diseñadas para simplificar el recorrido del cliente, desde el pedido hasta la entrega.",
+        "highlights": [
+          "Gestión de pedidos e inventario en tiempo real vía WebSockets",
+          "Apps móvil y web (React, React Native) con un flujo de pedido simplificado",
+          "Rediseño de interfaz y flujos vía Figma, reduciendo la fricción en el proceso de compra"
+        ],
+        "tags": ["React", "React Native", "Redux", "Node.js", "WebSockets"]
+      },
+      "dataDashboard": {
+        "title": "Motor de Dashboards Orientado por Datos",
+        "category": "Business Intelligence • Datos Corporativos",
+        "description": "Sistema de visualización de datos corporativos que consume información de sistemas externos y renderiza dashboards dinámicamente a partir de una configuración en JSON, con una capa de IA para consolidar automáticamente grandes volúmenes de documentos.",
+        "highlights": [
+          "Motor de dashboards configurable vía schema JSON, consumiendo datos de sistemas externos",
+          "Capa de IA en Python para la consolidación automática de más de 7.000 documentos",
+          "Arquitectura desacoplada (Clean Architecture/SOLID) en Node.js y NestJS"
+        ],
+        "tags": ["Next.js", "GraphQL", "Node.js", "NestJS", "Python", "MongoDB"]
+      },
+      "metalsCatalog": {
+        "title": "Catálogo Inteligente para la Industria Metalúrgica",
+        "category": "Industria Metalúrgica • E-commerce B2B",
+        "description": "Sistema de catálogo de productos autogestionable para una empresa del sector metalúrgico, dando al equipo de ventas acceso a inventario y precios en tiempo real, con infraestructura serverless en AWS para una entrega rápida de contenido multimedia.",
+        "highlights": [
+          "Catálogo de productos autogestionable con inventario y precios en tiempo real",
+          "Panel administrativo personalizado para la gestión de medios y descripciones",
+          "Infraestructura AWS serverless (Lambda + S3 + CloudFront) para alto rendimiento"
+        ],
+        "tags": ["Next.js", "Node.js", "MySQL", "AWS Lambda", "CloudFront"]
+      },
+      "eventsPlatform": {
+        "title": "Plataforma de Gestión de Bodas y Eventos",
+        "category": "Eventos • SaaS",
+        "description": "Módulos de gestión para una plataforma de eventos y bodas orientada al mercado estadounidense, con personalización de tema en tiempo real y sincronización de datos vía GraphQL.",
+        "highlights": [
+          "Selector de tema en tiempo real para personalizar la experiencia del usuario",
+          "Módulos de gestión de invitados, proveedores y cronograma del evento",
+          "Arquitectura GraphQL (Apollo) para sincronización de datos en tiempo real"
+        ],
+        "tags": ["React", "Next.js", "Apollo GraphQL", "Node.js", "Styled-components"]
       }
     }
   }

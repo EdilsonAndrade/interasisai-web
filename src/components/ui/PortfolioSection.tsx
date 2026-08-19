@@ -1,4 +1,4 @@
-import { Bot, Sparkles } from "lucide-react";
+import { BarChart3, Bot, Factory, PartyPopper, Sparkles, Truck } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import PortfolioCard from "@/components/ui/PortfolioCard";
@@ -41,6 +41,66 @@ export default async function PortfolioSection() {
       isInteractiveChat: true,
       featuresLabel: t("portfolio.actions.featuresLabel"),
       ownershipLabel: t("portfolio.ownershipLabel"),
+    },
+    {
+      title: t("portfolio.projects.feijoadaDelivery.title"),
+      category: t("portfolio.projects.feijoadaDelivery.category"),
+      description: t("portfolio.projects.feijoadaDelivery.description"),
+      highlights: [
+        t("portfolio.projects.feijoadaDelivery.highlights.0"),
+        t("portfolio.projects.feijoadaDelivery.highlights.1"),
+        t("portfolio.projects.feijoadaDelivery.highlights.2"),
+      ],
+      tags: ["React", "React Native", "Redux", "Node.js", "WebSockets"],
+      status: t("portfolio.status.delivered"),
+      Icon: Truck,
+      actionText: "",
+      featuresLabel: t("portfolio.actions.featuresLabel"),
+    },
+    {
+      title: t("portfolio.projects.dataDashboard.title"),
+      category: t("portfolio.projects.dataDashboard.category"),
+      description: t("portfolio.projects.dataDashboard.description"),
+      highlights: [
+        t("portfolio.projects.dataDashboard.highlights.0"),
+        t("portfolio.projects.dataDashboard.highlights.1"),
+        t("portfolio.projects.dataDashboard.highlights.2"),
+      ],
+      tags: ["Next.js", "GraphQL", "Node.js", "NestJS", "Python", "MongoDB"],
+      status: t("portfolio.status.delivered"),
+      Icon: BarChart3,
+      actionText: "",
+      featuresLabel: t("portfolio.actions.featuresLabel"),
+    },
+    {
+      title: t("portfolio.projects.metalsCatalog.title"),
+      category: t("portfolio.projects.metalsCatalog.category"),
+      description: t("portfolio.projects.metalsCatalog.description"),
+      highlights: [
+        t("portfolio.projects.metalsCatalog.highlights.0"),
+        t("portfolio.projects.metalsCatalog.highlights.1"),
+        t("portfolio.projects.metalsCatalog.highlights.2"),
+      ],
+      tags: ["Next.js", "Node.js", "MySQL", "AWS Lambda", "CloudFront"],
+      status: t("portfolio.status.delivered"),
+      Icon: Factory,
+      actionText: "",
+      featuresLabel: t("portfolio.actions.featuresLabel"),
+    },
+    {
+      title: t("portfolio.projects.eventsPlatform.title"),
+      category: t("portfolio.projects.eventsPlatform.category"),
+      description: t("portfolio.projects.eventsPlatform.description"),
+      highlights: [
+        t("portfolio.projects.eventsPlatform.highlights.0"),
+        t("portfolio.projects.eventsPlatform.highlights.1"),
+        t("portfolio.projects.eventsPlatform.highlights.2"),
+      ],
+      tags: ["React", "Next.js", "Apollo GraphQL", "Node.js", "Styled-components"],
+      status: t("portfolio.status.delivered"),
+      Icon: PartyPopper,
+      actionText: "",
+      featuresLabel: t("portfolio.actions.featuresLabel"),
     },
   ];
 

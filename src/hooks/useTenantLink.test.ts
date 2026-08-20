@@ -1,10 +1,6 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { toast } from "sonner";
-import {
-  fetchPrompts,
-  fetchTenantPromptDetail,
-  linkTenantToPrompt,
-} from "@/services/promptManager";
+import { fetchTenantPromptDetail, linkTenantToPrompt } from "@/services/promptManager";
 import { useTenantLink } from "./useTenantLink";
 
 jest.mock("sonner", () => ({
@@ -12,12 +8,10 @@ jest.mock("sonner", () => ({
 }));
 
 jest.mock("@/services/promptManager", () => ({
-  fetchPrompts: jest.fn(),
   fetchTenantPromptDetail: jest.fn(),
   linkTenantToPrompt: jest.fn(),
 }));
 
-const fetchPromptsMock = jest.mocked(fetchPrompts);
 const fetchTenantPromptDetailMock = jest.mocked(fetchTenantPromptDetail);
 const linkTenantToPromptMock = jest.mocked(linkTenantToPrompt);
 
@@ -35,7 +29,6 @@ const tenantDetail = {
 describe("useTenantLink", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    fetchPromptsMock.mockResolvedValue({ ok: true, status: 200, data: [] });
   });
 
   it("does not set a blocking error when the tenant has no prompt linked yet (404)", async () => {
@@ -46,7 +39,6 @@ describe("useTenantLink", () => {
       retryable: false,
     });
     const { result } = renderHook(() => useTenantLink());
-    await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
       await result.current.fetchDetail("tenant-sem-vinculo");
@@ -54,8 +46,6 @@ describe("useTenantLink", () => {
 
     expect(result.current.tenantNotFound).toBe(true);
     expect(result.current.detailError).toBeNull();
-    // The blocking "error" (reserved for the prompts list load) must stay untouched.
-    expect(result.current.error).toBeNull();
     expect(result.current.tenantDetail).toBeNull();
   });
 
@@ -67,7 +57,6 @@ describe("useTenantLink", () => {
       retryable: true,
     });
     const { result } = renderHook(() => useTenantLink());
-    await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
       await result.current.fetchDetail("tenant-1");
@@ -75,13 +64,11 @@ describe("useTenantLink", () => {
 
     expect(result.current.tenantNotFound).toBe(false);
     expect(result.current.detailError).toBe("Erro interno do servidor. Tente novamente.");
-    expect(result.current.error).toBeNull();
   });
 
   it("populates tenantDetail when found", async () => {
     fetchTenantPromptDetailMock.mockResolvedValue({ ok: true, status: 200, data: tenantDetail });
     const { result } = renderHook(() => useTenantLink());
-    await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
       await result.current.fetchDetail("tenant-1");
@@ -95,7 +82,6 @@ describe("useTenantLink", () => {
     linkTenantToPromptMock.mockResolvedValue({ ok: true, status: 200, data: null });
     fetchTenantPromptDetailMock.mockResolvedValue({ ok: true, status: 200, data: tenantDetail });
     const { result } = renderHook(() => useTenantLink());
-    await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
       await result.current.linkTenant({ tenant_id: "tenant-1", prompt_id: "prompt-1" });

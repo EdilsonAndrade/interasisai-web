@@ -4,21 +4,14 @@
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import {
-  fetchPrompts,
-  fetchTenantPromptDetail,
-  linkTenantToPrompt,
-} from "@/services/promptManager";
-import type { Prompt, TenantLinkInput, TenantPromptDetail } from "@/services/promptManager.types";
+import { fetchTenantPromptDetail, linkTenantToPrompt } from "@/services/promptManager";
+import type { TenantLinkInput, TenantPromptDetail } from "@/services/promptManager.types";
 
 interface UseTenantLinkReturn {
-  prompts: Prompt[];
-  loading: boolean;
   submitting: boolean;
   fetchingDetail: boolean;
-  error: string | null;
   detailError: string | null;
   tenantNotFound: boolean;
   tenantDetail: TenantPromptDetail | null;
@@ -28,30 +21,11 @@ interface UseTenantLinkReturn {
 }
 
 export function useTenantLink(): UseTenantLinkReturn {
-  const [prompts, setPrompts] = useState<Prompt[]>([]);
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [fetchingDetail, setFetchingDetail] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
   const [tenantNotFound, setTenantNotFound] = useState(false);
   const [tenantDetail, setTenantDetail] = useState<TenantPromptDetail | null>(null);
-
-  const loadPrompts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    const result = await fetchPrompts();
-    if (result.ok) {
-      setPrompts(result.data);
-    } else {
-      setError(result.message);
-    }
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    loadPrompts();
-  }, [loadPrompts]);
 
   const fetchDetail = useCallback(async (tenantId: string) => {
     setFetchingDetail(true);
@@ -105,11 +79,8 @@ export function useTenantLink(): UseTenantLinkReturn {
   }, []);
 
   return {
-    prompts,
-    loading,
     submitting,
     fetchingDetail,
-    error,
     detailError,
     tenantNotFound,
     tenantDetail,

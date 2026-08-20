@@ -1,7 +1,7 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at specs/017-tenant-search-knowledge-base/plan.md
+at specs/018-guardrail-node-targets/plan.md
 ## RULES
 1. Always speak in Portugese in the chat
 2. EVITE ao máximo detalhar muito, SOMENTE quando solicito ou não compreensivo pelo usuário

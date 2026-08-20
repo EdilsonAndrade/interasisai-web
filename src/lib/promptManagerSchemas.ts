@@ -15,6 +15,7 @@ export const promptFormSchema = z.object({
   titulo: z.string().trim().min(1, "Título é obrigatório"),
   conteudo: z.string().trim().min(1, "Conteúdo é obrigatório"),
   is_default: z.boolean(),
+  node_type: z.enum(["operational", "institutional", "chitchat"]),
   guardrail_ids: z.array(z.string()),
 });
 

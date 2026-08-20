@@ -5,12 +5,18 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, Loader2, Search, Shield, Star, X } from "lucide-react";
 import { tenantLinkSchema, type TenantLinkFormData } from "@/lib/promptManagerSchemas";
 import { MarkdownEditorCustom } from "./MarkdownEditorCustom";
-import type { Prompt, TenantLinkInput, TenantPromptDetail } from "@/services/promptManager.types";
+import type { NodeType, Prompt, TenantLinkInput, TenantPromptDetail } from "@/services/promptManager.types";
+
+const NODE_TABS: { id: NodeType; label: string }[] = [
+  { id: "operational", label: "Operacional" },
+  { id: "institutional", label: "Institucional" },
+  { id: "chitchat", label: "Chitchat" },
+];
 
 interface TenantLinkSectionProps {
   prompts: Prompt[];
@@ -21,8 +27,8 @@ interface TenantLinkSectionProps {
   detailError: string | null;
   tenantNotFound: boolean;
   tenantDetail: TenantPromptDetail | null;
-  onLink: (input: TenantLinkInput) => Promise<boolean>;
-  onFetchDetail: (tenantId: string) => Promise<void>;
+  onLink: (input: TenantLinkInput, nodeType: NodeType) => Promise<boolean>;
+  onFetchDetail: (tenantId: string, nodeType: NodeType) => Promise<void>;
   onClearDetail: () => void;
 }
 
@@ -39,6 +45,9 @@ export function TenantLinkSection({
   onFetchDetail,
   onClearDetail,
 }: TenantLinkSectionProps) {
+  const [selectedNode, setSelectedNode] = useState<NodeType>("operational");
+  const nodePrompts = prompts.filter((p) => p.node_type === selectedNode);
+
   const {
     register,
     handleSubmit,
@@ -68,7 +77,18 @@ export function TenantLinkSection({
   const handleFetchDetail = () => {
     const tenantId = getValues("tenant_id").trim();
     if (!tenantId) return;
-    onFetchDetail(tenantId);
+    onFetchDetail(tenantId, selectedNode);
+  };
+
+  const handleSelectNode = (node: NodeType) => {
+    setSelectedNode(node);
+    setValue("prompt_id", "");
+    const tenantId = getValues("tenant_id").trim();
+    // Se já havia um tenant carregado, atualiza o card para o novo nó sem
+    // exigir que o usuário busque novamente.
+    if (tenantId && tenantDetail) {
+      onFetchDetail(tenantId, node);
+    }
   };
 
   const handleClearDetail = () => {
@@ -84,7 +104,7 @@ export function TenantLinkSection({
     if (data.custom_content_override?.trim()) {
       input.custom_content_override = data.custom_content_override.trim();
     }
-    const ok = await onLink(input);
+    const ok = await onLink(input, selectedNode);
     if (!ok) {
       // Keep tenant_id and prompt_id on error
       reset(
@@ -126,6 +146,29 @@ export function TenantLinkSection({
       <p className="text-sm text-text-weak">
         Associe um tenant a um prompt específico, com possibilidade de customização de conteúdo.
       </p>
+
+      {/* Seletor de Nó — cada nó tem vínculo ativo independente por tenant */}
+      <div
+        className="flex gap-0.5 self-start rounded-card border border-border-subtle bg-surface-subtle p-0.5"
+        role="group"
+        aria-label="Nó de destino"
+      >
+        {NODE_TABS.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => handleSelectNode(id)}
+            aria-pressed={selectedNode === id}
+            className={`inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+              selectedNode === id
+                ? "bg-brand-primary text-text-inverse"
+                : "text-text-weak hover:text-text-body"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-5">
         {/* tenant_id + Buscar */}
@@ -212,7 +255,7 @@ export function TenantLinkSection({
                 <span className="text-text-weak">Prompt: </span>
                 <span className="font-semibold text-text-body">
                   {tenantDetail.prompt_titulo}
-                  {tenantDetail.prompt_is_default && (
+                  {tenantDetail.is_default_prompt && (
                     <span className="ml-1.5 inline-flex items-center gap-1 rounded-full bg-brand-primary/20 px-1.5 py-0.5 text-xs font-semibold text-brand-primary">
                       <Star className="h-3 w-3" aria-hidden="true" />
                       Padrão
@@ -270,9 +313,9 @@ export function TenantLinkSection({
           <label htmlFor="prompt-id" className="text-sm font-semibold text-text-strong">
             Prompt
           </label>
-          {prompts.length === 0 ? (
+          {nodePrompts.length === 0 ? (
             <div className="rounded-card border border-border-subtle bg-surface-subtle px-4 py-3 text-sm text-text-weak italic">
-              Nenhum prompt cadastrado. Cadastre prompts primeiro para vinculá-los a tenants.
+              Nenhum prompt cadastrado para este nó. Cadastre um prompt com o nó correspondente primeiro.
             </div>
           ) : (
             <select
@@ -281,7 +324,7 @@ export function TenantLinkSection({
               className="w-full rounded-card border border-border-subtle bg-surface-subtle px-4 py-3 text-text-body outline-none transition-colors focus:border-brand-primary disabled:opacity-60"
             >
               <option value="">Selecione um prompt...</option>
-              {prompts.map((p) => (
+              {nodePrompts.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.titulo}
                   {p.is_default ? " (Padrão)" : ""}
@@ -312,7 +355,7 @@ export function TenantLinkSection({
         <div className="flex justify-end gap-3 border-t border-border-subtle pt-4">
           <button
             type="submit"
-            disabled={submitting || prompts.length === 0}
+            disabled={submitting || nodePrompts.length === 0}
             className="inline-flex min-h-10 items-center gap-2 rounded-card bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition-transform hover:scale-[1.02] disabled:opacity-50"
           >
             {submitting ? (

@@ -3,12 +3,12 @@ import { TenantContextCard } from "./TenantContextCard";
 
 const baseDetail = {
   tenant_id: "tenant-1",
+  node_type: "operational" as const,
   prompt_id: "prompt-1",
   is_active: true,
   custom_content_override: null,
   prompt_titulo: "Atendimento Barbearia",
-  prompt_conteudo_base: "conteúdo",
-  prompt_is_default: false,
+  prompt_conteudo: "conteúdo",
   is_default_prompt: false,
   guardrails_associados: [
     { id: "g1", titulo: "Confirmação de agenda", conteudo: "...", is_global: false },
@@ -45,23 +45,7 @@ describe("TenantContextCard", () => {
   it("shows the default-prompt badge when is_default_prompt is true", () => {
     render(
       <TenantContextCard
-        detail={{ ...baseDetail, is_default_prompt: true, prompt_is_default: true }}
-        loading={false}
-        error={null}
-      />,
-    );
-
-    expect(screen.getByText("Padrão do Sistema")).toBeInTheDocument();
-  });
-
-  it("falls back to prompt_is_default when is_default_prompt is absent", () => {
-    const detailWithoutNewField: Omit<typeof baseDetail, "is_default_prompt"> & {
-      is_default_prompt?: boolean;
-    } = { ...baseDetail, prompt_is_default: true };
-    delete detailWithoutNewField.is_default_prompt;
-    render(
-      <TenantContextCard
-        detail={detailWithoutNewField}
+        detail={{ ...baseDetail, is_default_prompt: true }}
         loading={false}
         error={null}
       />,

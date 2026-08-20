@@ -7,7 +7,7 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { fetchTenantPromptDetail, linkTenantToPrompt } from "@/services/promptManager";
-import type { TenantLinkInput, TenantPromptDetail } from "@/services/promptManager.types";
+import type { NodeType, TenantLinkInput, TenantPromptDetail } from "@/services/promptManager.types";
 
 interface UseTenantLinkReturn {
   submitting: boolean;
@@ -15,8 +15,8 @@ interface UseTenantLinkReturn {
   detailError: string | null;
   tenantNotFound: boolean;
   tenantDetail: TenantPromptDetail | null;
-  linkTenant: (input: TenantLinkInput) => Promise<boolean>;
-  fetchDetail: (tenantId: string) => Promise<void>;
+  linkTenant: (input: TenantLinkInput, nodeType: NodeType) => Promise<boolean>;
+  fetchDetail: (tenantId: string, nodeType: NodeType) => Promise<void>;
   clearDetail: () => void;
 }
 
@@ -27,13 +27,13 @@ export function useTenantLink(): UseTenantLinkReturn {
   const [tenantNotFound, setTenantNotFound] = useState(false);
   const [tenantDetail, setTenantDetail] = useState<TenantPromptDetail | null>(null);
 
-  const fetchDetail = useCallback(async (tenantId: string) => {
+  const fetchDetail = useCallback(async (tenantId: string, nodeType: NodeType) => {
     setFetchingDetail(true);
     setTenantDetail(null);
     setDetailError(null);
     setTenantNotFound(false);
 
-    const result = await fetchTenantPromptDetail(tenantId);
+    const result = await fetchTenantPromptDetail(tenantId, nodeType);
     setFetchingDetail(false);
 
     if (result.ok) {
@@ -54,7 +54,7 @@ export function useTenantLink(): UseTenantLinkReturn {
   }, []);
 
   const linkTenant = useCallback(
-    async (input: TenantLinkInput): Promise<boolean> => {
+    async (input: TenantLinkInput, nodeType: NodeType): Promise<boolean> => {
       setSubmitting(true);
       const result = await linkTenantToPrompt(input);
       setSubmitting(false);
@@ -63,7 +63,7 @@ export function useTenantLink(): UseTenantLinkReturn {
         toast.success("Vínculo criado com sucesso");
         // Atualiza o card "Vínculo Atual" com o resultado recém-criado, sem
         // exigir que o usuário busque o tenant novamente.
-        await fetchDetail(input.tenant_id);
+        await fetchDetail(input.tenant_id, nodeType);
         return true;
       }
       toast.error(result.message);

@@ -11,12 +11,12 @@ const fetchTenantPromptDetailMock = jest.mocked(fetchTenantPromptDetail);
 
 const detail = {
   tenant_id: "tenant-1",
+  node_type: "operational" as const,
   prompt_id: "prompt-1",
   is_active: true,
   custom_content_override: null,
   prompt_titulo: "Prompt Padrão",
-  prompt_conteudo_base: "conteúdo",
-  prompt_is_default: true,
+  prompt_conteudo: "conteúdo",
   is_default_prompt: true,
   guardrails_associados: [],
 };

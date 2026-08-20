@@ -2,11 +2,15 @@
 // Prompt Manager API — TypeScript types
 // Contract: /prompt-manager/* endpoints
 // Source: specs/015-admin-prompt-guardrails/data-model.md
+// Node targeting (EDI-42): specs/018-guardrail-node-targets — node_type mirrors
+// the backend's app/schemas/prompt_manager.py::NodeType (agendamento-ia repo).
 // ============================================================================
 
 // ---------------------------------------------------------------------------
 // Entities
 // ---------------------------------------------------------------------------
+
+export type NodeType = "operational" | "institutional" | "chitchat";
 
 export interface Guardrail {
   id: string;
@@ -20,6 +24,7 @@ export interface Prompt {
   titulo: string;
   conteudo: string;
   is_default: boolean;
+  node_type: NodeType;
   guardrail_ids: string[];
   guardrails?: Guardrail[];
   guardrails_associados?: Guardrail[];
@@ -41,6 +46,7 @@ export interface PromptCreateInput {
   titulo: string;
   conteudo: string;
   is_default: boolean;
+  node_type: NodeType;
   guardrail_ids: string[];
 }
 
@@ -58,16 +64,13 @@ export interface TenantLinkInput {
 
 export interface TenantPromptDetail {
   tenant_id: string;
+  node_type: NodeType;
   prompt_id: string;
   is_active: boolean;
   custom_content_override: string | null;
   prompt_titulo: string;
-  prompt_conteudo_base: string;
-  prompt_is_default: boolean;
-  // Contract field from specs/017-tenant-search-knowledge-base/contracts/admin-api-contract.md.
-  // Optional/additive: read defensively alongside `prompt_is_default` (see useTenantContext)
-  // since the two names may not both be sent by every backend revision.
-  is_default_prompt?: boolean;
+  prompt_conteudo: string;
+  is_default_prompt: boolean;
   guardrails_associados: Guardrail[];
 }
 

@@ -38,12 +38,12 @@ const tenantTwo = { ...tenantOne, id: "2", name: "Tenant Dois" };
 
 const detailFor = (tenantId: string) => ({
   tenant_id: tenantId,
+  node_type: "operational" as const,
   prompt_id: "prompt-1",
   is_active: true,
   custom_content_override: null,
   prompt_titulo: `Prompt de ${tenantId}`,
-  prompt_conteudo_base: "conteúdo",
-  prompt_is_default: false,
+  prompt_conteudo: "conteúdo",
   is_default_prompt: false,
   guardrails_associados: [],
 });

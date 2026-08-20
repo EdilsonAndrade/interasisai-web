@@ -8,6 +8,7 @@ import type {
   Guardrail,
   GuardrailCreateInput,
   GuardrailUpdateInput,
+  NodeType,
   Prompt,
   PromptCreateInput,
   PromptUpdateInput,
@@ -297,10 +298,12 @@ export function deletePrompt(id: string, signal?: AbortSignal): Promise<DeleteRe
 
 export function fetchTenantPromptDetail(
   tenantId: string,
+  nodeType?: NodeType,
   signal?: AbortSignal,
 ): Promise<TenantPromptDetailResult> {
+  const query = nodeType ? `?node_type=${encodeURIComponent(nodeType)}` : "";
   return requestPromptManager<TenantPromptDetail>(
-    `/api/v1/prompt-manager/tenant/${encodeURIComponent(tenantId)}`,
+    `/api/v1/prompt-manager/tenant/${encodeURIComponent(tenantId)}${query}`,
     { signal },
     false,
   );

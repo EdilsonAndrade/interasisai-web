@@ -9,6 +9,13 @@ import { useState } from "react";
 import type { Guardrail, Prompt } from "@/services/promptManager.types";
 import { AdminDialog } from "@/components/admin/AdminDialog";
 import type { ConfirmDeleteTarget } from "./types";
+import type { NodeType } from "@/services/promptManager.types";
+
+const NODE_LABELS: Record<NodeType, string> = {
+  operational: "Operacional",
+  institutional: "Institucional",
+  chitchat: "Chitchat",
+};
 
 interface PromptListProps {
   prompts: Prompt[];
@@ -115,6 +122,9 @@ export function PromptList({
                 <h3 className="truncate text-sm font-semibold text-text-strong">
                   {p.titulo}
                 </h3>
+                <span className="inline-flex shrink-0 items-center rounded-full bg-surface-subtle px-2 py-0.5 text-xs font-semibold text-text-weak">
+                  {NODE_LABELS[p.node_type]}
+                </span>
                 {p.is_default && (
                   <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-primary/20 px-2 py-0.5 text-xs font-semibold text-brand-primary">
                     <Star className="h-3 w-3" aria-hidden="true" />

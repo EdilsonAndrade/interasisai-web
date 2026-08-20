@@ -29,15 +29,11 @@ export function TenantContextCard({ detail, loading, error }: TenantContextCardP
 
   if (!detail) return null;
 
-  // The contract's `is_default_prompt` and the pre-existing `prompt_is_default`
-  // may not both be sent by every backend revision — read defensively.
-  const isDefault = detail.is_default_prompt ?? detail.prompt_is_default;
-
   return (
     <div className="w-full max-w-2xl space-y-4 rounded-card border border-brand-primary/20 bg-surface-base/60 p-6 backdrop-blur-xl">
       <div className="flex flex-wrap items-center gap-2">
         <h3 className="text-sm font-semibold text-text-strong">{detail.prompt_titulo}</h3>
-        {isDefault && (
+        {detail.is_default_prompt && (
           <span className="inline-flex items-center gap-1 rounded-full bg-brand-primary/20 px-2 py-0.5 text-xs font-semibold text-brand-primary">
             <Sparkles className="h-3 w-3" aria-hidden="true" />
             Padrão do Sistema

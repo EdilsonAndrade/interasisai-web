@@ -17,12 +17,13 @@ const linkTenantToPromptMock = jest.mocked(linkTenantToPrompt);
 
 const tenantDetail = {
   tenant_id: "tenant-1",
+  node_type: "operational" as const,
   prompt_id: "prompt-1",
   is_active: true,
   custom_content_override: null,
   prompt_titulo: "Prompt Padrão",
-  prompt_conteudo_base: "conteúdo",
-  prompt_is_default: true,
+  prompt_conteudo: "conteúdo",
+  is_default_prompt: true,
   guardrails_associados: [],
 };
 
@@ -41,7 +42,7 @@ describe("useTenantLink", () => {
     const { result } = renderHook(() => useTenantLink());
 
     await act(async () => {
-      await result.current.fetchDetail("tenant-sem-vinculo");
+      await result.current.fetchDetail("tenant-sem-vinculo", "operational");
     });
 
     expect(result.current.tenantNotFound).toBe(true);
@@ -59,7 +60,7 @@ describe("useTenantLink", () => {
     const { result } = renderHook(() => useTenantLink());
 
     await act(async () => {
-      await result.current.fetchDetail("tenant-1");
+      await result.current.fetchDetail("tenant-1", "operational");
     });
 
     expect(result.current.tenantNotFound).toBe(false);
@@ -71,11 +72,22 @@ describe("useTenantLink", () => {
     const { result } = renderHook(() => useTenantLink());
 
     await act(async () => {
-      await result.current.fetchDetail("tenant-1");
+      await result.current.fetchDetail("tenant-1", "operational");
     });
 
     expect(result.current.tenantDetail).toEqual(tenantDetail);
     expect(result.current.tenantNotFound).toBe(false);
+  });
+
+  it("requests the detail for the node_type it was asked to fetch", async () => {
+    fetchTenantPromptDetailMock.mockResolvedValue({ ok: true, status: 200, data: tenantDetail });
+    const { result } = renderHook(() => useTenantLink());
+
+    await act(async () => {
+      await result.current.fetchDetail("tenant-1", "chitchat");
+    });
+
+    expect(fetchTenantPromptDetailMock).toHaveBeenCalledWith("tenant-1", "chitchat");
   });
 
   it("refreshes tenantDetail after a successful link, without requiring another manual search", async () => {
@@ -84,10 +96,10 @@ describe("useTenantLink", () => {
     const { result } = renderHook(() => useTenantLink());
 
     await act(async () => {
-      await result.current.linkTenant({ tenant_id: "tenant-1", prompt_id: "prompt-1" });
+      await result.current.linkTenant({ tenant_id: "tenant-1", prompt_id: "prompt-1" }, "operational");
     });
 
-    expect(fetchTenantPromptDetailMock).toHaveBeenCalledWith("tenant-1");
+    expect(fetchTenantPromptDetailMock).toHaveBeenCalledWith("tenant-1", "operational");
     expect(result.current.tenantDetail).toEqual(tenantDetail);
     expect(toast.success).toHaveBeenCalled();
   });

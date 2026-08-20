@@ -11,7 +11,13 @@ import { Loader2 } from "lucide-react";
 import { AdminDialog } from "@/components/admin/AdminDialog";
 import { promptFormSchema, type PromptFormData } from "@/lib/promptManagerSchemas";
 import { MarkdownEditorCustom } from "./MarkdownEditorCustom";
-import type { Guardrail, Prompt } from "@/services/promptManager.types";
+import type { Guardrail, NodeType, Prompt } from "@/services/promptManager.types";
+
+const NODE_OPTIONS: { id: NodeType; label: string }[] = [
+  { id: "operational", label: "Operacional" },
+  { id: "institutional", label: "Institucional" },
+  { id: "chitchat", label: "Chitchat" },
+];
 
 interface PromptFormModalProps {
   open: boolean;
@@ -39,7 +45,13 @@ export function PromptFormModal({
     formState: { errors, isSubmitting },
   } = useForm<PromptFormData>({
     resolver: zodResolver(promptFormSchema),
-    defaultValues: { titulo: "", conteudo: "", is_default: false, guardrail_ids: [] },
+    defaultValues: {
+      titulo: "",
+      conteudo: "",
+      is_default: false,
+      node_type: "operational",
+      guardrail_ids: [],
+    },
   });
 
   const conteudoValue = watch("conteudo");
@@ -57,10 +69,17 @@ export function PromptFormModal({
         titulo: initial.titulo,
         conteudo: initial.conteudo,
         is_default: initial.is_default,
+        node_type: initial.node_type ?? "operational",
         guardrail_ids: selectedGuardrailIds,
       });
     } else if (open && mode === "create") {
-      reset({ titulo: "", conteudo: "", is_default: false, guardrail_ids: [] });
+      reset({
+        titulo: "",
+        conteudo: "",
+        is_default: false,
+        node_type: "operational",
+        guardrail_ids: [],
+      });
     }
   }, [open, mode, initial, reset]);
 
@@ -134,6 +153,29 @@ export function PromptFormModal({
             Padrão <span className="text-text-weak">(prompt padrão do sistema)</span>
           </span>
         </label>
+
+        {/* Nó de Destino */}
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="prompt-node-type" className="text-sm font-semibold text-text-strong">
+            Nó de Destino
+          </label>
+          <select
+            id="prompt-node-type"
+            {...register("node_type")}
+            className="w-full rounded-card border border-border-subtle bg-surface-subtle px-4 py-3 text-text-body outline-none transition-colors focus:border-brand-primary disabled:opacity-60"
+          >
+            {NODE_OPTIONS.map(({ id, label }) => (
+              <option key={id} value={id}>
+                {label}
+              </option>
+            ))}
+          </select>
+          {errors.node_type && (
+            <p role="alert" className="text-xs font-semibold text-red-400">
+              {errors.node_type.message}
+            </p>
+          )}
+        </div>
 
         {/* Guardrails N:N Selector */}
         <fieldset className="flex flex-col gap-2">

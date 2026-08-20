@@ -27,6 +27,11 @@ export const tenantLookupSchema = z.object({
   tenantId: z.string().trim().min(1, "O ID do tenant é obrigatório."),
 });
 
+export const tenantSearchSchema = z.object({
+  term: z.string().trim().min(1, "Informe um termo de busca."),
+});
+
 export type TenantWriteInput = z.infer<typeof tenantWriteSchema>;
 export type TenantCreateInput = z.infer<typeof tenantCreateSchema>;
 export type TenantLookupInput = z.infer<typeof tenantLookupSchema>;
+export type TenantSearchInput = z.infer<typeof tenantSearchSchema>;

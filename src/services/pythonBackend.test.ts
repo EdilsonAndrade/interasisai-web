@@ -8,7 +8,10 @@ import {
   getWhatsAppQrCode,
   initializeChatSession,
   sendChatMessage,
-  ingestKnowledge,
+  searchTenants,
+  getKnowledgeBase,
+  saveKnowledgeBase,
+  deleteKnowledgeBase,
 } from "./pythonBackend";
 
 // ---------------------------------------------------------------------------
@@ -347,117 +350,259 @@ describe("pythonBackend", () => {
   });
 
   // -----------------------------------------------------------------------
-  // ingestKnowledge — Success
+  // searchTenants — GET /tenants?q=&limit=
   // -----------------------------------------------------------------------
 
-  describe("ingestKnowledge", () => {
-    it("sends POST with correct body, headers, and endpoint", async () => {
-      fetchMock.mockResolvedValueOnce(
-        createMockResponse(201, {
-          tenant_id: "admin-tenant",
-          status: "processing",
-          message: "A tarefa de vetorização foi agendada.",
-        }),
-      );
+  describe("searchTenants", () => {
+    const tenant = {
+      id: "1234",
+      name: "Barbearia Central",
+      google_calendar_id: "abc@group.calendar.google.com",
+      allowed_domains: ["barbeariacentral.com.br"],
+      created_at: "2026-01-10T12:00:00Z",
+      updated_at: null,
+      deleted_at: null,
+    };
 
-      const result = await ingestKnowledge(
-        { text_content: "Regras de negócio aqui." },
-        "admin-tenant",
-      );
+    it("sends GET with the term and default limit, returns the tenant list", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, [tenant]));
+
+      const result = await searchTenants("Barbearia");
 
       const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
-
-      expect(url).toBe("http://test-api.example.com/api/v1/ingest/text");
-      expect(options.method).toBe("POST");
-      expect(options.headers).toEqual({
-        "Content-Type": "application/json",
-        "X-Tenant-ID": "admin-tenant",
-      });
-
-      const body = JSON.parse(options.body as string);
-      expect(body).toEqual({ text_content: "Regras de negócio aqui." });
-
-      expect(result).toEqual({
-        ok: true,
-        message: "A tarefa de vetorização foi agendada.",
-        status: 201,
-      });
+      expect(url).toBe(
+        "http://test-api.example.com/api/v1/tenants?q=Barbearia&limit=20",
+      );
+      expect(options.method).toBe("GET");
+      expect(result).toEqual({ ok: true, status: 200, tenants: [tenant] });
     });
 
-    it("uses fallback message when response message is empty", async () => {
-      fetchMock.mockResolvedValueOnce(
-        createMockResponse(201, {
-          tenant_id: "t",
-          status: "processing",
-          message: "",
-        }),
-      );
+    it("treats an empty result list as a valid success", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, []));
 
-      const result = await ingestKnowledge(
-        { text_content: "text" },
-        "t",
-      );
+      const result = await searchTenants("termo-sem-resultado");
 
-      expect(result.ok).toBe(true);
-      expect(result.message).toBe(
-        "Texto enviado para vetorização. O processamento está em andamento em segundo plano.",
-      );
+      expect(result).toEqual({ ok: true, status: 200, tenants: [] });
     });
 
-    // -------------------------------------------------------------------
-    // ingestKnowledge — Errors
-    // -------------------------------------------------------------------
-
-    it("handles HTTP 400 error with detail from body", async () => {
+    it("normalizes a 401 failure", async () => {
       fetchMock.mockResolvedValueOnce(
-        createMockResponse(400, {
-          detail: "text_content não pode estar vazio.",
-        }),
+        createMockResponse(401, { detail: "Token inválido" }),
       );
 
-      const result = await ingestKnowledge(
-        { text_content: "" },
-        "admin-tenant",
-      );
+      const result = await searchTenants("qualquer");
 
       expect(result).toEqual({
         ok: false,
-        status: 400,
-        message: "text_content não pode estar vazio.",
+        status: 401,
+        message: "Token inválido",
+        retryable: false,
+      });
+    });
+
+    it("normalizes a 422 failure (empty q)", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(422, { detail: "q é obrigatório" }),
+      );
+
+      const result = await searchTenants("");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 422,
+        message: "q é obrigatório",
+        retryable: false,
       });
     });
 
     it("handles network failure", async () => {
-      fetchMock.mockRejectedValueOnce(new Error("Network error"));
+      fetchMock.mockRejectedValueOnce(new Error("offline"));
 
-      const result = await ingestKnowledge(
-        { text_content: "text" },
-        "admin-tenant",
-      );
+      const result = await searchTenants("qualquer");
 
       expect(result).toEqual({
         ok: false,
         status: 0,
-        message:
-          "Não foi possível se conectar ao serviço de mensagens.",
+        message: "Não foi possível se conectar ao serviço de mensagens.",
+        retryable: true,
+      });
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // Knowledge base — GET/PUT/DELETE /tenants/{tenant_id}/knowledge-base
+  // -----------------------------------------------------------------------
+
+  describe("getKnowledgeBase", () => {
+    it("returns the current content", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(200, {
+          tenant_id: "1234",
+          content: "Regra: o barbeiro Lucas atende...",
+          updated_at: "2026-08-19T10:00:00Z",
+        }),
+      );
+
+      const result = await getKnowledgeBase("1234");
+
+      const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(
+        "http://test-api.example.com/api/v1/tenants/1234/knowledge-base",
+      );
+      expect(options.method).toBe("GET");
+      expect(result).toEqual({
+        ok: true,
+        status: 200,
+        data: {
+          tenant_id: "1234",
+          content: "Regra: o barbeiro Lucas atende...",
+          updated_at: "2026-08-19T10:00:00Z",
+        },
       });
     });
 
-    it("falls back to generic error when detail is missing", async () => {
+    it("treats content: null as a valid (empty) state", async () => {
       fetchMock.mockResolvedValueOnce(
-        createMockResponse(500, {}),
+        createMockResponse(200, { tenant_id: "1234", content: null, updated_at: null }),
       );
 
-      const result = await ingestKnowledge(
-        { text_content: "text" },
-        "admin-tenant",
+      const result = await getKnowledgeBase("1234");
+
+      expect(result).toEqual({
+        ok: true,
+        status: 200,
+        data: { tenant_id: "1234", content: null, updated_at: null },
+      });
+    });
+
+    it("normalizes a 404 (tenant not found)", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(404, { detail: "not found" }));
+
+      const result = await getKnowledgeBase("missing");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 404,
+        message: "Tenant não encontrado.",
+        retryable: false,
+      });
+    });
+
+    it("encodes the tenant id in the URL", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(200, { tenant_id: "a/b", content: null, updated_at: null }),
       );
 
-      expect(result.ok).toBe(false);
-      expect(result.status).toBe(500);
-      expect(result.message).toBe(
-        "Erro ao enviar texto para vetorização. Tente novamente.",
+      await getKnowledgeBase("a/b");
+
+      const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(
+        "http://test-api.example.com/api/v1/tenants/a%2Fb/knowledge-base",
       );
+    });
+  });
+
+  describe("saveKnowledgeBase", () => {
+    it("sends PUT with the content body and returns the saved document", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(200, {
+          tenant_id: "1234",
+          content: "novo conteúdo",
+          updated_at: "2026-08-19T10:05:00Z",
+        }),
+      );
+
+      const result = await saveKnowledgeBase("1234", "novo conteúdo");
+
+      const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(
+        "http://test-api.example.com/api/v1/tenants/1234/knowledge-base",
+      );
+      expect(options.method).toBe("PUT");
+      expect(options.headers).toEqual({ "Content-Type": "application/json" });
+      expect(JSON.parse(options.body as string)).toEqual({ content: "novo conteúdo" });
+      expect(result.ok).toBe(true);
+    });
+
+    it("normalizes a 422 (empty content) with a field error", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(422, {
+          detail: [{ loc: ["body", "content"], msg: "content não pode estar vazio" }],
+        }),
+      );
+
+      const result = await saveKnowledgeBase("1234", "");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 422,
+        message: "Revise o conteúdo informado.",
+        fieldErrors: { content: "content não pode estar vazio" },
+        retryable: false,
+      });
+    });
+
+    it("normalizes a 404 (tenant not found)", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(404, { detail: "not found" }));
+
+      const result = await saveKnowledgeBase("missing", "texto");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 404,
+        message: "Tenant não encontrado.",
+        retryable: false,
+      });
+    });
+  });
+
+  describe("deleteKnowledgeBase", () => {
+    it("sends DELETE and returns the confirmation message", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(200, {
+          tenant_id: "1234",
+          message: "Base de conhecimento removida com sucesso.",
+        }),
+      );
+
+      const result = await deleteKnowledgeBase("1234");
+
+      const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(
+        "http://test-api.example.com/api/v1/tenants/1234/knowledge-base",
+      );
+      expect(options.method).toBe("DELETE");
+      expect(result).toEqual({
+        ok: true,
+        status: 200,
+        message: "Base de conhecimento removida com sucesso.",
+      });
+    });
+
+    it("normalizes a 404 (tenant not found, or nothing to delete)", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(404, { detail: "not found" }));
+
+      const result = await deleteKnowledgeBase("1234");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 404,
+        message: "Tenant não encontrado.",
+        retryable: false,
+      });
+    });
+
+    it("handles network failure", async () => {
+      fetchMock.mockRejectedValueOnce(new Error("offline"));
+
+      const result = await deleteKnowledgeBase("1234");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 0,
+        message: "Não foi possível se conectar ao serviço de mensagens.",
+        retryable: true,
+      });
     });
   });
 

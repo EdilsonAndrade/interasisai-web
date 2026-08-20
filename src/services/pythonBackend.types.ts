@@ -1,7 +1,7 @@
 // ============================================================================
 // Python Backend API — TypeScript types (Agendamento IA)
-// Contract: GET /api/v1/chat/init, POST /api/v1/chat and POST /api/v1/ingest/text
-// Source: specs/010-integrate-python-backend/contracts/
+// Contract: GET /api/v1/chat/init, POST /api/v1/chat, tenants and knowledge-base endpoints
+// Source: specs/010-integrate-python-backend/contracts/, specs/017-tenant-search-knowledge-base/contracts/
 // ============================================================================
 
 // ---------------------------------------------------------------------------
@@ -99,50 +99,6 @@ export type PythonChatInitResult =
   | PythonChatInitFailure;
 
 // ---------------------------------------------------------------------------
-// Ingest API — Request
-// ---------------------------------------------------------------------------
-
-export type IngestRequest = {
-  text_content: string;
-};
-
-// ---------------------------------------------------------------------------
-// Ingest API — Success Response (HTTP 201)
-// ---------------------------------------------------------------------------
-
-export type IngestSuccessResponse = {
-  tenant_id: string;
-  status: "processing";
-  message: string;
-};
-
-// ---------------------------------------------------------------------------
-// Ingest API — Error Response
-// ---------------------------------------------------------------------------
-
-export type IngestErrorResponse = {
-  detail: string;
-};
-
-// ---------------------------------------------------------------------------
-// Ingest API — Union result type
-// ---------------------------------------------------------------------------
-
-export type IngestSuccess = {
-  ok: true;
-  message: string;
-  status: number;
-};
-
-export type IngestFailure = {
-  ok: false;
-  status: number;
-  message: string;
-};
-
-export type IngestResult = IngestSuccess | IngestFailure;
-
-// ---------------------------------------------------------------------------
 // WhatsApp instance API
 // ---------------------------------------------------------------------------
 
@@ -213,7 +169,7 @@ export type Tenant = {
   name: string;
   google_calendar_id: string;
   created_at: string;
-  updated_at: string;
+  updated_at: string | null;
   deleted_at: string | null;
   allowed_domains: string[];
 };
@@ -248,3 +204,64 @@ export type TenantOperationResult =
 export type TenantDeleteResult =
   | TenantDeleteSuccess
   | TenantOperationFailure;
+
+// ---------------------------------------------------------------------------
+// Tenant search API — GET /tenants?q=&limit=
+// ---------------------------------------------------------------------------
+
+export type TenantSearchItem = Tenant;
+
+export type TenantSearchSuccess = {
+  ok: true;
+  status: number;
+  tenants: TenantSearchItem[]; // empty array is a valid result, not an error
+};
+
+export type TenantSearchFailure = {
+  ok: false;
+  status: number;
+  message: string;
+  retryable: boolean;
+};
+
+export type TenantSearchResult = TenantSearchSuccess | TenantSearchFailure;
+
+// ---------------------------------------------------------------------------
+// Knowledge base API — GET/PUT/DELETE /tenants/{tenant_id}/knowledge-base
+// ---------------------------------------------------------------------------
+
+export type KnowledgeBase = {
+  tenant_id: string;
+  content: string | null; // null = no knowledge base saved yet (normal state)
+  updated_at: string | null;
+};
+
+export type KnowledgeBaseReadSuccess = {
+  ok: true;
+  status: number;
+  data: KnowledgeBase;
+};
+
+export type KnowledgeBaseWriteSuccess = {
+  ok: true;
+  status: number;
+  data: KnowledgeBase;
+};
+
+export type KnowledgeBaseDeleteSuccess = {
+  ok: true;
+  status: number;
+  message: string;
+};
+
+export type KnowledgeBaseFailure = {
+  ok: false;
+  status: number;
+  message: string;
+  fieldErrors?: { content?: string };
+  retryable: boolean;
+};
+
+export type KnowledgeBaseReadResult = KnowledgeBaseReadSuccess | KnowledgeBaseFailure;
+export type KnowledgeBaseWriteResult = KnowledgeBaseWriteSuccess | KnowledgeBaseFailure;
+export type KnowledgeBaseDeleteResult = KnowledgeBaseDeleteSuccess | KnowledgeBaseFailure;

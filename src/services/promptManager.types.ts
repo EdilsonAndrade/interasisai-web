@@ -64,6 +64,10 @@ export interface TenantPromptDetail {
   prompt_titulo: string;
   prompt_conteudo_base: string;
   prompt_is_default: boolean;
+  // Contract field from specs/017-tenant-search-knowledge-base/contracts/admin-api-contract.md.
+  // Optional/additive: read defensively alongside `prompt_is_default` (see useTenantContext)
+  // since the two names may not both be sent by every backend revision.
+  is_default_prompt?: boolean;
   guardrails_associados: Guardrail[];
 }
 

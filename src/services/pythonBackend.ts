@@ -1,6 +1,6 @@
 // ============================================================================
 // Python Backend HTTP Client — Agendamento IA
-// Wraps fetch for GET /api/v1/chat/init, POST /api/v1/chat and POST /api/v1/ingest/text
+// Wraps fetch for GET /api/v1/chat/init, POST /api/v1/chat, tenants and knowledge-base endpoints
 // ============================================================================
 
 import type {
@@ -12,10 +12,6 @@ import type {
   PythonChatInitSuccessResponse,
   PythonChatInitErrorResponse,
   PythonChatInitResult,
-  IngestRequest,
-  IngestSuccessResponse,
-  IngestErrorResponse,
-  IngestResult,
   CreateWhatsAppInstanceRequest,
   CreateWhatsAppInstanceResponse,
   CreateWhatsAppInstanceResult,
@@ -28,6 +24,13 @@ import type {
   TenantOperationFailure,
   TenantOperationResult,
   TenantWriteInput,
+  TenantSearchItem,
+  TenantSearchResult,
+  KnowledgeBase,
+  KnowledgeBaseReadResult,
+  KnowledgeBaseWriteResult,
+  KnowledgeBaseDeleteResult,
+  KnowledgeBaseFailure,
 } from "./pythonBackend.types";
 
 // ---------------------------------------------------------------------------
@@ -269,77 +272,6 @@ export async function sendChatMessage(
     status: response.status,
     message,
     retryable: isRetryableStatus(response.status),
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Ingest API — POST /api/v1/ingest/text
-// ---------------------------------------------------------------------------
-
-/**
- * Sends business rules / institutional text for vectorization in the RAG knowledge base.
- *
- * @param request - The ingest request containing text_content.
- * @param tenantId - The tenant identifier from the admin form (NOT from env var).
- * @returns {Promise<IngestResult>} Success or failure result.
- */
-export async function ingestKnowledge(
-  request: IngestRequest,
-  tenantId: string,
-): Promise<IngestResult> {
-  const config = getPythonBackendConfig();
-
-  let response: Response;
-  try {
-    response = await fetch(`${config.baseUrl}/api/v1/ingest/text`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Tenant-ID": tenantId,
-      },
-      body: JSON.stringify(request),
-    });
-  } catch {
-    return {
-      ok: false,
-      status: 0,
-      message: NETWORK_ERROR_MSG,
-    };
-  }
-
-  const payload = await parseJsonSafely(response);
-
-  if (response.ok) {
-    const successPayload = payload as IngestSuccessResponse | null;
-
-    console.info("[PythonBackend:ingest]", {
-      tenant_id: successPayload?.tenant_id ?? tenantId,
-      status: successPayload?.status ?? "unknown",
-      endpoint: "/api/v1/ingest/text",
-    });
-
-    return {
-      ok: true,
-      message:
-        successPayload?.message?.trim() ||
-        "Texto enviado para vetorização. O processamento está em andamento em segundo plano.",
-      status: response.status,
-    };
-  }
-
-  const errorPayload = payload as IngestErrorResponse | null;
-
-  console.error("[PythonBackend:ingest:error]", {
-    status: response.status,
-    message: errorPayload?.detail ?? "Erro desconhecido",
-  });
-
-  return {
-    ok: false,
-    status: response.status,
-    message:
-      errorPayload?.detail?.trim() ||
-      "Erro ao enviar texto para vetorização. Tente novamente.",
   };
 }
 
@@ -621,4 +553,183 @@ export async function deleteTenant(
 
   if (response.ok) return { ok: true, status: response.status };
   return tenantFailure(response.status, await parseJsonSafely(response));
+}
+
+// ---------------------------------------------------------------------------
+// Tenant search — GET /tenants?q=&limit=
+// ---------------------------------------------------------------------------
+
+export async function searchTenants(
+  term: string,
+  limit = 20,
+  signal?: AbortSignal,
+): Promise<TenantSearchResult> {
+  const params = new URLSearchParams({ q: term, limit: String(limit) });
+
+  let response: Response;
+  try {
+    response = await fetch(`${getPythonBackendBaseUrl()}/api/v1/tenants?${params.toString()}`, {
+      method: "GET",
+      signal,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      message:
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Solicitação cancelada."
+          : NETWORK_ERROR_MSG,
+      retryable: true,
+    };
+  }
+
+  const payload = await parseJsonSafely(response);
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      message: getOperationErrorMessage(payload),
+      retryable: isRetryableStatus(response.status),
+    };
+  }
+
+  if (!Array.isArray(payload)) {
+    return {
+      ok: false,
+      status: 502,
+      message: "O serviço retornou dados em formato inválido.",
+      retryable: true,
+    };
+  }
+
+  const tenants = (payload as unknown[]).filter(isTenant) as TenantSearchItem[];
+  return { ok: true, status: response.status, tenants };
+}
+
+// ---------------------------------------------------------------------------
+// Knowledge base — GET/PUT/DELETE /tenants/{tenant_id}/knowledge-base
+// ---------------------------------------------------------------------------
+
+function isKnowledgeBase(value: unknown): value is KnowledgeBase {
+  if (!value || typeof value !== "object") return false;
+  const kb = value as Partial<KnowledgeBase>;
+  return (
+    typeof kb.tenant_id === "string" &&
+    (typeof kb.content === "string" || kb.content === null) &&
+    (typeof kb.updated_at === "string" || kb.updated_at === null)
+  );
+}
+
+function getKnowledgeBaseFieldErrors(payload: unknown): { content?: string } | undefined {
+  if (!payload || typeof payload !== "object") return undefined;
+  const detail = (payload as { detail?: unknown }).detail;
+  if (!Array.isArray(detail)) return undefined;
+  for (const issue of detail) {
+    if (!issue || typeof issue !== "object") continue;
+    const { loc, msg } = issue as { loc?: unknown; msg?: unknown };
+    if (Array.isArray(loc) && typeof msg === "string" && loc.at(-1) === "content") {
+      return { content: msg };
+    }
+  }
+  return undefined;
+}
+
+function knowledgeBaseFailure(status: number, payload?: unknown): KnowledgeBaseFailure {
+  if (status === 404) {
+    return { ok: false, status, message: "Tenant não encontrado.", retryable: false };
+  }
+  const fieldErrors = getKnowledgeBaseFieldErrors(payload);
+  return {
+    ok: false,
+    status,
+    message: fieldErrors ? "Revise o conteúdo informado." : getOperationErrorMessage(payload),
+    fieldErrors,
+    retryable: isRetryableStatus(status),
+  };
+}
+
+async function requestKnowledgeBase(
+  tenantId: string,
+  init: RequestInit,
+): Promise<KnowledgeBaseReadResult | KnowledgeBaseWriteResult> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getPythonBackendBaseUrl()}/api/v1/tenants/${encodeURIComponent(tenantId)}/knowledge-base`,
+      init,
+    );
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      message:
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Solicitação cancelada."
+          : NETWORK_ERROR_MSG,
+      retryable: true,
+    };
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) return knowledgeBaseFailure(response.status, payload);
+  if (!isKnowledgeBase(payload)) return knowledgeBaseFailure(502);
+  return { ok: true, status: response.status, data: payload };
+}
+
+export function getKnowledgeBase(
+  tenantId: string,
+  signal?: AbortSignal,
+): Promise<KnowledgeBaseReadResult> {
+  return requestKnowledgeBase(tenantId, { method: "GET", signal });
+}
+
+export function saveKnowledgeBase(
+  tenantId: string,
+  content: string,
+  signal?: AbortSignal,
+): Promise<KnowledgeBaseWriteResult> {
+  return requestKnowledgeBase(tenantId, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+    signal,
+  });
+}
+
+export async function deleteKnowledgeBase(
+  tenantId: string,
+  signal?: AbortSignal,
+): Promise<KnowledgeBaseDeleteResult> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getPythonBackendBaseUrl()}/api/v1/tenants/${encodeURIComponent(tenantId)}/knowledge-base`,
+      { method: "DELETE", signal },
+    );
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      message:
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Solicitação cancelada."
+          : NETWORK_ERROR_MSG,
+      retryable: true,
+    };
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) return knowledgeBaseFailure(response.status, payload);
+
+  const success = payload as { message?: unknown } | null;
+  return {
+    ok: true,
+    status: response.status,
+    message:
+      typeof success?.message === "string" && success.message.trim()
+        ? success.message.trim()
+        : "Base de conhecimento removida com sucesso.",
+  };
 }

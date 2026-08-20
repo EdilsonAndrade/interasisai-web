@@ -126,9 +126,9 @@ export function PromptManagerPage() {
         {/* Tenant Link Tab */}
         <div style={{ display: activeTab === "tenant-link" ? "block" : "none" }}>
           <TenantLinkSection
-            prompts={tenantLinkHook.prompts}
-            loading={tenantLinkHook.loading}
-            error={tenantLinkHook.error}
+            prompts={promptsHook.prompts}
+            loading={promptsHook.state === "loading"}
+            error={promptsHook.error}
             submitting={tenantLinkHook.submitting}
             fetchingDetail={tenantLinkHook.fetchingDetail}
             detailError={tenantLinkHook.detailError}

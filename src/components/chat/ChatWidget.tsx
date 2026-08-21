@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback, type KeyboardEvent, type ChangeEvent } from "react";
+import { useRef, useEffect, useState, useCallback, type KeyboardEvent, type ChangeEvent, isValidElement, Children } from "react";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { MessageCircle, X, Send, Mic, MicOff } from "lucide-react";
 import ReactMarkdown from "react-markdown";
@@ -181,7 +181,16 @@ export default function ChatWidget() {
                     </p>
                   ) : (
                     <div className="max-w-[80%] rounded-card rounded-bl-sm bg-surface-subtle px-4 py-2 text-sm text-text-strong chat-message-content">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      <ReactMarkdown
+                          components={{
+                            li: ({ children, ...props }) => {
+                              const flat = Children.map(children, (child) =>
+                                isValidElement(child) && child.type === "p" ? (child.props as Record<string, unknown>).children : child
+                              ) as React.ReactNode[];
+                              return <li {...props}>{flat}</li>;
+                            },
+                          }}
+                        >{msg.content}</ReactMarkdown>
                     </div>
                   )}
                 </div>

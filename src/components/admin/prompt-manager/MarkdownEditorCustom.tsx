@@ -6,7 +6,7 @@
 "use client";
 
 import { Code, Columns, Eye } from "lucide-react";
-import { useId, useState } from "react";
+import { Children, isValidElement, useId, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeSanitize from "rehype-sanitize";
 import { cn } from "@/lib/cn";
@@ -99,8 +99,18 @@ export function MarkdownEditorCustom({
           >
             {value.trim() ? (
               <div className="prose prose-sm max-w-none prose-headings:text-text-strong prose-p:text-text-body prose-strong:text-text-strong prose-a:text-brand-primary prose-code:rounded prose-code:bg-surface-subtle prose-code:px-1 prose-code:text-sm prose-pre:bg-surface-subtle prose-pre:text-text-body">
-                <ReactMarkdown rehypePlugins={[rehypeSanitize]}>
-                  {value}
+                <ReactMarkdown
+                  rehypePlugins={[rehypeSanitize]}
+                    components={{
+                      li: ({ children, ...props }) => {
+                        const flat = Children.map(children, (child) =>
+                          isValidElement(child) && child.type === "p" ? (child.props as Record<string, unknown>).children : child
+                        ) as React.ReactNode[];
+                        return <li {...props}>{flat}</li>;
+                      },
+                    }}
+                  >
+                    {value}
                 </ReactMarkdown>
               </div>
             ) : (

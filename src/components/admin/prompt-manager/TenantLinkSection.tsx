@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, Loader2, Search, Shield, Star, X } from "lucide-react";
+import { GuardrailScopeBadge } from "@/components/admin/GuardrailScopeBadge";
 import { tenantLinkSchema, type TenantLinkFormData } from "@/lib/promptManagerSchemas";
 import { MarkdownEditorCustom } from "./MarkdownEditorCustom";
 import type { NodeType, Prompt, TenantLinkInput, TenantPromptDetail } from "@/services/promptManager.types";
@@ -295,11 +296,7 @@ export function TenantLinkSection({
                     >
                       <Shield className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
                       <span className="font-medium text-text-body">{g.titulo}</span>
-                      {g.is_global && (
-                        <span className="rounded-full bg-brand-primary/20 px-1.5 py-0.5 text-[10px] font-semibold text-brand-primary">
-                          Global
-                        </span>
-                      )}
+                      <GuardrailScopeBadge isGlobal={g.is_global} />
                     </div>
                   ))}
                 </div>

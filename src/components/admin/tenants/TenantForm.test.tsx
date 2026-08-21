@@ -82,4 +82,25 @@ describe("TenantForm", () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ allowed_domains: ["localhost"] })));
   });
+
+  it("reports dirty state changes via onDirtyChange", () => {
+    const onDirtyChange = jest.fn();
+    render(
+      <TenantForm
+        mode="create"
+        isLoading={false}
+        onCancel={jest.fn()}
+        onSubmit={jest.fn()}
+        onDirtyChange={onDirtyChange}
+      />,
+    );
+
+    expect(onDirtyChange).toHaveBeenLastCalledWith(false);
+
+    fireEvent.change(screen.getByLabelText("Nome do tenant"), {
+      target: { value: "Tenant One" },
+    });
+
+    expect(onDirtyChange).toHaveBeenLastCalledWith(true);
+  });
 });

@@ -4,10 +4,12 @@
 
 "use client";
 
-import { Edit2, FileText, Loader2, Plus, Star, Trash2 } from "lucide-react";
+import { Edit2, FileText, Loader2, Plus, Search, Star } from "lucide-react";
 import { useState } from "react";
 import type { Guardrail, Prompt } from "@/services/promptManager.types";
 import { AdminDialog } from "@/components/admin/AdminDialog";
+import { DeleteAction } from "@/components/admin/DeleteAction";
+import { GuardrailScopeBadge } from "@/components/admin/GuardrailScopeBadge";
 import type { ConfirmDeleteTarget } from "./types";
 import type { NodeType } from "@/services/promptManager.types";
 
@@ -16,6 +18,12 @@ const NODE_LABELS: Record<NodeType, string> = {
   institutional: "Institucional",
   chitchat: "Chitchat",
 };
+
+const COMBINING_DIACRITICS = /[̀-ͯ]/g;
+
+function normalize(value: string): string {
+  return value.normalize("NFD").replace(COMBINING_DIACRITICS, "").toLowerCase();
+}
 
 interface PromptListProps {
   prompts: Prompt[];
@@ -40,7 +48,22 @@ export function PromptList({
 }: PromptListProps) {
   const [deleteTarget, setDeleteTarget] = useState<ConfirmDeleteTarget>(null);
   const [deleting, setDeleting] = useState(false);
+  const [query, setQuery] = useState("");
   const guardrailsById = new Map(availableGuardrails.map((g) => [g.id, g]));
+
+  const normalizedQuery = normalize(query.trim());
+  const filteredPrompts = normalizedQuery
+    ? prompts.filter((p) => normalize(p.titulo).includes(normalizedQuery))
+    : prompts;
+
+  // Prompts sharing both title and node_type are indistinguishable by the node
+  // badge alone — count title+node collisions so those get an extra id-based
+  // tie-breaker in the render below.
+  const titleNodeCounts = new Map<string, number>();
+  for (const p of filteredPrompts) {
+    const key = `${normalize(p.titulo)}|${p.node_type}`;
+    titleNodeCounts.set(key, (titleNodeCounts.get(key) ?? 0) + 1);
+  }
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -91,7 +114,25 @@ export function PromptList({
         </button>
       </div>
 
-      {/* Empty State */}
+      {/* Search */}
+      {prompts.length > 0 && (
+        <div className="relative">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-weak"
+            aria-hidden="true"
+          />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Buscar por título..."
+            aria-label="Buscar prompt por título"
+            className="w-full rounded-card border border-border-subtle bg-surface-subtle py-2 pl-9 pr-4 text-sm text-text-body outline-none transition-colors focus:border-brand-primary"
+          />
+        </div>
+      )}
+
+      {/* Empty State — no prompts at all */}
       {prompts.length === 0 && (
         <div className="rounded-card border border-dashed border-border-subtle px-5 py-12 text-center">
           <FileText className="mx-auto mb-3 h-8 w-8 text-text-weak" aria-hidden="true" />
@@ -102,15 +143,27 @@ export function PromptList({
         </div>
       )}
 
+      {/* Empty State — search yields no matches */}
+      {prompts.length > 0 && filteredPrompts.length === 0 && (
+        <div className="rounded-card border border-dashed border-border-subtle px-5 py-12 text-center">
+          <Search className="mx-auto mb-3 h-8 w-8 text-text-weak" aria-hidden="true" />
+          <p className="text-sm text-text-weak">
+            Nenhum prompt encontrado para &ldquo;{query.trim()}&rdquo;.
+          </p>
+        </div>
+      )}
+
       {/* List */}
       <div className="flex flex-col gap-2">
-        {prompts.map((p) => {
+        {filteredPrompts.map((p) => {
           const resolvedFromIds = (p.guardrail_ids ?? [])
             .map((id) => guardrailsById.get(id))
             .filter((g): g is Guardrail => Boolean(g));
           const displayGuardrails = p.guardrails && p.guardrails.length > 0
             ? p.guardrails
             : resolvedFromIds;
+          const titleNodeKey = `${normalize(p.titulo)}|${p.node_type}`;
+          const needsTieBreaker = (titleNodeCounts.get(titleNodeKey) ?? 0) > 1;
 
           return (
           <div
@@ -125,6 +178,14 @@ export function PromptList({
                 <span className="inline-flex shrink-0 items-center rounded-full bg-surface-subtle px-2 py-0.5 text-xs font-semibold text-text-weak">
                   {NODE_LABELS[p.node_type]}
                 </span>
+                {needsTieBreaker && (
+                  <span
+                    className="inline-flex shrink-0 items-center rounded-full bg-surface-subtle px-2 py-0.5 font-mono text-[10px] text-text-weak"
+                    title="Identificador para diferenciar prompts com título e nó idênticos"
+                  >
+                    #{p.id.slice(-6)}
+                  </span>
+                )}
                 {p.is_default && (
                   <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-brand-primary/20 px-2 py-0.5 text-xs font-semibold text-brand-primary">
                     <Star className="h-3 w-3" aria-hidden="true" />
@@ -144,7 +205,9 @@ export function PromptList({
                       <ShieldChip className="mr-1 h-3 w-3 text-brand-primary" aria-hidden="true" />
                       {g.titulo}
                       {g.is_global && (
-                        <span className="ml-1 text-[10px] text-brand-primary">(G)</span>
+                        <span className="ml-1">
+                          <GuardrailScopeBadge isGlobal={g.is_global} />
+                        </span>
                       )}
                     </span>
                   ))}
@@ -165,14 +228,10 @@ export function PromptList({
               >
                 <Edit2 className="h-4 w-4" aria-hidden="true" />
               </button>
-              <button
-                type="button"
+              <DeleteAction
                 onClick={() => setDeleteTarget({ id: p.id, titulo: p.titulo, type: "prompt" })}
-                aria-label={`Excluir ${p.titulo}`}
-                className="rounded-md p-2 text-text-weak transition-colors hover:bg-red-500/10 hover:text-red-400"
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-              </button>
+                ariaLabel={`Excluir ${p.titulo}`}
+              />
             </div>
           </div>
           );
@@ -183,7 +242,8 @@ export function PromptList({
       <AdminDialog
         open={deleteTarget !== null}
         title="Excluir prompt?"
-        onClose={() => !deleting && setDeleteTarget(null)}
+        onClose={() => setDeleteTarget(null)}
+        closeDisabled={deleting}
       >
         <div className="flex flex-col gap-4">
           <p className="text-sm text-text-body">

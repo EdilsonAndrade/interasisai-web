@@ -13,7 +13,7 @@ type TenantDeleteDialogProps = {
 
 export function TenantDeleteDialog({ open, tenantName, isLoading, onCancel, onConfirm }: TenantDeleteDialogProps) {
   return (
-    <AdminDialog open={open} title="Excluir tenant?" onClose={onCancel}>
+    <AdminDialog open={open} title="Excluir tenant?" onClose={onCancel} closeDisabled={isLoading}>
       <div className="space-y-5">
         <div className="space-y-2">
           <p className="break-words font-semibold text-text-strong">{tenantName}</p>

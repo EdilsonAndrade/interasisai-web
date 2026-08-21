@@ -19,7 +19,7 @@ export function KnowledgeBaseDeleteDialog({
   onConfirm,
 }: KnowledgeBaseDeleteDialogProps) {
   return (
-    <AdminDialog open={open} title="Excluir base de conhecimento?" onClose={onCancel}>
+    <AdminDialog open={open} title="Excluir base de conhecimento?" onClose={onCancel} closeDisabled={isLoading}>
       <div className="space-y-5">
         <div className="space-y-2">
           <p className="break-words font-semibold text-text-strong">Tenant: {tenantId}</p>

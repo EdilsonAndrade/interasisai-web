@@ -4,10 +4,12 @@
 
 "use client";
 
-import { Edit2, Loader2, Plus, Shield, Trash2 } from "lucide-react";
+import { Edit2, Loader2, Plus, Shield } from "lucide-react";
 import { useState } from "react";
 import type { Guardrail } from "@/services/promptManager.types";
 import { AdminDialog } from "@/components/admin/AdminDialog";
+import { DeleteAction } from "@/components/admin/DeleteAction";
+import { GuardrailScopeBadge } from "@/components/admin/GuardrailScopeBadge";
 import type { ConfirmDeleteTarget } from "./types";
 
 interface GuardrailListProps {
@@ -104,15 +106,7 @@ export function GuardrailList({
                 <h3 className="truncate text-sm font-semibold text-text-strong">
                   {g.titulo}
                 </h3>
-                <span
-                  className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                    g.is_global
-                      ? "bg-brand-primary/20 text-brand-primary"
-                      : "bg-surface-subtle text-text-weak"
-                  }`}
-                >
-                  {g.is_global ? "Global" : "Específico"}
-                </span>
+                <GuardrailScopeBadge isGlobal={g.is_global} />
               </div>
               <p className="mt-1 line-clamp-2 text-xs text-text-weak">
                 {g.conteudo.slice(0, 120)}
@@ -129,14 +123,10 @@ export function GuardrailList({
               >
                 <Edit2 className="h-4 w-4" aria-hidden="true" />
               </button>
-              <button
-                type="button"
+              <DeleteAction
                 onClick={() => setDeleteTarget({ id: g.id, titulo: g.titulo, type: "guardrail" })}
-                aria-label={`Excluir ${g.titulo}`}
-                className="rounded-md p-2 text-text-weak transition-colors hover:bg-red-500/10 hover:text-red-400"
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-              </button>
+                ariaLabel={`Excluir ${g.titulo}`}
+              />
             </div>
           </div>
         ))}
@@ -146,7 +136,8 @@ export function GuardrailList({
       <AdminDialog
         open={deleteTarget !== null}
         title="Excluir guardrail?"
-        onClose={() => !deleting && setDeleteTarget(null)}
+        onClose={() => setDeleteTarget(null)}
+        closeDisabled={deleting}
       >
         <div className="flex flex-col gap-4">
           <p className="text-sm text-text-body">

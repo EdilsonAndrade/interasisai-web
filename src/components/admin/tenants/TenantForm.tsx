@@ -18,6 +18,7 @@ type TenantFormProps = {
   fieldErrors?: TenantFieldErrors;
   onCancel: () => void;
   onSubmit: (input: TenantCreateInput) => Promise<boolean>;
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
 export function TenantForm({
@@ -27,6 +28,7 @@ export function TenantForm({
   fieldErrors,
   onCancel,
   onSubmit,
+  onDirtyChange,
 }: TenantFormProps) {
   const {
     register,
@@ -35,7 +37,7 @@ export function TenantForm({
     setError,
     setValue,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<TenantCreateInput>({
     resolver: zodResolver(tenantCreateSchema),
     defaultValues: {
@@ -48,6 +50,10 @@ export function TenantForm({
   const allowedDomains = useWatch({ control, name: "allowed_domains" }) ?? [];
   const [domainInput, setDomainInput] = useState("");
   const [domainError, setDomainError] = useState<string>();
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   useEffect(() => {
     if (fieldErrors?.name) setError("name", { message: fieldErrors.name });

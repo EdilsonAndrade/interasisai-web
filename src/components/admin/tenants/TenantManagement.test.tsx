@@ -44,4 +44,19 @@ describe("TenantManagement", () => {
     expect(screen.getByRole("dialog", { name: "Novo tenant" })).toBeInTheDocument();
     expect(screen.getByLabelText("Nome do tenant")).toBeInTheDocument();
   });
+
+  it("asks for discard confirmation when closing the create form with unsaved changes", () => {
+    render(<TenantManagement />);
+    fireEvent.click(screen.getByRole("button", { name: "Novo tenant" }));
+    fireEvent.change(screen.getByLabelText("Nome do tenant"), {
+      target: { value: "Tenant One" },
+    });
+
+    fireEvent.keyDown(document, { key: "Escape", code: "Escape" });
+
+    expect(screen.getByRole("alertdialog", { name: "Descartar alterações?" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Descartar alterações" }));
+    expect(screen.queryByRole("dialog", { name: "Novo tenant" })).not.toBeInTheDocument();
+  });
 });

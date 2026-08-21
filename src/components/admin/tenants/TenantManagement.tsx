@@ -15,11 +15,13 @@ export function TenantManagement() {
   const management = useTenantManagement();
   const [editor, setEditor] = useState<EditorMode>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [formDirty, setFormDirty] = useState(false);
   const editing = editor === "edit" && management.tenant;
 
   const closeEditor = () => {
     if (management.isLoading) return;
     setEditor(null);
+    setFormDirty(false);
     management.clearFeedback();
   };
 
@@ -29,7 +31,7 @@ export function TenantManagement() {
         <h1 className="text-3xl font-bold text-text-strong">Tenants</h1>
         <button
           type="button"
-          onClick={() => { management.clearFeedback(); setEditor("create"); }}
+          onClick={() => { management.clearFeedback(); setFormDirty(false); setEditor("create"); }}
           className="inline-flex min-h-11 items-center justify-center gap-2 rounded-card bg-brand-primary px-4 py-3 text-sm font-semibold text-text-inverse hover:scale-[1.02]"
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
@@ -53,7 +55,7 @@ export function TenantManagement() {
         {management.tenant && (
           <TenantDetails
             tenant={management.tenant}
-            onEdit={() => { management.clearFeedback(); setEditor("edit"); }}
+            onEdit={() => { management.clearFeedback(); setFormDirty(false); setEditor("edit"); }}
             onDelete={() => { management.clearFeedback(); setConfirmDelete(true); }}
           />
         )}
@@ -72,6 +74,8 @@ export function TenantManagement() {
         open={editor !== null}
         title={editor === "edit" ? "Editar tenant" : "Novo tenant"}
         onClose={closeEditor}
+        hasUnsavedChanges={formDirty}
+        closeDisabled={management.isLoading}
       >
         <TenantForm
           key={editor ?? "closed"}
@@ -85,6 +89,7 @@ export function TenantManagement() {
           isLoading={management.operation === "create" || management.operation === "update"}
           fieldErrors={management.fieldErrors}
           onCancel={closeEditor}
+          onDirtyChange={setFormDirty}
           onSubmit={async (input) => {
             const success = editor === "edit"
               ? await management.update(input)

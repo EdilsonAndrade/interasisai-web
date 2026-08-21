@@ -35,7 +35,7 @@ export function GuardrailFormModal({
     watch,
     reset,
     setError,
-    formState: { errors, isSubmitting },
+    formState: { errors, isDirty, isSubmitting },
   } = useForm<GuardrailFormData>({
     resolver: zodResolver(guardrailFormSchema),
     defaultValues: { titulo: "", conteudo: "", is_global: false },
@@ -70,6 +70,8 @@ export function GuardrailFormModal({
       open={open}
       title={title}
       onClose={onClose}
+      hasUnsavedChanges={isDirty}
+      closeDisabled={isSubmitting}
       className="md:w-[60vw] md:max-w-[60vw]"
     >
       <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-5">

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { Loader2, Trash2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useKnowledgeBase } from "@/hooks/useKnowledgeBase";
 import { KnowledgeBaseDeleteDialog } from "@/components/admin/KnowledgeBaseDeleteDialog";
+import { DeleteAction } from "@/components/admin/DeleteAction";
 
 const MAX_LENGTH = 100_000;
 
@@ -125,15 +126,9 @@ export function KnowledgeBaseEditor({ tenantId }: KnowledgeBaseEditorProps) {
         </button>
 
         {content !== null && (
-          <button
-            type="button"
-            onClick={() => setDeleteDialogOpen(true)}
-            disabled={saving}
-            className="inline-flex items-center justify-center gap-2 rounded-card border border-red-400/50 px-4 py-3 text-sm font-semibold text-red-300 hover:bg-red-500/10 disabled:opacity-60"
-          >
-            <Trash2 className="h-4 w-4" aria-hidden="true" />
-            Excluir
-          </button>
+          <div className="flex items-center justify-center sm:justify-start">
+            <DeleteAction onClick={() => setDeleteDialogOpen(true)} disabled={saving} />
+          </div>
         )}
       </div>
 

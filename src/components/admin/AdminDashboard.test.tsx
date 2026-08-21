@@ -58,6 +58,15 @@ describe("AdminDashboard", () => {
     });
   });
 
+  it("titles the screen after its real purpose (tenant lookup + knowledge base), not tenant creation", () => {
+    render(<AdminDashboard />);
+
+    const heading = screen.getByRole("heading", { level: 1 });
+    expect(heading).not.toHaveTextContent(/adicionar novo tenant/i);
+    expect(heading).toHaveTextContent(/buscar tenant/i);
+    expect(heading).toHaveTextContent(/base de conhecimento/i);
+  });
+
   it("searches for a tenant and shows selectable results", async () => {
     searchTenantsMock.mockResolvedValue({ ok: true, status: 200, tenants: [tenantOne] });
     render(<AdminDashboard />);

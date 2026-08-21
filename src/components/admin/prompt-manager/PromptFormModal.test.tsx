@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { PromptFormModal } from "./PromptFormModal";
-import type { Prompt } from "@/services/promptManager.types";
+import type { Guardrail, Prompt } from "@/services/promptManager.types";
 
 // react-markdown é ESM-only e não é necessário para estes testes (foco no
 // seletor de node_type); substitui por um textarea simples equivalente.
@@ -101,5 +101,73 @@ describe("PromptFormModal — Nó de Destino", () => {
     );
 
     expect(screen.getByLabelText("Nó de Destino")).toHaveValue("chitchat");
+  });
+});
+
+describe("PromptFormModal — fechamento com alterações não salvas", () => {
+  const pressEscape = () => fireEvent.keyDown(document, { key: "Escape", code: "Escape" });
+
+  it("closes immediately on Escape when the form has no changes", async () => {
+    const onClose = jest.fn();
+    render(
+      <PromptFormModal
+        open
+        mode="create"
+        availableGuardrails={[]}
+        onClose={onClose}
+        onSubmit={jest.fn()}
+      />,
+    );
+
+    await waitFor(() => expect(screen.getByRole("dialog")).toHaveAttribute("open"));
+    pressEscape();
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("asks for discard confirmation on Escape once a field has been edited", async () => {
+    const onClose = jest.fn();
+    render(
+      <PromptFormModal
+        open
+        mode="create"
+        availableGuardrails={[]}
+        onClose={onClose}
+        onSubmit={jest.fn()}
+      />,
+    );
+
+    await waitFor(() => expect(screen.getByRole("dialog")).toHaveAttribute("open"));
+    fireEvent.change(screen.getByLabelText("Título"), {
+      target: { value: "Rascunho não salvo" },
+    });
+    pressEscape();
+
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByRole("alertdialog", { name: "Descartar alterações?" })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Descartar alterações" }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the standardized GuardrailScopeBadge next to global guardrails in the selector", () => {
+    const globalGuardrail: Guardrail = {
+      id: "g1",
+      titulo: "Guardrail Global",
+      conteudo: "conteúdo",
+      is_global: true,
+    };
+
+    render(
+      <PromptFormModal
+        open
+        mode="create"
+        availableGuardrails={[globalGuardrail]}
+        onClose={jest.fn()}
+        onSubmit={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Global")).toBeInTheDocument();
   });
 });

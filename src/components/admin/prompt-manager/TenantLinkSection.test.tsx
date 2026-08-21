@@ -134,4 +134,23 @@ describe("TenantLinkSection — Nó de Destino", () => {
 
     expect(onFetchDetail).toHaveBeenCalledWith("tenant-1", "chitchat");
   });
+
+  it("shows the standardized GuardrailScopeBadge for a global guardrail linked to the tenant", () => {
+    const tenantDetail = {
+      tenant_id: "tenant-1",
+      node_type: "operational" as const,
+      prompt_id: "op-1",
+      is_active: true,
+      custom_content_override: null,
+      prompt_titulo: "Operacional Padrão",
+      prompt_conteudo: "conteúdo",
+      is_default_prompt: true,
+      guardrails_associados: [
+        { id: "g1", titulo: "Guardrail Global", conteudo: "conteúdo", is_global: true },
+      ],
+    };
+    renderSection({ tenantDetail });
+
+    expect(screen.getByText("Global")).toBeInTheDocument();
+  });
 });

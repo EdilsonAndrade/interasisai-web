@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { TenantDetails } from "./TenantDetails";
 
 const tenant = {
@@ -20,6 +20,28 @@ describe("TenantDetails", () => {
     expect(screen.getByText("calendar")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Excluir" })).toBeInTheDocument();
+  });
+
+  it("triggers onDelete when the discreet DeleteAction is clicked", () => {
+    const onDelete = jest.fn();
+    render(<TenantDetails tenant={tenant} onEdit={jest.fn()} onDelete={onDelete} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Excluir" }));
+
+    expect(onDelete).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows 'Nunca atualizado' instead of the literal 'Não informado' when updated_at is empty", () => {
+    render(
+      <TenantDetails
+        tenant={{ ...tenant, updated_at: null }}
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Nunca atualizado")).toBeInTheDocument();
+    expect(screen.queryByText("Não informado")).not.toBeInTheDocument();
   });
 
   it("hides mutation actions for a deleted tenant", () => {

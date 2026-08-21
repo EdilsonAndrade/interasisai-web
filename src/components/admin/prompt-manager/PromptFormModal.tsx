@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Loader2 } from "lucide-react";
 import { AdminDialog } from "@/components/admin/AdminDialog";
+import { GuardrailScopeBadge } from "@/components/admin/GuardrailScopeBadge";
 import { promptFormSchema, type PromptFormData } from "@/lib/promptManagerSchemas";
 import { MarkdownEditorCustom } from "./MarkdownEditorCustom";
 import type { Guardrail, NodeType, Prompt } from "@/services/promptManager.types";
@@ -42,7 +43,7 @@ export function PromptFormModal({
     setValue,
     watch,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { errors, isDirty, isSubmitting },
   } = useForm<PromptFormData>({
     resolver: zodResolver(promptFormSchema),
     defaultValues: {
@@ -105,6 +106,8 @@ export function PromptFormModal({
       open={open}
       title={title}
       onClose={onClose}
+      hasUnsavedChanges={isDirty}
+      closeDisabled={isSubmitting}
       className="md:w-[60vw] md:max-w-[60vw]"
     >
       <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-5">
@@ -202,8 +205,8 @@ export function PromptFormModal({
                   <div className="min-w-0 flex-1">
                     <span className="text-sm text-text-body">{g.titulo}</span>
                     {g.is_global && (
-                      <span className="ml-1.5 inline-flex items-center rounded-full bg-brand-primary/20 px-1.5 py-0.5 text-[10px] font-semibold text-brand-primary">
-                        Global
+                      <span className="ml-1.5 inline-flex">
+                        <GuardrailScopeBadge isGlobal={g.is_global} />
                       </span>
                     )}
                     <p className="mt-0.5 line-clamp-1 text-xs text-text-weak">

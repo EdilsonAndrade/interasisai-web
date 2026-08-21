@@ -24,7 +24,7 @@ export function AdminDashboard() {
 
       <header className="space-y-3 text-center">
         <h1 className="text-3xl font-bold text-text-strong sm:text-4xl">
-          Painel Administrador - Adicionar Novo Tenant
+          Buscar Tenant e Base de Conhecimento
         </h1>
         <p className="text-sm text-text-body">
           Busque um tenant para consultar seu contexto e gerenciar a base de conhecimento.

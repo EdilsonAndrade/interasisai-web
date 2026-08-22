@@ -1,9 +1,11 @@
 const initSessionMock = jest.fn();
 const mountWidgetMock = jest.fn();
 
-async function loadIndexWithTenantId(tenantId: string): Promise<void> {
+async function loadIndexWithTenantId(tenantId: string, tenantName = ""): Promise<void> {
   (globalThis as unknown as { __INTERASIS_TENANT_ID__: string }).__INTERASIS_TENANT_ID__ =
     tenantId;
+  (globalThis as unknown as { __INTERASIS_TENANT_NAME__: string }).__INTERASIS_TENANT_NAME__ =
+    tenantName;
   await import("./index");
   // Let the fire-and-forget bootstrap() promise chain settle.
   await new Promise((resolve) => setTimeout(resolve, 0));
@@ -25,6 +27,14 @@ describe("widget bootstrap (src/widget/index.ts)", () => {
 
     expect(initSessionMock).toHaveBeenCalledWith("demo-cliente");
     expect(mountWidgetMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("passes the injected tenant name through to mountWidget", async () => {
+    initSessionMock.mockResolvedValue(true);
+
+    await loadIndexWithTenantId("demo-cliente", "Demo Cliente Ltda");
+
+    expect(mountWidgetMock).toHaveBeenCalledWith({ tenantName: "Demo Cliente Ltda" });
   });
 
   it("renders nothing when session initialization fails (unauthorized domain, deleted tenant, network error)", async () => {

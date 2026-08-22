@@ -8,6 +8,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
+import { getTenantById } from "@/services/pythonBackend";
 
 const BUNDLE_PATH = path.join(process.cwd(), "public", "widget", "widget.bundle.js");
 
@@ -39,7 +40,13 @@ export async function GET(
     });
   }
 
-  const script = `const __INTERASIS_TENANT_ID__ = "${escapeForScriptString(trimmedTenantId)}";\n${bundle}`;
+  const tenantResult = await getTenantById(trimmedTenantId);
+  const tenantName = tenantResult.ok ? tenantResult.tenant.name : "";
+
+  const script =
+    `const __INTERASIS_TENANT_ID__ = "${escapeForScriptString(trimmedTenantId)}";\n` +
+    `const __INTERASIS_TENANT_NAME__ = "${escapeForScriptString(tenantName)}";\n` +
+    bundle;
 
   return new NextResponse(script, {
     status: 200,

@@ -12,7 +12,10 @@ const HOST_ELEMENT_ID = "interasis-chat-widget";
 export type WidgetAppearance = {
   primaryColor?: string;
   greetingMessage?: string;
+  tenantName?: string;
 };
+
+const INTERASIS_BRAND_URL = "https://interasisai.com.br";
 
 function createBubble(): HTMLButtonElement {
   const bubble = document.createElement("button");
@@ -24,7 +27,7 @@ function createBubble(): HTMLButtonElement {
   return bubble;
 }
 
-function createPanel(greetingMessage?: string): {
+function createPanel(appearance: WidgetAppearance): {
   panel: HTMLDivElement;
   messagesEl: HTMLDivElement;
   errorEl: HTMLDivElement;
@@ -38,7 +41,24 @@ function createPanel(greetingMessage?: string): {
 
   const header = document.createElement("div");
   header.className = "header";
-  header.innerHTML = "<span>Interasis AI</span>";
+
+  const headerText = document.createElement("div");
+  headerText.className = "header-text";
+
+  const titleEl = document.createElement("span");
+  titleEl.className = "header-title";
+  titleEl.textContent = appearance.tenantName?.trim() || "Interasis AI";
+  headerText.appendChild(titleEl);
+
+  const poweredByEl = document.createElement("a");
+  poweredByEl.className = "powered-by";
+  poweredByEl.href = INTERASIS_BRAND_URL;
+  poweredByEl.target = "_blank";
+  poweredByEl.rel = "noopener noreferrer";
+  poweredByEl.textContent = "Powered by Interasis AI";
+  headerText.appendChild(poweredByEl);
+
+  header.appendChild(headerText);
 
   const closeButton = document.createElement("button");
   closeButton.className = "close-button";
@@ -50,10 +70,10 @@ function createPanel(greetingMessage?: string): {
   const messagesEl = document.createElement("div");
   messagesEl.className = "messages";
 
-  if (greetingMessage) {
+  if (appearance.greetingMessage) {
     const greeting = document.createElement("div");
     greeting.className = "message ai";
-    greeting.textContent = greetingMessage;
+    greeting.textContent = appearance.greetingMessage;
     messagesEl.appendChild(greeting);
   }
 
@@ -101,9 +121,7 @@ export function mountWidget(appearance: WidgetAppearance = {}): void {
   shadowRoot.appendChild(styleEl);
 
   const bubble = createBubble();
-  const { panel, messagesEl, errorEl, textarea, sendButton, closeButton } = createPanel(
-    appearance.greetingMessage,
-  );
+  const { panel, messagesEl, errorEl, textarea, sendButton, closeButton } = createPanel(appearance);
 
   shadowRoot.appendChild(bubble);
   shadowRoot.appendChild(panel);

@@ -71,7 +71,33 @@ export function buildWidgetCss(primaryColor: string = DEFAULT_PRIMARY_COLOR): st
       padding: 12px 16px;
       border-bottom: 1px solid rgba(29, 111, 232, 0.1);
       color: #F8FAFC;
+    }
+
+    .header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .header-title {
       font-weight: 700;
+      font-size: 15px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .powered-by {
+      font-size: 11px;
+      font-weight: 400;
+      color: #8B98B8;
+      text-decoration: none;
+    }
+
+    .powered-by:hover {
+      color: #D7DFED;
+      text-decoration: underline;
     }
 
     .close-button {

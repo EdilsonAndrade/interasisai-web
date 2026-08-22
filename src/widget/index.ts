@@ -8,11 +8,15 @@ import { initSession } from "./state";
 import { mountWidget } from "./render";
 
 declare const __INTERASIS_TENANT_ID__: string;
+declare const __INTERASIS_TENANT_NAME__: string;
 
 async function bootstrap(): Promise<void> {
   const tenantId =
     typeof __INTERASIS_TENANT_ID__ === "string" ? __INTERASIS_TENANT_ID__.trim() : "";
   if (!tenantId) return;
+
+  const tenantName =
+    typeof __INTERASIS_TENANT_NAME__ === "string" ? __INTERASIS_TENANT_NAME__.trim() : "";
 
   const ok = await initSession(tenantId);
   // Any failure (domain not authorized, tenant deleted/inexistent, network
@@ -20,7 +24,7 @@ async function bootstrap(): Promise<void> {
   // Per FR-004 / contracts/widget-loader-contract.md.
   if (!ok) return;
 
-  mountWidget();
+  mountWidget({ tenantName: tenantName || undefined });
 }
 
 void bootstrap();

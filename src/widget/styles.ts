@@ -136,10 +136,55 @@ export function buildWidgetCss(primaryColor: string = DEFAULT_PRIMARY_COLOR): st
       border-bottom-left-radius: 4px;
     }
 
-    .status {
+    .message strong {
+      font-weight: 700;
+    }
+
+    .message em {
+      font-style: italic;
+    }
+
+    .message code {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      padding: 1px 4px;
+      font-size: 0.9em;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .message a {
+      color: inherit;
+      text-decoration: underline;
+    }
+
+    .typing-indicator {
       align-self: flex-start;
-      color: #D7DFED;
-      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #18233A;
+    }
+
+    .typing-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: ${primaryColor};
+      animation: chat-typing-bounce 1.4s ease-in-out infinite both;
+    }
+
+    @keyframes chat-typing-bounce {
+      0%, 80%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+      }
+      40% {
+        transform: translateY(-6px);
+        opacity: 1;
+      }
     }
 
     .error {

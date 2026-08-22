@@ -3,6 +3,7 @@
 // Vanilla DOM APIs only (no React) — see plan.md Complexity Tracking.
 // ============================================================================
 
+import { renderInlineMarkdown } from "./markdown";
 import { getState, sendUserMessage, subscribe, type WidgetState } from "./state";
 import { buildWidgetCss } from "./styles";
 
@@ -151,15 +152,26 @@ export function mountWidget(appearance: WidgetAppearance = {}): void {
       const el = document.createElement("div");
       el.className = `message ${message.role}`;
       el.dataset.messageId = message.id;
-      el.textContent = message.content;
+      if (message.role === "ai") {
+        el.innerHTML = renderInlineMarkdown(message.content);
+      } else {
+        el.textContent = message.content;
+      }
       messagesEl.appendChild(el);
     }
 
     if (state.isLoading) {
       const statusEl = document.createElement("div");
-      statusEl.className = "status";
+      statusEl.className = "typing-indicator";
       statusEl.dataset.status = "loading";
-      statusEl.textContent = "Digitando...";
+      statusEl.setAttribute("role", "status");
+      statusEl.setAttribute("aria-label", "IA está digitando");
+      for (let i = 0; i < 3; i += 1) {
+        const dot = document.createElement("span");
+        dot.className = "typing-dot";
+        dot.style.animationDelay = `${i * 0.2}s`;
+        statusEl.appendChild(dot);
+      }
       messagesEl.appendChild(statusEl);
     }
 

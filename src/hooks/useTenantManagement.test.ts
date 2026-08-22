@@ -5,6 +5,7 @@ import {
   getTenantById,
   updateTenant,
 } from "@/services";
+import { createPrompt } from "@/services/promptManager";
 import { useTenantManagement } from "./useTenantManagement";
 
 jest.mock("@/services", () => ({
@@ -14,10 +15,16 @@ jest.mock("@/services", () => ({
   updateTenant: jest.fn(),
 }));
 
+jest.mock("@/services/promptManager", () => ({
+  createPrompt: jest.fn(),
+}));
+
 const createMock = jest.mocked(createTenant);
 const getMock = jest.mocked(getTenantById);
 const updateMock = jest.mocked(updateTenant);
 const deleteMock = jest.mocked(deleteTenant);
+const createPromptMock = jest.mocked(createPrompt);
+
 const tenant = {
   id: "tenant-1",
   name: "Tenant One",
@@ -28,27 +35,116 @@ const tenant = {
   deleted_at: null,
 };
 
+const base = {
+  tenant_id: tenant.id,
+  name: tenant.name,
+  google_calendar_id: tenant.google_calendar_id,
+  allowed_domains: tenant.allowed_domains,
+};
+
+const newPromptDraft = {
+  titulo: "Novo Prompt",
+  conteudo: "Texto {guardrails}",
+  is_default: false,
+  node_type: "operational" as const,
+  guardrail_ids: [],
+};
+
+const createdPrompt = {
+  id: "prompt-1",
+  titulo: newPromptDraft.titulo,
+  conteudo: newPromptDraft.conteudo,
+  is_default: false,
+  node_type: "operational" as const,
+  guardrail_ids: [],
+};
+
 describe("useTenantManagement", () => {
   beforeEach(() => jest.clearAllMocks());
 
-  it("creates and stores the returned tenant", async () => {
+  it("creates and stores the returned tenant (existing prompt intent)", async () => {
     createMock.mockResolvedValue({ ok: true, status: 201, tenant });
-    getMock
-      .mockResolvedValueOnce({ ok: true, status: 200, tenant })
-      .mockResolvedValueOnce({ ok: true, status: 200, tenant: { ...tenant, name: "Updated" } });
+    getMock.mockResolvedValue({ ok: true, status: 200, tenant });
     const { result } = renderHook(() => useTenantManagement());
 
     await act(async () => {
-      await result.current.create({
-        tenant_id: tenant.id,
-        name: tenant.name,
-        google_calendar_id: tenant.google_calendar_id,
-        allowed_domains: tenant.allowed_domains,
-      });
+      await result.current.create(base, { mode: "existing", prompt_id: "prompt-existing" });
     });
 
+    expect(createMock).toHaveBeenCalledWith(
+      { ...base, prompt_id: "prompt-existing" },
+      expect.anything(),
+    );
+    expect(createPromptMock).not.toHaveBeenCalled();
     expect(result.current.tenant).toEqual(tenant);
     expect(result.current.feedback).toBe("Tenant cadastrado com sucesso");
+  });
+
+  it("creates the prompt first, then the tenant, in the new-prompt intent", async () => {
+    createPromptMock.mockResolvedValue({ ok: true, status: 201, data: createdPrompt });
+    createMock.mockResolvedValue({ ok: true, status: 201, tenant });
+    getMock.mockResolvedValue({ ok: true, status: 200, tenant });
+    const { result } = renderHook(() => useTenantManagement());
+
+    await act(async () => {
+      await result.current.create(base, { mode: "new", prompt: newPromptDraft });
+    });
+
+    expect(createPromptMock).toHaveBeenCalledWith(newPromptDraft, expect.anything());
+    expect(createMock).toHaveBeenCalledWith(
+      { ...base, prompt_id: "prompt-1" },
+      expect.anything(),
+    );
+    expect(result.current.tenant).toEqual(tenant);
+  });
+
+  it("keeps the created prompt and does not create a second one when the tenant step fails and the retry reuses it", async () => {
+    createPromptMock.mockResolvedValue({ ok: true, status: 201, data: createdPrompt });
+    createMock.mockResolvedValueOnce({
+      ok: false,
+      status: 422,
+      message: "ID já em uso.",
+      blockers: [],
+      retryable: false,
+    });
+    const { result } = renderHook(() => useTenantManagement());
+
+    await act(async () => {
+      await result.current.create(base, { mode: "new", prompt: newPromptDraft });
+    });
+
+    expect(createPromptMock).toHaveBeenCalledTimes(1);
+    expect(result.current.error).toContain("disponível na biblioteca");
+    expect(result.current.pendingPromptId).toBe("prompt-1");
+
+    // Retentativa reaproveita o prompt já criado, no modo "existing".
+    createMock.mockResolvedValueOnce({ ok: true, status: 201, tenant });
+    getMock.mockResolvedValue({ ok: true, status: 200, tenant });
+    await act(async () => {
+      await result.current.create(base, { mode: "existing", prompt_id: "prompt-1" });
+    });
+
+    expect(createPromptMock).toHaveBeenCalledTimes(1);
+    expect(result.current.tenant).toEqual(tenant);
+  });
+
+  it("does not create a tenant when the prompt step fails", async () => {
+    createPromptMock.mockResolvedValue({
+      ok: false,
+      status: 422,
+      message: "Título é obrigatório",
+      blockers: [],
+      retryable: false,
+    });
+    const { result } = renderHook(() => useTenantManagement());
+
+    await act(async () => {
+      await result.current.create(base, { mode: "new", prompt: newPromptDraft });
+    });
+
+    expect(createMock).not.toHaveBeenCalled();
+    expect(result.current.error).toBe("Título é obrigatório");
+    expect(result.current.tenant).toBeNull();
   });
 
   it("blocks duplicate requests while one is pending", async () => {
@@ -61,19 +157,14 @@ describe("useTenantManagement", () => {
       () => new Promise((resolve) => { resolveRequest = resolve; }),
     );
     const { result } = renderHook(() => useTenantManagement());
-    const input = {
-      tenant_id: "tenant-1",
-      name: "Tenant",
-      google_calendar_id: "calendar",
-      allowed_domains: ["example.com"],
-    };
+    const intent = { mode: "existing" as const, prompt_id: "prompt-1" };
 
     let firstRequest: Promise<boolean> = Promise.resolve(false);
     act(() => {
-      firstRequest = result.current.create(input);
+      firstRequest = result.current.create(base, intent);
     });
     await act(async () => {
-      expect(await result.current.create(input)).toBe(false);
+      expect(await result.current.create(base, intent)).toBe(false);
       resolveRequest({ ok: true, status: 201, tenant });
       getMock.mockResolvedValue({ ok: true, status: 200, tenant });
       await firstRequest;
@@ -112,6 +203,7 @@ describe("useTenantManagement", () => {
       ok: false,
       status: 422,
       message: "Revise os campos informados.",
+      blockers: [],
       retryable: false,
       fieldErrors: { name: "Nome já utilizado" },
     });

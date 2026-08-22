@@ -6,6 +6,10 @@
 // the backend's app/schemas/prompt_manager.py::NodeType (agendamento-ia repo).
 // ============================================================================
 
+import type { ApiErrorCode, Blocker } from "@/lib/apiError";
+
+export type { ApiErrorCode, Blocker };
+
 // ---------------------------------------------------------------------------
 // Entities
 // ---------------------------------------------------------------------------
@@ -83,7 +87,9 @@ export type PromptManagerResult<T> =
   | {
       ok: false;
       status: number;
+      code?: ApiErrorCode;
       message: string;
+      blockers: Blocker[];
       fieldErrors?: Record<string, string>;
       retryable: boolean;
     };

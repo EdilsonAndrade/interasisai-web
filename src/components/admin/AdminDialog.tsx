@@ -90,7 +90,7 @@ export function AdminDialog({
       onClick={(event) => {
         if (event.target === event.currentTarget) requestClose();
       }}
-      className={`fixed inset-0 z-50 m-auto w-[calc(100%-2rem)] max-w-xl rounded-card border border-brand-primary/30 bg-surface-base/95 p-0 text-text-body shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm ${className ?? ""}`}
+      className={`fixed inset-0 z-50 m-auto w-[calc(100%-2rem)] max-w-xl rounded-card border border-brand-primary/30 bg-surface-base/95 p-0 text-text-body shadow-2xl backdrop:bg-black/70 ${className ?? ""}`}
     >
       <header className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
         <h2 id={titleId} className="text-xl font-bold text-text-strong">{title}</h2>

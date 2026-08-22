@@ -1,7 +1,7 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at specs/019-admin-ux-quick-wins/plan.md
+at specs/020-tenant-prompt-binding/plan.md
 ## RULES
 1. Always speak in Portugese in the chat
 2. EVITE ao máximo detalhar muito, SOMENTE quando solicito ou não compreensivo pelo usuário

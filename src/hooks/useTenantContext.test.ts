@@ -52,6 +52,7 @@ describe("useTenantContext", () => {
       ok: false,
       status: 404,
       message: "Tenant não encontrado",
+      blockers: [],
       retryable: false,
     });
     const { result } = renderHook(() => useTenantContext());

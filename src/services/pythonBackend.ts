@@ -3,6 +3,7 @@
 // Wraps fetch for GET /api/v1/chat/init, POST /api/v1/chat, tenants and knowledge-base endpoints
 // ============================================================================
 
+import { normalizeApiError } from "@/lib/apiError";
 import type {
   PythonBackendConfig,
   PythonChatRequest,
@@ -423,53 +424,55 @@ function isTenant(value: unknown): value is Tenant {
   );
 }
 
-function getTenantFieldErrors(payload: unknown): TenantFieldErrors | undefined {
-  if (!payload || typeof payload !== "object") return undefined;
-  const detail = (payload as { detail?: unknown }).detail;
-  if (!Array.isArray(detail)) return undefined;
-
-  const fieldErrors: TenantFieldErrors = {};
-  for (const issue of detail) {
-    if (!issue || typeof issue !== "object") continue;
-    const { loc, msg } = issue as { loc?: unknown; msg?: unknown };
-    if (!Array.isArray(loc) || typeof msg !== "string") continue;
-    const field: unknown = loc.at(-1);
+function toTenantFieldErrors(
+  fieldErrors: Record<string, string> | undefined,
+): TenantFieldErrors | undefined {
+  if (!fieldErrors) return undefined;
+  const result: TenantFieldErrors = {};
+  for (const [field, msg] of Object.entries(fieldErrors)) {
     if (
       field === "tenant_id" ||
       field === "name" ||
       field === "google_calendar_id" ||
-      field === "allowed_domains"
+      field === "allowed_domains" ||
+      field === "prompt_id"
     ) {
-      fieldErrors[field] = msg;
+      result[field] = msg;
     }
   }
-  return Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined;
+  return Object.keys(result).length > 0 ? result : undefined;
 }
 
 function tenantFailure(
   status: number,
   payload?: unknown,
 ): TenantOperationFailure {
+  const normalized = normalizeApiError(status, payload);
+  const fieldErrors = toTenantFieldErrors(normalized.fieldErrors);
+
   if (status === 404) {
     return {
       ok: false,
       status,
+      code: normalized.code,
       message: "Tenant não encontrado",
+      blockers: normalized.blockers,
       retryable: false,
     };
   }
 
-  const fieldErrors = getTenantFieldErrors(payload);
   return {
     ok: false,
     status,
+    code: normalized.code,
     message: fieldErrors
       ? "Revise os campos informados."
       : status === 0 || status === 502
         ? TENANT_OPERATION_ERROR
-        : getOperationErrorMessage(payload),
+        : normalized.message,
+    blockers: normalized.blockers,
     fieldErrors,
-    retryable: isRetryableStatus(status),
+    retryable: normalized.retryable,
   };
 }
 
@@ -502,6 +505,7 @@ export function createTenant(
       name: input.name,
       google_calendar_id: input.google_calendar_id,
       allowed_domains: input.allowed_domains,
+      prompt_id: input.prompt_id,
     }),
     signal,
   });

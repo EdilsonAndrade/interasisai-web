@@ -43,12 +43,14 @@ describe("tenant schemas", () => {
         name: "  Tenant One  ",
         google_calendar_id: "  calendar  ",
         allowed_domains: ["  example.com  "],
+        prompt_id: "prompt-1",
       }),
     ).toEqual({
       tenant_id: "tenant-1",
       name: "Tenant One",
       google_calendar_id: "calendar",
       allowed_domains: ["example.com"],
+      prompt_id: "prompt-1",
     });
     expect(
       tenantCreateSchema.safeParse({
@@ -56,8 +58,26 @@ describe("tenant schemas", () => {
         name: "Tenant One",
         google_calendar_id: "calendar",
         allowed_domains: ["example.com"],
+        prompt_id: "prompt-1",
       }).success,
     ).toBe(false);
+  });
+
+  it("rejects a blank prompt_id with a message that explains why it is required", () => {
+    const result = tenantCreateSchema.safeParse({
+      tenant_id: "tenant-1",
+      name: "Tenant One",
+      google_calendar_id: "calendar",
+      allowed_domains: ["example.com"],
+      prompt_id: "   ",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.flatten().fieldErrors.prompt_id).toEqual([
+        "Selecione o prompt que este tenant vai usar. Sem prompt vinculado, o atendimento não funciona.",
+      ]);
+    }
   });
 
   it("accepts domains without protocols or ports only", () => {

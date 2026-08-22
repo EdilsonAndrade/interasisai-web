@@ -7,13 +7,20 @@ import {
   getTenantById,
   updateTenant,
   type Tenant,
-  type TenantCreateInput,
   type TenantFieldErrors,
   type TenantOperationFailure,
   type TenantWriteInput,
 } from "@/services";
+import { createPrompt } from "@/services/promptManager";
+import type { PromptCreateInput } from "@/services/promptManager.types";
 
 export type TenantOperation = "create" | "lookup" | "update" | "delete";
+
+export type TenantCreateBase = TenantWriteInput & { tenant_id: string };
+
+export type TenantCreateIntent =
+  | { mode: "existing"; prompt_id: string }
+  | { mode: "new"; prompt: PromptCreateInput };
 
 export function useTenantManagement() {
   const [tenant, setTenant] = useState<Tenant | null>(null);
@@ -21,6 +28,7 @@ export function useTenantManagement() {
   const [error, setError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<TenantFieldErrors>();
+  const [pendingPromptId, setPendingPromptId] = useState<string | null>(null);
   const active = useRef(false);
   const requestId = useRef(0);
   const controller = useRef<AbortController | null>(null);
@@ -53,14 +61,43 @@ export function useTenantManagement() {
     return false;
   };
 
-  const create = async (input: TenantCreateInput) => {
+  const create = async (base: TenantCreateBase, intent: TenantCreateIntent) => {
     const request = begin("create");
     if (!request) return false;
-    const result = await createTenant(input, request.signal);
-    if (!result.ok) return fail(request.id, result);
+    setPendingPromptId(null);
+
+    let promptId: string;
+    if (intent.mode === "new") {
+      const promptResult = await createPrompt(intent.prompt, request.signal);
+      if (!promptResult.ok) {
+        if (!finish(request.id)) return false;
+        setError(promptResult.message);
+        return false;
+      }
+      promptId = promptResult.data.id;
+      // Passo 1 concluído: guarda o id para que uma nova tentativa (após falha
+      // do passo 2) reaproveite este prompt em vez de criar um segundo (FR-010).
+      setPendingPromptId(promptId);
+    } else {
+      promptId = intent.prompt_id;
+    }
+
+    const result = await createTenant({ ...base, prompt_id: promptId }, request.signal);
+    if (!result.ok) {
+      if (!finish(request.id)) return false;
+      setError(
+        intent.mode === "new"
+          ? `${result.message} O prompt criado permanece disponível na biblioteca para a nova tentativa.`
+          : result.message,
+      );
+      setFieldErrors(result.fieldErrors);
+      return false;
+    }
+
     const refreshed = await getTenantById(result.tenant.id, request.signal);
     if (!finish(request.id)) return false;
     setTenant(refreshed.ok ? refreshed.tenant : result.tenant);
+    setPendingPromptId(null);
     setFeedback("Tenant cadastrado com sucesso");
     return true;
   };
@@ -117,6 +154,7 @@ export function useTenantManagement() {
     error,
     feedback,
     fieldErrors,
+    pendingPromptId,
     create,
     lookup,
     update,

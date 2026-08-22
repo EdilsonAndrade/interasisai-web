@@ -37,6 +37,7 @@ describe("useTenantLink", () => {
       ok: false,
       status: 404,
       message: "Item não encontrado.",
+      blockers: [],
       retryable: false,
     });
     const { result } = renderHook(() => useTenantLink());
@@ -55,6 +56,7 @@ describe("useTenantLink", () => {
       ok: false,
       status: 500,
       message: "Erro interno do servidor. Tente novamente.",
+      blockers: [],
       retryable: true,
     });
     const { result } = renderHook(() => useTenantLink());

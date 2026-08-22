@@ -4,6 +4,7 @@
 // Pattern: union types (ok/status/message), same as pythonBackend.ts
 // ============================================================================
 
+import { normalizeApiError } from "@/lib/apiError";
 import type {
   Guardrail,
   GuardrailCreateInput,
@@ -21,6 +22,7 @@ import type {
   TenantLinkResult,
   TenantPromptDetailResult,
   DeleteResult,
+  PromptManagerResult,
 } from "./promptManager.types";
 
 // ---------------------------------------------------------------------------
@@ -43,59 +45,6 @@ async function parseJsonSafely(response: Response): Promise<unknown | null> {
   } catch {
     return null;
   }
-}
-
-function isRetryableStatus(status: number): boolean {
-  if (status === 0 || status === 408 || status === 429) return true;
-  return status >= 500;
-}
-
-/**
- * Extracts a user-friendly error message from an API error payload.
- * NOTE: Does NOT log `conteudo` or `custom_content_override` values (FR-045).
- */
-function getErrorMessage(status: number, payload: unknown): string {
-  if (status === 0) {
-    return "Não foi possível conectar ao servidor. Verifique sua conexão.";
-  }
-
-  if (payload && typeof payload === "object") {
-    const detail = (payload as { detail?: unknown }).detail;
-    if (typeof detail === "string" && detail.trim()) {
-      return detail.trim();
-    }
-    const message = (payload as { message?: unknown }).message;
-    if (typeof message === "string" && message.trim()) {
-      return message.trim();
-    }
-  }
-
-  if (status === 404) return "Item não encontrado.";
-  if (status === 409) return "Operação conflitante. Verifique os vínculos.";
-  if (status === 422) return "Dados inválidos. Verifique os campos.";
-  if (status >= 500) return "Erro interno do servidor. Tente novamente.";
-
-  return "Não foi possível concluir a operação. Tente novamente.";
-}
-
-/**
- * Extracts field-level errors from a 422 validation error payload (FastAPI format).
- */
-function extractFieldErrors(payload: unknown): Record<string, string> | undefined {
-  if (!Array.isArray((payload as { detail?: unknown })?.detail)) return undefined;
-  const detail = (payload as { detail: unknown[] }).detail;
-  const fieldErrors: Record<string, string> = {};
-  for (const item of detail) {
-    if (item && typeof item === "object") {
-      const loc = (item as { loc?: unknown[] }).loc;
-      const msg = (item as { msg?: string }).msg;
-      if (Array.isArray(loc) && loc.length >= 2 && typeof msg === "string") {
-        const field = String(loc[loc.length - 1]);
-        fieldErrors[field] = msg;
-      }
-    }
-  }
-  return Object.keys(fieldErrors).length > 0 ? fieldErrors : undefined;
 }
 
 function isGuardrail(value: unknown): value is Guardrail {
@@ -143,10 +92,7 @@ async function requestPromptManager<T>(
   path: string,
   init: RequestInit,
   isArray: boolean,
-): Promise<
-  | { ok: true; status: number; data: T }
-  | { ok: false; status: number; message: string; fieldErrors?: Record<string, string>; retryable: boolean }
-> {
+): Promise<PromptManagerResult<T>> {
   let response: Response;
   try {
     response = await fetch(`${getBaseUrl()}${path}`, {
@@ -161,6 +107,7 @@ async function requestPromptManager<T>(
       message: isAborted
         ? "Solicitação cancelada."
         : "Não foi possível conectar ao servidor. Verifique sua conexão.",
+      blockers: [],
       retryable: !isAborted,
     };
   }
@@ -173,28 +120,31 @@ async function requestPromptManager<T>(
         ok: false,
         status: 502,
         message: "O serviço retornou dados em formato inválido.",
+        blockers: [],
         retryable: true,
       };
     }
     return { ok: true, status: response.status, data: (payload ?? []) as T };
   }
 
-  const message = getErrorMessage(response.status, payload);
-  const fieldErrors = response.status === 422 ? extractFieldErrors(payload) : undefined;
+  // FR-045/FR-039: não logar conteudo/custom_content_override.
+  const normalized = normalizeApiError(response.status, payload);
 
   console.error("[PromptManager:error]", {
     status: response.status,
     endpoint: path,
     method: init.method ?? "GET",
-    // FR-045: não logar conteudo/custom_content_override
+    code: normalized.code,
   });
 
   return {
     ok: false,
     status: response.status,
-    message,
-    fieldErrors,
-    retryable: isRetryableStatus(response.status),
+    code: normalized.code,
+    message: normalized.message,
+    blockers: normalized.blockers,
+    fieldErrors: normalized.fieldErrors,
+    retryable: normalized.retryable,
   };
 }
 
@@ -240,8 +190,12 @@ export function deleteGuardrail(id: string, signal?: AbortSignal): Promise<Delet
 // Prompts
 // ---------------------------------------------------------------------------
 
-export function fetchPrompts(signal?: AbortSignal): Promise<PromptListResult> {
-  return requestPromptManager<Prompt[]>("/api/v1/prompt-manager/prompts", { signal }, true).then((result) => {
+export function fetchPrompts(
+  signal?: AbortSignal,
+  nodeType?: NodeType,
+): Promise<PromptListResult> {
+  const query = nodeType ? `?node_type=${encodeURIComponent(nodeType)}` : "";
+  return requestPromptManager<Prompt[]>(`/api/v1/prompt-manager/prompts${query}`, { signal }, true).then((result) => {
     if (!result.ok) return result;
     return {
       ...result,

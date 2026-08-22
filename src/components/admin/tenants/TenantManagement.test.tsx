@@ -1,12 +1,34 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useTenantManagement } from "@/hooks/useTenantManagement";
+import { usePrompts } from "@/hooks/usePrompts";
 import { TenantManagement } from "./TenantManagement";
+
+// react-markdown é ESM-only e não é necessário para estes testes; substitui
+// por um textarea simples equivalente (mesmo padrão de PromptFormModal.test.tsx).
+jest.mock("@/components/admin/prompt-manager/MarkdownEditorCustom", () => ({
+  MarkdownEditorCustom: ({
+    value,
+    onChange,
+    label,
+  }: {
+    value: string;
+    onChange: (v: string) => void;
+    label?: string;
+  }) => (
+    <textarea aria-label={label} value={value} onChange={(e) => onChange(e.target.value)} />
+  ),
+}));
 
 jest.mock("@/hooks/useTenantManagement", () => ({
   useTenantManagement: jest.fn(),
 }));
 
+jest.mock("@/hooks/usePrompts", () => ({
+  usePrompts: jest.fn(),
+}));
+
 const useTenantMock = jest.mocked(useTenantManagement);
+const usePromptsMock = jest.mocked(usePrompts);
 const actions = {
   create: jest.fn().mockResolvedValue(true),
   lookup: jest.fn().mockResolvedValue(true),
@@ -25,7 +47,18 @@ describe("TenantManagement", () => {
       error: null,
       feedback: null,
       fieldErrors: undefined,
+      pendingPromptId: null,
       ...actions,
+    });
+    usePromptsMock.mockReturnValue({
+      prompts: [],
+      guardrails: [],
+      state: "success",
+      error: null,
+      refreshPrompts: jest.fn(),
+      addPrompt: jest.fn().mockResolvedValue(true),
+      editPrompt: jest.fn().mockResolvedValue(true),
+      removePrompt: jest.fn().mockResolvedValue(true),
     });
   });
 

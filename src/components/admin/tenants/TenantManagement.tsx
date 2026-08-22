@@ -1,9 +1,11 @@
 "use client";
 
 import { AlertCircle, CheckCircle2, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AdminDialog } from "@/components/admin/AdminDialog";
 import { useTenantManagement } from "@/hooks/useTenantManagement";
+import { usePrompts } from "@/hooks/usePrompts";
+import { useTenantPromptBinding } from "@/hooks/useTenantPromptBinding";
 import { TenantDeleteDialog } from "./TenantDeleteDialog";
 import { TenantDetails } from "./TenantDetails";
 import { TenantForm } from "./TenantForm";
@@ -13,10 +15,32 @@ type EditorMode = "create" | "edit" | null;
 
 export function TenantManagement() {
   const management = useTenantManagement();
+  const promptsHook = usePrompts();
+  const binding = useTenantPromptBinding();
+  const operationalPrompts = promptsHook.prompts.filter((p) => p.node_type === "operational");
   const [editor, setEditor] = useState<EditorMode>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [formDirty, setFormDirty] = useState(false);
   const editing = editor === "edit" && management.tenant;
+
+  useEffect(() => {
+    // Um prompt novo pode ter sido criado no passo 1 do cadastro composto
+    // mesmo que o passo 2 (criar o tenant) tenha falhado — atualiza a lista
+    // para que ele apareça disponível para a nova tentativa (FR-010).
+    if (management.pendingPromptId) {
+      promptsHook.refreshPrompts();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [management.pendingPromptId]);
+
+  useEffect(() => {
+    if (management.tenant) {
+      binding.fetchBinding(management.tenant.id);
+    } else {
+      binding.clear();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [management.tenant?.id]);
 
   const closeEditor = () => {
     if (management.isLoading) return;
@@ -57,6 +81,12 @@ export function TenantManagement() {
             tenant={management.tenant}
             onEdit={() => { management.clearFeedback(); setFormDirty(false); setEditor("edit"); }}
             onDelete={() => { management.clearFeedback(); setConfirmDelete(true); }}
+            bindingState={binding.state}
+            bindingDetail={binding.detail}
+            bindingError={binding.error}
+            bindingLinking={binding.linking}
+            operationalPrompts={operationalPrompts}
+            onLinkPrompt={(promptId) => binding.linkPrompt(management.tenant!.id, promptId)}
           />
         )}
       </section>
@@ -86,15 +116,22 @@ export function TenantManagement() {
             google_calendar_id: editing.google_calendar_id,
             allowed_domains: editing.allowed_domains,
           } : undefined}
+          operationalPrompts={operationalPrompts}
           isLoading={management.operation === "create" || management.operation === "update"}
           fieldErrors={management.fieldErrors}
           onCancel={closeEditor}
           onDirtyChange={setFormDirty}
-          onSubmit={async (input) => {
-            const success = editor === "edit"
-              ? await management.update(input)
-              : await management.create(input);
+          onEdit={async (input) => {
+            const success = await management.update(input);
             if (success) setEditor(null);
+            return success;
+          }}
+          onCreate={async (base, intent) => {
+            const success = await management.create(base, intent);
+            if (success) {
+              setEditor(null);
+              if (intent.mode === "new") promptsHook.refreshPrompts();
+            }
             return success;
           }}
         />

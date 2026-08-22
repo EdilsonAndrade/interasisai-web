@@ -9,25 +9,39 @@ import {
   tenantDomainSchema,
   type TenantCreateInput,
 } from "@/lib/tenantSchemas";
-import type { TenantFieldErrors } from "@/services";
+import { PromptSelectField } from "@/components/admin/PromptSelectField";
+import type { TenantCreateBase, TenantCreateIntent } from "@/hooks/useTenantManagement";
+import type { TenantFieldErrors, TenantWriteInput } from "@/services";
+import type { Prompt, PromptCreateInput } from "@/services/promptManager.types";
+
+// Satisfaz a validação Zod de "prompt escolhido" enquanto o rascunho do novo
+// prompt vive em estado local — nunca é enviado ao backend como prompt_id.
+const NEW_PROMPT_SENTINEL = "__new_prompt_draft__";
+// Preenche o campo (nunca renderizado nem validado de fato) no modo edição,
+// onde a troca de prompt não acontece por este formulário (FR-011).
+const EDIT_MODE_PROMPT_PLACEHOLDER = "__edit_mode__";
 
 type TenantFormProps = {
   mode: "create" | "edit";
-  initialValues?: TenantCreateInput;
+  initialValues?: Partial<TenantCreateInput>;
+  operationalPrompts?: Prompt[];
   isLoading: boolean;
   fieldErrors?: TenantFieldErrors;
   onCancel: () => void;
-  onSubmit: (input: TenantCreateInput) => Promise<boolean>;
+  onCreate?: (base: TenantCreateBase, intent: TenantCreateIntent) => Promise<boolean>;
+  onEdit?: (input: TenantWriteInput) => Promise<boolean>;
   onDirtyChange?: (dirty: boolean) => void;
 };
 
 export function TenantForm({
   mode,
   initialValues,
+  operationalPrompts = [],
   isLoading,
   fieldErrors,
   onCancel,
-  onSubmit,
+  onCreate,
+  onEdit,
   onDirtyChange,
 }: TenantFormProps) {
   const {
@@ -45,11 +59,14 @@ export function TenantForm({
       name: initialValues?.name ?? "",
       google_calendar_id: initialValues?.google_calendar_id ?? "",
       allowed_domains: initialValues?.allowed_domains ?? [],
+      prompt_id: mode === "edit" ? EDIT_MODE_PROMPT_PLACEHOLDER : "",
     },
   });
   const allowedDomains = useWatch({ control, name: "allowed_domains" }) ?? [];
+  const promptId = useWatch({ control, name: "prompt_id" });
   const [domainInput, setDomainInput] = useState("");
   const [domainError, setDomainError] = useState<string>();
+  const [newPromptDraft, setNewPromptDraft] = useState<PromptCreateInput | null>(null);
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -66,11 +83,49 @@ export function TenantForm({
     if (fieldErrors?.allowed_domains) {
       setError("allowed_domains", { message: fieldErrors.allowed_domains });
     }
+    if (fieldErrors?.prompt_id) {
+      setError("prompt_id", { message: fieldErrors.prompt_id });
+    }
   }, [fieldErrors, setError]);
 
-  const submit = async (input: TenantCreateInput) => {
-    if (await onSubmit(input)) reset();
+  const selectExistingPrompt = (id: string) => {
+    setNewPromptDraft(null);
+    setValue("prompt_id", id, { shouldValidate: true });
   };
+
+  const changeNewPromptDraft = (draft: PromptCreateInput | null) => {
+    setNewPromptDraft(draft);
+    setValue("prompt_id", draft ? NEW_PROMPT_SENTINEL : "", { shouldValidate: true });
+  };
+
+  const submit = async (values: TenantCreateInput) => {
+    if (mode === "edit") {
+      const ok = await onEdit?.({
+        name: values.name,
+        google_calendar_id: values.google_calendar_id,
+        allowed_domains: values.allowed_domains,
+      });
+      if (ok) reset();
+      return;
+    }
+
+    const base: TenantCreateBase = {
+      tenant_id: values.tenant_id,
+      name: values.name,
+      google_calendar_id: values.google_calendar_id,
+      allowed_domains: values.allowed_domains,
+    };
+    const intent: TenantCreateIntent = newPromptDraft
+      ? { mode: "new", prompt: newPromptDraft }
+      : { mode: "existing", prompt_id: values.prompt_id };
+
+    const ok = await onCreate?.(base, intent);
+    if (ok) {
+      reset();
+      setNewPromptDraft(null);
+    }
+  };
+
   const addDomain = () => {
     if (!domainInput.trim()) return;
     const parsed = tenantDomainSchema.safeParse(domainInput.trim());
@@ -179,6 +234,17 @@ export function TenantForm({
           </p>
         )}
       </div>
+      {mode === "create" && (
+        <PromptSelectField
+          prompts={operationalPrompts}
+          selectedPromptId={promptId === NEW_PROMPT_SENTINEL ? "" : promptId}
+          newPromptDraft={newPromptDraft}
+          onSelectExisting={selectExistingPrompt}
+          onNewPromptDraftChange={changeNewPromptDraft}
+          disabled={isLoading}
+          error={errors.prompt_id?.message}
+        />
+      )}
       <footer className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <button type="button" disabled={isLoading} onClick={onCancel} className="rounded-card border border-border-subtle px-4 py-3 text-sm font-semibold text-text-body hover:bg-surface-subtle disabled:opacity-60">Cancelar</button>
         <button type="submit" disabled={isLoading} className="inline-flex items-center justify-center gap-2 rounded-card bg-brand-primary px-4 py-3 text-sm font-semibold text-text-inverse disabled:opacity-60">

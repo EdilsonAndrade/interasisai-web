@@ -41,6 +41,7 @@ describe("tenant API", () => {
       name: tenant.name,
       google_calendar_id: tenant.google_calendar_id,
       allowed_domains: tenant.allowed_domains,
+      prompt_id: "prompt-1",
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -52,6 +53,7 @@ describe("tenant API", () => {
           name: tenant.name,
           google_calendar_id: tenant.google_calendar_id,
           allowed_domains: tenant.allowed_domains,
+          prompt_id: "prompt-1",
         }),
       }),
     );
@@ -147,6 +149,7 @@ describe("tenant API", () => {
         name: "Existing",
         google_calendar_id: "calendar",
         allowed_domains: ["example.com"],
+        prompt_id: "prompt-1",
       }),
     ).resolves.toEqual(
       expect.objectContaining({
@@ -171,7 +174,10 @@ describe("tenant API", () => {
     await expect(getTenantById("secret-id")).resolves.toEqual({
       ok: false,
       status: 0,
+      code: undefined,
       message: "Não foi possível concluir a operação. Tente novamente.",
+      blockers: [],
+      fieldErrors: undefined,
       retryable: true,
     });
   });

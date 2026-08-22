@@ -4,6 +4,8 @@
 // Source: specs/010-integrate-python-backend/contracts/, specs/017-tenant-search-knowledge-base/contracts/
 // ============================================================================
 
+import type { ApiErrorCode, Blocker } from "@/lib/apiError";
+
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
@@ -162,6 +164,7 @@ export type TenantWriteInput = {
 
 export type TenantCreateInput = TenantWriteInput & {
   tenant_id: string;
+  prompt_id: string;
 };
 
 export type Tenant = {
@@ -181,7 +184,9 @@ export type TenantFieldErrors = Partial<
 export type TenantOperationFailure = {
   ok: false;
   status: number;
+  code?: ApiErrorCode;
   message: string;
+  blockers: Blocker[];
   fieldErrors?: TenantFieldErrors;
   retryable: boolean;
 };

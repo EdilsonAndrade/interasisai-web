@@ -21,6 +21,13 @@ export const tenantWriteSchema = z.object({
 
 export const tenantCreateSchema = tenantWriteSchema.extend({
   tenant_id: z.string().trim().min(1, "O ID do tenant é obrigatório."),
+  prompt_id: z
+    .string()
+    .trim()
+    .min(
+      1,
+      "Selecione o prompt que este tenant vai usar. Sem prompt vinculado, o atendimento não funciona.",
+    ),
 });
 
 export const tenantLookupSchema = z.object({

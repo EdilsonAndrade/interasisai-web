@@ -2,7 +2,7 @@
 // Tests: promptManager — node_type query param on fetchTenantPromptDetail
 // ============================================================================
 
-import { fetchTenantPromptDetail } from "./promptManager";
+import { fetchPrompts, fetchTenantPromptDetail } from "./promptManager";
 
 type MockResponse = {
   ok: boolean;
@@ -49,6 +49,40 @@ describe("promptManager — fetchTenantPromptDetail node_type", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       "http://test-api.example.com/api/v1/prompt-manager/tenant/tenant-1?node_type=chitchat",
+      expect.anything(),
+    );
+  });
+});
+
+describe("promptManager — fetchPrompts node_type filter", () => {
+  beforeEach(() => {
+    fetchMock.mockReset();
+    global.fetch = fetchMock as unknown as typeof fetch;
+    process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL = "http://test-api.example.com";
+  });
+
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL;
+  });
+
+  it("omits the node_type query param when none is given", async () => {
+    fetchMock.mockResolvedValueOnce(createMockResponse(200, []));
+
+    await fetchPrompts(undefined);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://test-api.example.com/api/v1/prompt-manager/prompts",
+      expect.anything(),
+    );
+  });
+
+  it("applies the node_type query param when given", async () => {
+    fetchMock.mockResolvedValueOnce(createMockResponse(200, []));
+
+    await fetchPrompts(undefined, "operational");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://test-api.example.com/api/v1/prompt-manager/prompts?node_type=operational",
       expect.anything(),
     );
   });

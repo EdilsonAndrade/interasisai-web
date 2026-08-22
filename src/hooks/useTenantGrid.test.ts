@@ -14,6 +14,7 @@ function itemsPage(startIndex: number, count: number) {
     name: `Tenant ${startIndex + i}`,
     google_calendar_id: "cal@x",
     allowed_domains: [],
+    scheduling_enabled: true,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: null,
     prompts: [],

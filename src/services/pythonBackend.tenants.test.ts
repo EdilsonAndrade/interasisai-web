@@ -10,6 +10,7 @@ const tenant = {
   name: "Tenant One",
   google_calendar_id: "agenda@group.calendar.google.com",
   allowed_domains: ["example.com"],
+  scheduling_enabled: true,
   created_at: "2026-08-08T10:00:00Z",
   updated_at: "2026-08-08T10:00:00Z",
   deleted_at: null,
@@ -41,6 +42,7 @@ describe("tenant API", () => {
       name: tenant.name,
       google_calendar_id: tenant.google_calendar_id,
       allowed_domains: tenant.allowed_domains,
+      scheduling_enabled: tenant.scheduling_enabled,
       prompt_id: "prompt-1",
     });
 
@@ -53,6 +55,7 @@ describe("tenant API", () => {
           name: tenant.name,
           google_calendar_id: tenant.google_calendar_id,
           allowed_domains: tenant.allowed_domains,
+          scheduling_enabled: tenant.scheduling_enabled,
           prompt_id: "prompt-1",
         }),
       }),
@@ -78,6 +81,7 @@ describe("tenant API", () => {
       name: "New",
       google_calendar_id: tenant.google_calendar_id,
       allowed_domains: tenant.allowed_domains,
+      scheduling_enabled: tenant.scheduling_enabled,
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
@@ -88,6 +92,7 @@ describe("tenant API", () => {
           name: "New",
           google_calendar_id: tenant.google_calendar_id,
           allowed_domains: tenant.allowed_domains,
+          scheduling_enabled: tenant.scheduling_enabled,
         }),
       }),
     );
@@ -149,6 +154,7 @@ describe("tenant API", () => {
         name: "Existing",
         google_calendar_id: "calendar",
         allowed_domains: ["example.com"],
+        scheduling_enabled: true,
         prompt_id: "prompt-1",
       }),
     ).resolves.toEqual(

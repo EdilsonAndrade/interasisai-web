@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { AlertCircle, CalendarDays, CalendarOff, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import type { TenantGridItem } from "@/services/pythonBackend.types";
 
 type TenantGridProps = {
@@ -62,12 +62,13 @@ export function TenantGrid({
               <tr className="border-b border-border-subtle text-xs font-semibold uppercase text-text-body/60">
                 <th scope="col" className="p-0 pb-2">ID</th>
                 <th scope="col" className="p-0 pb-2">Nome</th>
+                <th scope="col" className="p-0 pb-2">Agendamento</th>
               </tr>
             </thead>
             <tbody>
               {items.map((item) => (
                 <tr key={item.id} className="border-b border-border-subtle last:border-0">
-                  <td colSpan={2} className="p-0">
+                  <td colSpan={3} className="p-0">
                     <button
                       type="button"
                       onClick={() => onSelect(item.id)}
@@ -75,6 +76,14 @@ export function TenantGrid({
                     >
                       <span className="w-1/3 shrink-0 break-all text-text-body">{item.id}</span>
                       <span className="min-w-0 flex-1 break-words font-semibold text-text-strong">{item.name}</span>
+                      <span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-text-body" title={item.scheduling_enabled ? "Agendamento habilitado" : "Agendamento desabilitado"}>
+                        {item.scheduling_enabled ? (
+                          <CalendarDays className="h-4 w-4 text-brand-primary" aria-hidden="true" />
+                        ) : (
+                          <CalendarOff className="h-4 w-4 text-text-muted" aria-hidden="true" />
+                        )}
+                        <span className="sr-only">{item.scheduling_enabled ? "Agendamento habilitado" : "Agendamento desabilitado"}</span>
+                      </span>
                     </button>
                   </td>
                 </tr>

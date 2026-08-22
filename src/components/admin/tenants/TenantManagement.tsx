@@ -158,6 +158,7 @@ export function TenantManagement() {
             name: editing.name,
             google_calendar_id: editing.google_calendar_id,
             allowed_domains: editing.allowed_domains,
+            scheduling_enabled: editing.scheduling_enabled,
           } : undefined}
           operationalPrompts={operationalPrompts}
           isLoading={management.operation === "create" || management.operation === "update"}

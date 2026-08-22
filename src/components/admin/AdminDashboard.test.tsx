@@ -29,6 +29,7 @@ const tenantOne = {
   name: "Tenant Um",
   google_calendar_id: "a@group.calendar.google.com",
   allowed_domains: ["um.com"],
+  scheduling_enabled: true,
   created_at: "2026-01-01T00:00:00Z",
   updated_at: null,
   deleted_at: null,

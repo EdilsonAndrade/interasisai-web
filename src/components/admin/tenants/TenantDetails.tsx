@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Globe2, MessageCircleMore, Pencil } from "lucide-react";
+import { CalendarDays, CalendarOff, Globe2, MessageCircleMore, Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { Tenant } from "@/services";
 import { DeleteAction } from "@/components/admin/DeleteAction";
@@ -116,6 +116,7 @@ export function TenantDetails({
       <dl className="grid gap-4 sm:grid-cols-2">
         <div><dt className="text-xs font-semibold uppercase text-text-muted">ID</dt><dd className="mt-1 break-all text-sm text-text-strong">{tenant.id}</dd></div>
         <div><dt className="text-xs font-semibold uppercase text-text-muted">Google Calendar</dt><dd className="mt-1 flex min-w-0 gap-2 break-all text-sm text-text-strong"><CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" />{tenant.google_calendar_id}</dd></div>
+        <div><dt className="text-xs font-semibold uppercase text-text-muted">Agendamento</dt><dd className="mt-1 flex min-w-0 items-center gap-2 text-sm text-text-strong">{tenant.scheduling_enabled ? <CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" /> : <CalendarOff className="h-4 w-4 shrink-0" aria-hidden="true" />}{tenant.scheduling_enabled ? "Habilitado" : "Desabilitado"}</dd></div>
         <div className="sm:col-span-2"><dt className="text-xs font-semibold uppercase text-text-muted">Domínios permitidos</dt><dd className="mt-2 flex flex-wrap gap-2">{tenant.allowed_domains.map((domain) => <span key={domain} className="inline-flex max-w-full items-center gap-2 rounded-card border border-brand-primary/30 bg-brand-primary/10 px-3 py-2 text-sm text-text-strong"><Globe2 className="h-4 w-4 shrink-0" aria-hidden="true" /><span className="break-all">{domain}</span></span>)}</dd></div>
         <div><dt className="text-xs font-semibold uppercase text-text-muted">Criado em</dt><dd className="mt-1 text-sm text-text-strong">{formatDate(tenant.created_at)}</dd></div>
         <div><dt className="text-xs font-semibold uppercase text-text-muted">Atualizado em</dt><dd className="mt-1 text-sm text-text-strong">{formatDate(tenant.updated_at, "Nunca atualizado")}</dd></div>

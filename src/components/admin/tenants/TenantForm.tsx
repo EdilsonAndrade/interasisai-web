@@ -59,6 +59,7 @@ export function TenantForm({
       name: initialValues?.name ?? "",
       google_calendar_id: initialValues?.google_calendar_id ?? "",
       allowed_domains: initialValues?.allowed_domains ?? [],
+      scheduling_enabled: initialValues?.scheduling_enabled ?? true,
       prompt_id: mode === "edit" ? EDIT_MODE_PROMPT_PLACEHOLDER : "",
     },
   });
@@ -104,6 +105,7 @@ export function TenantForm({
         name: values.name,
         google_calendar_id: values.google_calendar_id,
         allowed_domains: values.allowed_domains,
+        scheduling_enabled: values.scheduling_enabled,
       });
       if (ok) reset();
       return;
@@ -114,6 +116,7 @@ export function TenantForm({
       name: values.name,
       google_calendar_id: values.google_calendar_id,
       allowed_domains: values.allowed_domains,
+      scheduling_enabled: values.scheduling_enabled,
     };
     const intent: TenantCreateIntent = newPromptDraft
       ? { mode: "new", prompt: newPromptDraft }
@@ -233,6 +236,20 @@ export function TenantForm({
             {domainError ?? errors.allowed_domains?.message}
           </p>
         )}
+      </div>
+      <div className="space-y-2">
+        <label className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            disabled={isLoading}
+            {...register("scheduling_enabled")}
+            className="h-4 w-4 rounded accent-brand-primary"
+          />
+          <span className="text-sm text-text-body">
+            Agendamento habilitado{" "}
+            <span className="text-text-weak">(disponibiliza as ferramentas de calendário para o agente)</span>
+          </span>
+        </label>
       </div>
       {mode === "create" && (
         <PromptSelectField

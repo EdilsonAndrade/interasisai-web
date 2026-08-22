@@ -161,6 +161,7 @@ export type TenantWriteInput = {
   name: string;
   google_calendar_id: string;
   allowed_domains: string[];
+  scheduling_enabled: boolean;
 };
 
 export type TenantCreateInput = TenantWriteInput & {
@@ -176,6 +177,7 @@ export type Tenant = {
   updated_at: string | null;
   deleted_at: string | null;
   allowed_domains: string[];
+  scheduling_enabled: boolean;
 };
 
 export type TenantFieldErrors = Partial<
@@ -287,6 +289,7 @@ export type TenantGridItem = {
   name: string;
   google_calendar_id: string;
   allowed_domains: string[];
+  scheduling_enabled: boolean;
   created_at: string;
   updated_at: string | null;
   prompts: TenantGridPromptTag[];

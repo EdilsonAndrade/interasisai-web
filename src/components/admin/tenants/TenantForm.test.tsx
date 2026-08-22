@@ -110,6 +110,7 @@ describe("TenantForm", () => {
           name: "Tenant One",
           google_calendar_id: "calendar",
           allowed_domains: ["example.com"],
+          scheduling_enabled: true,
         },
         { mode: "existing", prompt_id: "p-clinica" },
       ),
@@ -181,6 +182,7 @@ describe("TenantForm", () => {
         name: "One",
         google_calendar_id: "calendar",
         allowed_domains: ["example.com"],
+        scheduling_enabled: true,
       }),
     );
   });

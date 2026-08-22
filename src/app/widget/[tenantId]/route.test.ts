@@ -40,6 +40,7 @@ describe("GET /widget/[tenantId]", () => {
         updated_at: null,
         deleted_at: null,
         allowed_domains: [],
+        scheduling_enabled: true,
       },
     });
 

@@ -14,6 +14,7 @@ const tenant = {
   name: "Barbearia Central",
   google_calendar_id: "abc@group.calendar.google.com",
   allowed_domains: ["barbeariacentral.com.br"],
+  scheduling_enabled: true,
   created_at: "2026-01-10T12:00:00Z",
   updated_at: null,
   deleted_at: null,

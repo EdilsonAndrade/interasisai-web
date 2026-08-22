@@ -17,6 +17,7 @@ export const tenantWriteSchema = z.object({
   allowed_domains: z
     .array(tenantDomainSchema)
     .min(1, "Adicione pelo menos um domínio permitido."),
+  scheduling_enabled: z.boolean(),
 });
 
 export const tenantCreateSchema = tenantWriteSchema.extend({

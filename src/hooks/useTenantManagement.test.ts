@@ -30,6 +30,7 @@ const tenant = {
   name: "Tenant One",
   google_calendar_id: "calendar",
   allowed_domains: ["example.com"],
+  scheduling_enabled: true,
   created_at: "2026-08-08T10:00:00Z",
   updated_at: "2026-08-08T10:00:00Z",
   deleted_at: null,
@@ -40,6 +41,7 @@ const base = {
   name: tenant.name,
   google_calendar_id: tenant.google_calendar_id,
   allowed_domains: tenant.allowed_domains,
+  scheduling_enabled: tenant.scheduling_enabled,
 };
 
 const newPromptDraft = {
@@ -187,7 +189,7 @@ describe("useTenantManagement", () => {
 
     await act(async () => { await result.current.lookup("tenant-1"); });
     await act(async () => {
-      await result.current.update({ name: "Updated", google_calendar_id: "calendar", allowed_domains: ["example.com"] });
+      await result.current.update({ name: "Updated", google_calendar_id: "calendar", allowed_domains: ["example.com"], scheduling_enabled: true });
     });
     expect(result.current.tenant?.name).toBe("Updated");
     expect(result.current.feedback).toBe("Tenant atualizado com sucesso");
@@ -211,7 +213,7 @@ describe("useTenantManagement", () => {
 
     await act(async () => { await result.current.lookup("tenant-1"); });
     await act(async () => {
-      await result.current.update({ name: "Existing", google_calendar_id: "calendar", allowed_domains: ["example.com"] });
+      await result.current.update({ name: "Existing", google_calendar_id: "calendar", allowed_domains: ["example.com"], scheduling_enabled: true });
     });
 
     expect(result.current.tenant).toEqual(tenant);

@@ -123,6 +123,7 @@ describe("useBulkTenantLink", () => {
           updated_at: null,
           deleted_at: null,
           allowed_domains: [],
+          scheduling_enabled: true,
         },
       ],
     });

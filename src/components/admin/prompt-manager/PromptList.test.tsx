@@ -32,6 +32,7 @@ describe("PromptList", () => {
         onEdit={jest.fn()}
         onDelete={jest.fn()}
         onNew={jest.fn()}
+        onBulkLink={jest.fn()}
       />,
     );
 
@@ -51,6 +52,7 @@ describe("PromptList", () => {
         onEdit={jest.fn()}
         onDelete={onDelete}
         onNew={jest.fn()}
+        onBulkLink={jest.fn()}
       />,
     );
 
@@ -75,6 +77,7 @@ describe("PromptList", () => {
         onEdit={jest.fn()}
         onDelete={onDelete}
         onNew={jest.fn()}
+        onBulkLink={jest.fn()}
       />,
     );
 
@@ -96,6 +99,7 @@ describe("PromptList", () => {
         onEdit={jest.fn()}
         onDelete={jest.fn()}
         onNew={jest.fn()}
+        onBulkLink={jest.fn()}
       />,
     );
 
@@ -118,6 +122,7 @@ describe("PromptList", () => {
         onEdit={jest.fn()}
         onDelete={jest.fn()}
         onNew={jest.fn()}
+        onBulkLink={jest.fn()}
       />,
     );
 
@@ -147,6 +152,7 @@ describe("PromptList", () => {
         onEdit={jest.fn()}
         onDelete={jest.fn()}
         onNew={jest.fn()}
+        onBulkLink={jest.fn()}
       />,
     );
 
@@ -170,6 +176,7 @@ describe("PromptList", () => {
         onEdit={jest.fn()}
         onDelete={jest.fn()}
         onNew={jest.fn()}
+        onBulkLink={jest.fn()}
       />,
     );
 
@@ -196,9 +203,31 @@ describe("PromptList", () => {
         onEdit={jest.fn()}
         onDelete={jest.fn()}
         onNew={jest.fn()}
+        onBulkLink={jest.fn()}
       />,
     );
 
     expect(screen.getByText("Global")).toBeInTheDocument();
+  });
+
+  it("calls onBulkLink with the prompt when 'Aplicar a estes tenants' is clicked", () => {
+    const onBulkLink = jest.fn();
+    render(
+      <PromptList
+        prompts={[promptA]}
+        availableGuardrails={[]}
+        loading={false}
+        error={null}
+        onRefresh={jest.fn()}
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+        onNew={jest.fn()}
+        onBulkLink={onBulkLink}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Aplicar Agendamento Padrão a tenants" }));
+
+    expect(onBulkLink).toHaveBeenCalledWith(promptA);
   });
 });

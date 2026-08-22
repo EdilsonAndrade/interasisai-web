@@ -63,6 +63,31 @@ export interface TenantLinkInput {
 }
 
 // ---------------------------------------------------------------------------
+// Bulk tenant link (US3)
+// ---------------------------------------------------------------------------
+
+export type PromptTenant = { id: string; name: string };
+
+export type PromptTenantsResponse = {
+  prompt_id: string;
+  node_type: NodeType;
+  tenants: PromptTenant[];
+};
+
+export type BulkTenantLinkInput = {
+  prompt_id: string;
+  tenant_ids: string[];
+  custom_content_override?: string;
+};
+
+export type BulkTenantLinkResponse = {
+  prompt_id: string;
+  node_type: NodeType;
+  linked_count: number;
+  tenant_ids: string[];
+};
+
+// ---------------------------------------------------------------------------
 // Tenant Prompt Detail (GET /tenant/{tenant_id})
 // ---------------------------------------------------------------------------
 
@@ -101,3 +126,5 @@ export type PromptSingleResult = PromptManagerResult<Prompt>;
 export type TenantLinkResult = PromptManagerResult<null>;
 export type TenantPromptDetailResult = PromptManagerResult<TenantPromptDetail>;
 export type DeleteResult = PromptManagerResult<null>;
+export type PromptTenantsResult = PromptManagerResult<PromptTenantsResponse>;
+export type BulkTenantLinkResult = PromptManagerResult<BulkTenantLinkResponse>;

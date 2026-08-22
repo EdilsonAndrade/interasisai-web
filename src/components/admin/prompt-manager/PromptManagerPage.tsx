@@ -13,6 +13,7 @@ import { GuardrailFormModal } from "./GuardrailFormModal";
 import { PromptList } from "./PromptList";
 import { PromptFormModal } from "./PromptFormModal";
 import { TenantLinkSection } from "./TenantLinkSection";
+import { BulkTenantLinkModal } from "./BulkTenantLinkModal";
 import { useGuardrails } from "@/hooks/useGuardrails";
 import { usePrompts } from "@/hooks/usePrompts";
 import { useTenantLink } from "@/hooks/useTenantLink";
@@ -68,6 +69,8 @@ export function PromptManagerPage() {
     setPromptModal("edit");
   };
 
+  const [bulkLinkPrompt, setBulkLinkPrompt] = useState<Prompt | null>(null);
+
   const handlePromptSubmit = async (data: PromptFormData) => {
     if (promptModal === "edit" && editingPrompt) {
       return promptsHook.editPrompt(editingPrompt.id, data);
@@ -107,6 +110,7 @@ export function PromptManagerPage() {
             onEdit={openEditPrompt}
             onDelete={promptsHook.removePrompt}
             onNew={openNewPrompt}
+            onBulkLink={setBulkLinkPrompt}
           />
         </div>
 
@@ -158,6 +162,13 @@ export function PromptManagerPage() {
         availableGuardrails={promptsHook.guardrails}
         onClose={() => setPromptModal(null)}
         onSubmit={handlePromptSubmit}
+      />
+
+      {/* Bulk Tenant Link Modal */}
+      <BulkTenantLinkModal
+        open={bulkLinkPrompt !== null}
+        prompt={bulkLinkPrompt}
+        onClose={() => setBulkLinkPrompt(null)}
       />
     </div>
   );

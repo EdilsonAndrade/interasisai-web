@@ -25,7 +25,14 @@ export const tenantLinkSchema = z.object({
   custom_content_override: z.string().optional(),
 });
 
+export const bulkTenantLinkSchema = z.object({
+  prompt_id: z.string().min(1, "Prompt é obrigatório"),
+  tenant_ids: z.array(z.string()).min(1, "Selecione ao menos um tenant."),
+  custom_content_override: z.string().optional(),
+});
+
 // Inferred types for react-hook-form
 export type GuardrailFormData = z.infer<typeof guardrailFormSchema>;
 export type PromptFormData = z.infer<typeof promptFormSchema>;
 export type TenantLinkFormData = z.infer<typeof tenantLinkSchema>;
+export type BulkTenantLinkFormData = z.infer<typeof bulkTenantLinkSchema>;

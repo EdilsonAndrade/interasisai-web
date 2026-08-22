@@ -23,6 +23,11 @@ import type {
   TenantPromptDetailResult,
   DeleteResult,
   PromptManagerResult,
+  BulkTenantLinkInput,
+  BulkTenantLinkResponse,
+  PromptTenantsResponse,
+  PromptTenantsResult,
+  BulkTenantLinkResult,
 } from "./promptManager.types";
 
 // ---------------------------------------------------------------------------
@@ -275,6 +280,39 @@ export function linkTenantToPrompt(
     body.custom_content_override = input.custom_content_override;
   }
   return requestPromptManager<null>("/api/v1/prompt-manager/link-tenant", {
+    method: "POST",
+    body: JSON.stringify(body),
+    signal,
+  }, false);
+}
+
+// ---------------------------------------------------------------------------
+// Bulk tenant link (US3)
+// ---------------------------------------------------------------------------
+
+export function fetchPromptTenants(
+  promptId: string,
+  signal?: AbortSignal,
+): Promise<PromptTenantsResult> {
+  return requestPromptManager<PromptTenantsResponse>(
+    `/api/v1/prompt-manager/prompts/${encodeURIComponent(promptId)}/tenants`,
+    { signal },
+    false,
+  );
+}
+
+export function linkTenantsBulk(
+  input: BulkTenantLinkInput,
+  signal?: AbortSignal,
+): Promise<BulkTenantLinkResult> {
+  const body: Record<string, unknown> = {
+    prompt_id: input.prompt_id,
+    tenant_ids: input.tenant_ids,
+  };
+  if (input.custom_content_override) {
+    body.custom_content_override = input.custom_content_override;
+  }
+  return requestPromptManager<BulkTenantLinkResponse>("/api/v1/prompt-manager/link-tenants", {
     method: "POST",
     body: JSON.stringify(body),
     signal,

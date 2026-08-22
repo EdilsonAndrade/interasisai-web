@@ -108,22 +108,22 @@ description: "Task list for Vínculo obrigatório de prompt no tenant e associa�
 
 ### Implementation for User Story 3
 
-- [ ] T029 [P] [US3] Criar `src/components/admin/BlockerList.tsx`: renderiza `Blocker[]` com fallback para `id` quando `name` está ausente, e callback opcional de resolução por item (R-006, FR-038)
-- [ ] T030 [US3] Adicionar `fetchPromptTenants(promptId)` e `linkTenantsBulk(input)` a `src/services/promptManager.ts`, com os tipos `PromptTenant`, `PromptTenantsResponse`, `BulkTenantLinkInput`, `BulkTenantLinkResponse` em `src/services/promptManager.types.ts` — contrato §3/§4, usando `normalizeApiError` via `requestPromptManager` (depends on: T008)
-- [ ] T031 [P] [US3] Adicionar `bulkTenantLinkSchema` a `src/lib/promptManagerSchemas.ts` (`prompt_id` obrigatório, `tenant_ids` mínimo 1) (FR-028, data-model.md §4)
-- [ ] T032 [US3] Criar `src/hooks/usePromptTenants.ts`: busca os tenants já vinculados a um prompt via `fetchPromptTenants` (depends on: T030)
-- [ ] T033 [US3] Criar `src/hooks/useBulkTenantLink.ts`: seleção de tenants via `searchTenants` (existente), calcula `BulkLinkDiff` (unchanged/changing) por diferença de conjuntos contra `usePromptTenants`, executa `linkTenantsBulk`, e trata `TENANT_NOT_FOUND` expondo os `blockers` e deixando explícito que nada foi aplicado (FR-025..FR-030, R-005) (depends on: T030, T031, T032)
-- [ ] T034 [US3] Criar `src/components/admin/prompt-manager/BulkTenantLinkModal.tsx`: busca + seleção em chips (padrão já usado em `TenantForm.tsx` para domínios), separa visualmente "já usam" de "serão alterados", avisa explicitamente sobre substituição e all-or-nothing e que outros nós não são afetados, bloqueia confirmação sem seleção, informa a quantidade vinculada no sucesso, e usa `BlockerList` (T029) para listar tenants inexistentes no erro (FR-023..FR-030) (depends on: T029, T033)
-- [ ] T035 [US3] Adicionar a ação "Aplicar a estes tenants" a `src/components/admin/prompt-manager/PromptList.tsx`, abrindo `BulkTenantLinkModal` para o prompt selecionado (FR-023) (depends on: T034)
-- [ ] T036 [US3] Fiar `BulkTenantLinkModal` em `src/components/admin/prompt-manager/PromptManagerPage.tsx` (depends on: T034, T035)
+- [X] T029 [P] [US3] Criar `src/components/admin/BlockerList.tsx`: renderiza `Blocker[]` com fallback para `id` quando `name` está ausente, e callback opcional de resolução por item (R-006, FR-038)
+- [X] T030 [US3] Adicionar `fetchPromptTenants(promptId)` e `linkTenantsBulk(input)` a `src/services/promptManager.ts`, com os tipos `PromptTenant`, `PromptTenantsResponse`, `BulkTenantLinkInput`, `BulkTenantLinkResponse` em `src/services/promptManager.types.ts` — contrato §3/§4, usando `normalizeApiError` via `requestPromptManager` (depends on: T008)
+- [X] T031 [P] [US3] Adicionar `bulkTenantLinkSchema` a `src/lib/promptManagerSchemas.ts` (`prompt_id` obrigatório, `tenant_ids` mínimo 1) (FR-028, data-model.md §4)
+- [X] T032 [US3] Criar `src/hooks/usePromptTenants.ts`: busca os tenants já vinculados a um prompt via `fetchPromptTenants` (depends on: T030)
+- [X] T033 [US3] Criar `src/hooks/useBulkTenantLink.ts`: seleção de tenants via `searchTenants` (existente), calcula `BulkLinkDiff` (unchanged/changing) por diferença de conjuntos contra `usePromptTenants`, executa `linkTenantsBulk`, e trata `TENANT_NOT_FOUND` expondo os `blockers` e deixando explícito que nada foi aplicado (FR-025..FR-030, R-005) (depends on: T030, T031, T032)
+- [X] T034 [US3] Criar `src/components/admin/prompt-manager/BulkTenantLinkModal.tsx`: busca + seleção em chips (padrão já usado em `TenantForm.tsx` para domínios), separa visualmente "já usam" de "serão alterados", avisa explicitamente sobre substituição e all-or-nothing e que outros nós não são afetados, bloqueia confirmação sem seleção, informa a quantidade vinculada no sucesso, e usa `BlockerList` (T029) para listar tenants inexistentes no erro (FR-023..FR-030) (depends on: T029, T033)
+- [X] T035 [US3] Adicionar a ação "Aplicar a estes tenants" a `src/components/admin/prompt-manager/PromptList.tsx`, abrindo `BulkTenantLinkModal` para o prompt selecionado (FR-023) (depends on: T034)
+- [X] T036 [US3] Fiar `BulkTenantLinkModal` em `src/components/admin/prompt-manager/PromptManagerPage.tsx` (depends on: T034, T035)
 
 ### Tests for User Story 3
 
-- [ ] T037 [P] [US3] Teste de `BlockerList` — renderiza nome ou cai para id; aciona callback de resolução, em `src/components/admin/BlockerList.test.tsx`
-- [ ] T038 [P] [US3] Teste dos novos endpoints — sucesso, `PROMPT_NOT_FOUND`, `TENANT_NOT_FOUND` com `blockers`, em `src/services/promptManager.test.ts`
-- [ ] T039 [P] [US3] Teste de `usePromptTenants` (`renderHook`) em `src/hooks/usePromptTenants.test.ts`
-- [ ] T040 [US3] Teste de `useBulkTenantLink` (`renderHook`) — diff correto (unchanged/changing); `TENANT_NOT_FOUND` não aplica nada; bloqueia confirmação sem seleção, em `src/hooks/useBulkTenantLink.test.ts`
-- [ ] T041 [US3] Teste de `BulkTenantLinkModal` — separa os dois grupos; texto de substituição e all-or-nothing presente; sucesso mostra contagem; erro lista bloqueadores, em `src/components/admin/prompt-manager/BulkTenantLinkModal.test.tsx`
+- [X] T037 [P] [US3] Teste de `BlockerList` — renderiza nome ou cai para id; aciona callback de resolução, em `src/components/admin/BlockerList.test.tsx`
+- [X] T038 [P] [US3] Teste dos novos endpoints — sucesso, `PROMPT_NOT_FOUND`, `TENANT_NOT_FOUND` com `blockers`, em `src/services/promptManager.test.ts`
+- [X] T039 [P] [US3] Teste de `usePromptTenants` (`renderHook`) em `src/hooks/usePromptTenants.test.ts`
+- [X] T040 [US3] Teste de `useBulkTenantLink` (`renderHook`) — diff correto (unchanged/changing); `TENANT_NOT_FOUND` não aplica nada; bloqueia confirmação sem seleção, em `src/hooks/useBulkTenantLink.test.ts`
+- [X] T041 [US3] Teste de `BulkTenantLinkModal` — separa os dois grupos; texto de substituição e all-or-nothing presente; sucesso mostra contagem; erro lista bloqueadores, em `src/components/admin/prompt-manager/BulkTenantLinkModal.test.tsx`
 
 **Checkpoint**: US3 funciona de forma independente — aplicar a 10 tenants vira uma única confirmação.
 

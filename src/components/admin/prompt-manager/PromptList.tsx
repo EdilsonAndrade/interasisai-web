@@ -4,7 +4,7 @@
 
 "use client";
 
-import { Edit2, FileText, Loader2, Plus, Search, Star } from "lucide-react";
+import { Edit2, FileText, Link2, Loader2, Plus, Search, Star } from "lucide-react";
 import { useState } from "react";
 import type { Guardrail, Prompt } from "@/services/promptManager.types";
 import { AdminDialog } from "@/components/admin/AdminDialog";
@@ -34,6 +34,7 @@ interface PromptListProps {
   onEdit: (prompt: Prompt) => void;
   onDelete: (id: string) => Promise<boolean>;
   onNew: () => void;
+  onBulkLink: (prompt: Prompt) => void;
 }
 
 export function PromptList({
@@ -45,6 +46,7 @@ export function PromptList({
   onEdit,
   onDelete,
   onNew,
+  onBulkLink,
 }: PromptListProps) {
   const [deleteTarget, setDeleteTarget] = useState<ConfirmDeleteTarget>(null);
   const [deleting, setDeleting] = useState(false);
@@ -220,6 +222,15 @@ export function PromptList({
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
+              <button
+                type="button"
+                onClick={() => onBulkLink(p)}
+                aria-label={`Aplicar ${p.titulo} a tenants`}
+                title="Aplicar a estes tenants"
+                className="rounded-md p-2 text-text-weak transition-colors hover:bg-surface-subtle hover:text-brand-primary"
+              >
+                <Link2 className="h-4 w-4" aria-hidden="true" />
+              </button>
               <button
                 type="button"
                 onClick={() => onEdit(p)}

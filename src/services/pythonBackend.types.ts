@@ -5,6 +5,7 @@
 // ============================================================================
 
 import type { ApiErrorCode, Blocker } from "@/lib/apiError";
+import type { NodeType } from "./promptManager.types";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -211,6 +212,40 @@ export type TenantDeleteResult =
   | TenantOperationFailure;
 
 // ---------------------------------------------------------------------------
+// Tenant delete impact preview — GET /tenants/{id}/delete-impact (EDI-45)
+// ---------------------------------------------------------------------------
+
+export type TenantDeleteImpactPromptItem = {
+  id: string;
+  titulo: string;
+  node_type?: NodeType; // presente apenas em prompts_to_delete
+};
+
+export type TenantDeleteImpactGuardrailItem = {
+  id: string;
+  titulo: string;
+  is_global?: boolean; // presente apenas em guardrails_to_unlink_only
+};
+
+export type TenantDeleteImpact = {
+  tenant_id: string;
+  prompts_to_delete: TenantDeleteImpactPromptItem[];
+  prompts_to_unlink_only: TenantDeleteImpactPromptItem[];
+  guardrails_to_delete: TenantDeleteImpactGuardrailItem[];
+  guardrails_to_unlink_only: TenantDeleteImpactGuardrailItem[];
+};
+
+export type TenantDeleteImpactSuccess = {
+  ok: true;
+  status: number;
+  data: TenantDeleteImpact;
+};
+
+export type TenantDeleteImpactResult =
+  | TenantDeleteImpactSuccess
+  | TenantOperationFailure;
+
+// ---------------------------------------------------------------------------
 // Tenant search API — GET /tenants?q=&limit=
 // ---------------------------------------------------------------------------
 
@@ -230,6 +265,49 @@ export type TenantSearchFailure = {
 };
 
 export type TenantSearchResult = TenantSearchSuccess | TenantSearchFailure;
+
+// ---------------------------------------------------------------------------
+// Tenant grid API — GET /tenants/list?q=&limit=&offset= (EDI-46)
+// ---------------------------------------------------------------------------
+
+export type TenantGridPromptTag = {
+  id: string;
+  titulo: string;
+  node_type: NodeType;
+};
+
+export type TenantGridGuardrailTag = {
+  id: string;
+  titulo: string;
+  is_global: boolean;
+};
+
+export type TenantGridItem = {
+  id: string;
+  name: string;
+  google_calendar_id: string;
+  allowed_domains: string[];
+  created_at: string;
+  updated_at: string | null;
+  prompts: TenantGridPromptTag[];
+  guardrails: TenantGridGuardrailTag[];
+};
+
+export type TenantListSuccess = {
+  ok: true;
+  status: number;
+  items: TenantGridItem[];
+  total: number;
+};
+
+export type TenantListFailure = {
+  ok: false;
+  status: number;
+  message: string;
+  retryable: boolean;
+};
+
+export type TenantListResult = TenantListSuccess | TenantListFailure;
 
 // ---------------------------------------------------------------------------
 // Knowledge base API — GET/PUT/DELETE /tenants/{tenant_id}/knowledge-base

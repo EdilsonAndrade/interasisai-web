@@ -112,6 +112,42 @@ describe("AdminDialog", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it("closes when the mousedown and the click both land directly on the backdrop", async () => {
+    const onClose = jest.fn();
+    render(
+      <AdminDialog open title="Novo tenant" onClose={onClose}>
+        <button>Conteúdo</button>
+      </AdminDialog>,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    await waitFor(() => expect(dialog).toHaveAttribute("open"));
+
+    fireEvent.mouseDown(dialog);
+    fireEvent.click(dialog);
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not close when a text selection started inside the dialog ends up released over the backdrop", async () => {
+    const onClose = jest.fn();
+    render(
+      <AdminDialog open title="Novo tenant" onClose={onClose}>
+        <button>Conteúdo</button>
+      </AdminDialog>,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    await waitFor(() => expect(dialog).toHaveAttribute("open"));
+
+    // Mousedown starts on content (e.g. selecting text), mouseup/click ends
+    // up targeting the backdrop itself — must NOT be treated as a backdrop click.
+    fireEvent.mouseDown(screen.getByRole("button", { name: "Conteúdo" }));
+    fireEvent.click(dialog);
+
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
   it("gives the close ('X') button a touch-friendly hit area of at least 44x44px", () => {
     render(
       <AdminDialog open title="Novo tenant" onClose={jest.fn()}>

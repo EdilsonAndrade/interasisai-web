@@ -1,8 +1,13 @@
-import { CalendarDays, Globe2, Pencil } from "lucide-react";
+"use client";
+
+import { CalendarDays, Globe2, MessageCircleMore, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { Tenant } from "@/services";
 import { DeleteAction } from "@/components/admin/DeleteAction";
+import { GuardrailScopeBadge } from "@/components/admin/GuardrailScopeBadge";
 import { TenantPromptBindingCard } from "@/components/admin/TenantPromptBindingCard";
 import type { TenantPromptBindingState } from "@/hooks/useTenantPromptBinding";
+import type { TenantNodePromptEntry } from "@/hooks/useTenantNodePrompts";
 import type { Prompt, TenantPromptDetail } from "@/services/promptManager.types";
 import { TenantSnippet } from "./TenantSnippet";
 
@@ -16,7 +21,51 @@ type TenantDetailsProps = {
   bindingLinking: boolean;
   operationalPrompts: Prompt[];
   onLinkPrompt: (promptId: string) => Promise<boolean>;
+  institutionalPrompt: TenantNodePromptEntry;
+  chitchatPrompt: TenantNodePromptEntry;
 };
+
+const READ_ONLY_NODE_LABELS = {
+  institutional: "Institucional",
+  chitchat: "Chitchat",
+} as const;
+
+function ReadOnlyNodePromptCard({
+  label,
+  entry,
+}: {
+  label: string;
+  entry: TenantNodePromptEntry;
+}) {
+  if (entry.state === "idle" || entry.state === "loading") return null;
+
+  return (
+    <div className="space-y-2 rounded-card border border-border-subtle bg-surface-base/60 p-4">
+      <p className="text-xs font-semibold uppercase text-text-body/60">{label}</p>
+      {entry.state === "error" && (
+        <p role="alert" className="text-sm text-red-300">{entry.error}</p>
+      )}
+      {entry.state === "missing" && (
+        <p className="text-sm text-text-body">Nenhum prompt vinculado (usa o padrão da plataforma).</p>
+      )}
+      {entry.state === "linked" && entry.detail && (
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-text-strong">{entry.detail.prompt_titulo}</p>
+          {entry.detail.guardrails_associados.length > 0 && (
+            <div className="flex flex-col gap-1">
+              {entry.detail.guardrails_associados.map((g) => (
+                <div key={g.id} className="flex items-center gap-2 rounded-md bg-surface-subtle px-3 py-1.5 text-xs">
+                  <span className="font-medium text-text-body">{g.titulo}</span>
+                  <GuardrailScopeBadge isGlobal={g.is_global} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function formatDate(value: string | null, emptyLabel = "Não informado") {
   if (!value) return emptyLabel;
@@ -36,8 +85,15 @@ export function TenantDetails({
   bindingLinking,
   operationalPrompts,
   onLinkPrompt,
+  institutionalPrompt,
+  chitchatPrompt,
 }: TenantDetailsProps) {
   const active = tenant.deleted_at === null;
+  const router = useRouter();
+  const goToWhatsApp = () => {
+    const params = new URLSearchParams({ tenantId: tenant.id, instanceName: tenant.name });
+    router.push(`/admin/whatsapp?${params.toString()}`);
+  };
   return (
     <article className="space-y-5 border-t border-border-subtle pt-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -49,6 +105,9 @@ export function TenantDetails({
           <div className="flex gap-2">
             <button type="button" onClick={onEdit} className="inline-flex items-center gap-2 rounded-card border border-border-subtle px-3 py-2 text-sm font-semibold text-text-body hover:bg-surface-subtle">
               <Pencil className="h-4 w-4" aria-hidden="true" /> Editar
+            </button>
+            <button type="button" onClick={goToWhatsApp} className="inline-flex items-center gap-2 rounded-card border border-border-subtle px-3 py-2 text-sm font-semibold text-text-body hover:bg-surface-subtle">
+              <MessageCircleMore className="h-4 w-4" aria-hidden="true" /> WhatsApp
             </button>
             <DeleteAction onClick={onDelete} />
           </div>
@@ -71,6 +130,12 @@ export function TenantDetails({
           operationalPrompts={operationalPrompts}
           onLinkPrompt={onLinkPrompt}
         />
+      )}
+      {active && (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <ReadOnlyNodePromptCard label={READ_ONLY_NODE_LABELS.institutional} entry={institutionalPrompt} />
+          <ReadOnlyNodePromptCard label={READ_ONLY_NODE_LABELS.chitchat} entry={chitchatPrompt} />
+        </div>
       )}
       {active && <TenantSnippet tenant={tenant} />}
     </article>

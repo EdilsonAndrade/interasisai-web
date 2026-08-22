@@ -7,6 +7,7 @@
 
 import { AlertTriangle, Loader2, Shield } from "lucide-react";
 import { useState } from "react";
+import { GuardrailScopeBadge } from "@/components/admin/GuardrailScopeBadge";
 import type { TenantPromptBindingState } from "@/hooks/useTenantPromptBinding";
 import type { Prompt, TenantPromptDetail } from "@/services/promptManager.types";
 
@@ -38,6 +39,7 @@ function GuardrailsSection({
           >
             <Shield className="h-3.5 w-3.5 text-brand-primary" aria-hidden="true" />
             <span className="font-medium text-text-body">{g.titulo}</span>
+            <GuardrailScopeBadge isGlobal={g.is_global} />
           </div>
         ))}
       </div>

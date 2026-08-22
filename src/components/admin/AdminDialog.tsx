@@ -36,6 +36,11 @@ export function AdminDialog({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
   const discardPanelRef = useRef<HTMLDivElement>(null);
+  // Tracks whether the mousedown that started this click also landed on the
+  // backdrop itself — otherwise selecting text inside the dialog and
+  // releasing the mouse outside it (over the backdrop) would fire a single
+  // "click" on the backdrop and close the dialog unintentionally.
+  const backdropMouseDownRef = useRef(false);
   const [pendingDiscardConfirm, setPendingDiscardConfirm] = useState(false);
 
   // Reset any leftover discard-confirmation state when the dialog is freshly
@@ -87,8 +92,14 @@ export function AdminDialog({
         event.preventDefault();
         requestClose();
       }}
+      onMouseDown={(event) => {
+        backdropMouseDownRef.current = event.target === event.currentTarget;
+      }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) requestClose();
+        if (event.target === event.currentTarget && backdropMouseDownRef.current) {
+          requestClose();
+        }
+        backdropMouseDownRef.current = false;
       }}
       className={`fixed inset-0 z-50 m-auto w-[calc(100%-2rem)] max-w-xl rounded-card border border-brand-primary/30 bg-surface-base/95 p-0 text-text-body shadow-2xl backdrop:bg-black/70 ${className ?? ""}`}
     >

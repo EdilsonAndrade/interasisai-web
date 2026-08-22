@@ -1,6 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { TenantDetails } from "./TenantDetails";
 
+const push = jest.fn();
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+
 const tenant = {
   id: "tenant-1",
   name: "Tenant One",
@@ -28,9 +31,23 @@ const bindingProps = {
   bindingLinking: false,
   operationalPrompts: [],
   onLinkPrompt: jest.fn().mockResolvedValue(true),
+  institutionalPrompt: { state: "idle" as const, detail: null, error: null },
+  chitchatPrompt: { state: "idle" as const, detail: null, error: null },
 };
 
 describe("TenantDetails", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("navigates to the WhatsApp instances screen with Tenant ID and Nome pre-filled", () => {
+    render(
+      <TenantDetails tenant={tenant} onEdit={jest.fn()} onDelete={jest.fn()} {...bindingProps} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "WhatsApp" }));
+
+    expect(push).toHaveBeenCalledWith("/admin/whatsapp?tenantId=tenant-1&instanceName=Tenant+One");
+  });
+
   it("renders tenant data and active actions", () => {
     render(
       <TenantDetails tenant={tenant} onEdit={jest.fn()} onDelete={jest.fn()} {...bindingProps} />,
@@ -119,5 +136,40 @@ describe("TenantDetails", () => {
     fireEvent.click(screen.getByRole("button", { name: "Vincular prompt" }));
 
     expect(onLinkPrompt).toHaveBeenCalledWith("prompt-2");
+  });
+
+  it("labels institutional and chitchat prompts, and shows a neutral message when unbound", () => {
+    render(
+      <TenantDetails
+        tenant={tenant}
+        onEdit={jest.fn()}
+        onDelete={jest.fn()}
+        {...bindingProps}
+        institutionalPrompt={{
+          state: "linked",
+          detail: {
+            tenant_id: "tenant-1",
+            node_type: "institutional",
+            prompt_id: "prompt-inst",
+            is_active: true,
+            custom_content_override: null,
+            prompt_titulo: "Prompt Institucional",
+            prompt_conteudo: "...",
+            is_default_prompt: false,
+            guardrails_associados: [{ id: "g1", titulo: "Guardrail Global", conteudo: "...", is_global: true }],
+          },
+          error: null,
+        }}
+        chitchatPrompt={{ state: "missing", detail: null, error: null }}
+      />,
+    );
+
+    expect(screen.getByText("Institucional")).toBeInTheDocument();
+    expect(screen.getByText("Prompt Institucional")).toBeInTheDocument();
+    expect(screen.getByText("Guardrail Global")).toBeInTheDocument();
+    expect(screen.getByText("Global")).toBeInTheDocument();
+
+    expect(screen.getByText("Chitchat")).toBeInTheDocument();
+    expect(screen.getByText("Nenhum prompt vinculado (usa o padrão da plataforma).")).toBeInTheDocument();
   });
 });

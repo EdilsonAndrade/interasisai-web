@@ -20,6 +20,8 @@ import type {
   WhatsAppQrCodeResult,
   Tenant,
   TenantCreateInput,
+  TenantDeleteImpact,
+  TenantDeleteImpactResult,
   TenantDeleteResult,
   TenantFieldErrors,
   TenantOperationFailure,
@@ -27,6 +29,10 @@ import type {
   TenantWriteInput,
   TenantSearchItem,
   TenantSearchResult,
+  TenantGridItem,
+  TenantGridPromptTag,
+  TenantGridGuardrailTag,
+  TenantListResult,
   KnowledgeBase,
   KnowledgeBaseReadResult,
   KnowledgeBaseWriteResult,
@@ -409,6 +415,29 @@ export async function getWhatsAppQrCode(
 const TENANT_OPERATION_ERROR =
   "Não foi possível concluir a operação. Tente novamente.";
 
+function isTenantDeleteImpactItemList(value: unknown): boolean {
+  if (!Array.isArray(value)) return false;
+  return value.every(
+    (item) =>
+      item &&
+      typeof item === "object" &&
+      typeof (item as { id?: unknown }).id === "string" &&
+      typeof (item as { titulo?: unknown }).titulo === "string",
+  );
+}
+
+function isTenantDeleteImpact(value: unknown): value is TenantDeleteImpact {
+  if (!value || typeof value !== "object") return false;
+  const impact = value as Partial<TenantDeleteImpact>;
+  return (
+    typeof impact.tenant_id === "string" &&
+    isTenantDeleteImpactItemList(impact.prompts_to_delete) &&
+    isTenantDeleteImpactItemList(impact.prompts_to_unlink_only) &&
+    isTenantDeleteImpactItemList(impact.guardrails_to_delete) &&
+    isTenantDeleteImpactItemList(impact.guardrails_to_unlink_only)
+  );
+}
+
 function isTenant(value: unknown): value is Tenant {
   if (!value || typeof value !== "object") return false;
   const tenant = value as Partial<Tenant>;
@@ -559,6 +588,26 @@ export async function deleteTenant(
   return tenantFailure(response.status, await parseJsonSafely(response));
 }
 
+export async function fetchTenantDeleteImpact(
+  tenantId: string,
+  signal?: AbortSignal,
+): Promise<TenantDeleteImpactResult> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getPythonBackendBaseUrl()}/api/v1/tenants/${encodeURIComponent(tenantId)}/delete-impact`,
+      { method: "GET", signal },
+    );
+  } catch {
+    return tenantFailure(0);
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) return tenantFailure(response.status, payload);
+  if (!isTenantDeleteImpact(payload)) return tenantFailure(502);
+  return { ok: true, status: response.status, data: payload };
+}
+
 // ---------------------------------------------------------------------------
 // Tenant search — GET /tenants?q=&limit=
 // ---------------------------------------------------------------------------
@@ -610,6 +659,99 @@ export async function searchTenants(
 
   const tenants = (payload as unknown[]).filter(isTenant) as TenantSearchItem[];
   return { ok: true, status: response.status, tenants };
+}
+
+// ---------------------------------------------------------------------------
+// Tenant grid — GET /tenants/list?q=&limit=&offset= (EDI-46)
+// ---------------------------------------------------------------------------
+
+function isPromptTagList(value: unknown): value is TenantGridPromptTag[] {
+  if (!Array.isArray(value)) return false;
+  return value.every(
+    (item) =>
+      item &&
+      typeof item === "object" &&
+      typeof (item as { id?: unknown }).id === "string" &&
+      typeof (item as { titulo?: unknown }).titulo === "string",
+  );
+}
+
+function isGuardrailTagList(value: unknown): value is TenantGridGuardrailTag[] {
+  if (!Array.isArray(value)) return false;
+  return value.every(
+    (item) =>
+      item &&
+      typeof item === "object" &&
+      typeof (item as { id?: unknown }).id === "string" &&
+      typeof (item as { titulo?: unknown }).titulo === "string",
+  );
+}
+
+function isTenantGridItem(value: unknown): value is TenantGridItem {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Partial<TenantGridItem>;
+  return (
+    typeof item.id === "string" &&
+    typeof item.name === "string" &&
+    isPromptTagList(item.prompts ?? []) &&
+    isGuardrailTagList(item.guardrails ?? [])
+  );
+}
+
+export type ListTenantsParams = {
+  q?: string;
+  limit?: number;
+  offset?: number;
+};
+
+export async function listTenants(
+  { q, limit = 20, offset = 0 }: ListTenantsParams = {},
+  signal?: AbortSignal,
+): Promise<TenantListResult> {
+  const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+  if (q) params.set("q", q);
+
+  let response: Response;
+  try {
+    response = await fetch(`${getPythonBackendBaseUrl()}/api/v1/tenants/list?${params.toString()}`, {
+      method: "GET",
+      signal,
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      message:
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Solicitação cancelada."
+          : NETWORK_ERROR_MSG,
+      retryable: true,
+    };
+  }
+
+  const payload = await parseJsonSafely(response);
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      message: getOperationErrorMessage(payload),
+      retryable: isRetryableStatus(response.status),
+    };
+  }
+
+  const items = (payload as { items?: unknown } | null)?.items;
+  const total = (payload as { total?: unknown } | null)?.total;
+  if (!Array.isArray(items) || typeof total !== "number" || !items.every(isTenantGridItem)) {
+    return {
+      ok: false,
+      status: 502,
+      message: "O serviço retornou dados em formato inválido.",
+      retryable: true,
+    };
+  }
+
+  return { ok: true, status: response.status, items, total };
 }
 
 // ---------------------------------------------------------------------------

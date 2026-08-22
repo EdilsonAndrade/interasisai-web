@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Loader2, QrCode, RefreshCw } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useWhatsAppConnection } from "@/hooks/useWhatsAppConnection";
 import {
@@ -12,6 +12,7 @@ import {
 
 export function WhatsAppInstanceForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { createInstance, loadQrCode, state } = useWhatsAppConnection();
   const isLoading = state.status === "loading";
   const {
@@ -22,7 +23,10 @@ export function WhatsAppInstanceForm() {
     formState: { errors },
   } = useForm<WhatsAppInstanceInput>({
     resolver: zodResolver(whatsappInstanceSchema),
-    defaultValues: { tenantId: "", instanceName: "" },
+    defaultValues: {
+      tenantId: searchParams.get("tenantId") ?? "",
+      instanceName: searchParams.get("instanceName") ?? "",
+    },
   });
 
   const goToQr = (instanceName: string) =>

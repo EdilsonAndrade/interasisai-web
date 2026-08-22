@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useTenantManagement } from "@/hooks/useTenantManagement";
 import { usePrompts } from "@/hooks/usePrompts";
+import { useTenantGrid } from "@/hooks/useTenantGrid";
 import { TenantManagement } from "./TenantManagement";
 
 // react-markdown é ESM-only e não é necessário para estes testes; substitui
@@ -27,8 +28,18 @@ jest.mock("@/hooks/usePrompts", () => ({
   usePrompts: jest.fn(),
 }));
 
+jest.mock("@/hooks/useTenantGrid", () => ({
+  useTenantGrid: jest.fn(),
+}));
+
 const useTenantMock = jest.mocked(useTenantManagement);
 const usePromptsMock = jest.mocked(usePrompts);
+const useTenantGridMock = jest.mocked(useTenantGrid);
+const gridActions = {
+  fetchPage: jest.fn().mockResolvedValue(undefined),
+  goToPrevious: jest.fn(),
+  goToNext: jest.fn(),
+};
 const actions = {
   create: jest.fn().mockResolvedValue(true),
   lookup: jest.fn().mockResolvedValue(true),
@@ -60,15 +71,35 @@ describe("TenantManagement", () => {
       editPrompt: jest.fn().mockResolvedValue(true),
       removePrompt: jest.fn().mockResolvedValue(true),
     });
+    useTenantGridMock.mockReturnValue({
+      items: [{ id: "tenant-1", name: "Tenant One" }] as never,
+      total: 1,
+      offset: 0,
+      limit: 20,
+      loading: false,
+      error: null,
+      hasPrevious: false,
+      hasNext: false,
+      ...gridActions,
+    });
   });
 
-  it("renders the first version without an invented listing", () => {
+  it("renders the tenant grid alongside the ID lookup", () => {
     render(<TenantManagement />);
 
     expect(screen.getByRole("heading", { name: "Tenants" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Novo tenant" })).toBeInTheDocument();
     expect(screen.getByLabelText("ID do tenant")).toBeInTheDocument();
-    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.getByRole("table")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /tenant-1/ })).toBeInTheDocument();
+  });
+
+  it("looks up the clicked tenant row, same as a manual search", () => {
+    render(<TenantManagement />);
+
+    fireEvent.click(screen.getByRole("button", { name: /tenant-1/ }));
+
+    expect(actions.lookup).toHaveBeenCalledWith("tenant-1");
   });
 
   it("opens the create form", () => {

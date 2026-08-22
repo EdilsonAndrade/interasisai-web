@@ -103,6 +103,21 @@ describe("TenantPromptBindingCard", () => {
     expect(onLinkPrompt).toHaveBeenCalledWith("prompt-2");
   });
 
+  it("shows the Global badge only for guardrails marked is_global", () => {
+    render(
+      <TenantPromptBindingCard
+        state="linked"
+        detail={linkedDetail}
+        error={null}
+        linking={false}
+        operationalPrompts={operationalPrompts}
+        onLinkPrompt={jest.fn()}
+      />,
+    );
+
+    expect(screen.getAllByText("Global")).toHaveLength(1);
+  });
+
   it("disables the confirm action until a prompt is chosen", () => {
     render(
       <TenantPromptBindingCard

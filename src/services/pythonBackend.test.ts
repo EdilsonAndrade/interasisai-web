@@ -4,9 +4,11 @@
 
 import {
   createWhatsAppInstance,
+  fetchTenantDeleteImpact,
   getPythonBackendConfig,
   getWhatsAppQrCode,
   initializeChatSession,
+  listTenants,
   sendChatMessage,
   searchTenants,
   getKnowledgeBase,
@@ -419,6 +421,162 @@ describe("pythonBackend", () => {
       fetchMock.mockRejectedValueOnce(new Error("offline"));
 
       const result = await searchTenants("qualquer");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 0,
+        message: "Não foi possível se conectar ao serviço de mensagens.",
+        retryable: true,
+      });
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // fetchTenantDeleteImpact — GET /tenants/{id}/delete-impact (EDI-45)
+  // -----------------------------------------------------------------------
+
+  describe("fetchTenantDeleteImpact", () => {
+    const impact = {
+      tenant_id: "tenant-1",
+      prompts_to_delete: [{ id: "p1", titulo: "Prompt exclusivo", node_type: "operational" }],
+      prompts_to_unlink_only: [{ id: "p2", titulo: "Prompt compartilhado" }],
+      guardrails_to_delete: [{ id: "g1", titulo: "Guardrail exclusivo" }],
+      guardrails_to_unlink_only: [{ id: "g2", titulo: "Guardrail global", is_global: true }],
+    };
+
+    it("returns the four impact groups on success", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, impact));
+
+      const result = await fetchTenantDeleteImpact("tenant-1");
+
+      const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe("http://test-api.example.com/api/v1/tenants/tenant-1/delete-impact");
+      expect(options.method).toBe("GET");
+      expect(result).toEqual({ ok: true, status: 200, data: impact });
+    });
+
+    it("normalizes a 404 as tenant not found", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(404, { detail: { code: "TENANT_NOT_FOUND", message: "x", blockers: [] } }),
+      );
+
+      const result = await fetchTenantDeleteImpact("missing-tenant");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 404,
+        code: "TENANT_NOT_FOUND",
+        message: "Tenant não encontrado",
+        blockers: [],
+        retryable: false,
+      });
+    });
+
+    it("treats a malformed payload as a 502 failure", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, { unexpected: true }));
+
+      const result = await fetchTenantDeleteImpact("tenant-1");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 502,
+        code: undefined,
+        message: "Não foi possível concluir a operação. Tente novamente.",
+        blockers: [],
+        retryable: true,
+      });
+    });
+
+    it("handles network failure", async () => {
+      fetchMock.mockRejectedValueOnce(new Error("offline"));
+
+      const result = await fetchTenantDeleteImpact("tenant-1");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 0,
+        code: undefined,
+        message: "Não foi possível concluir a operação. Tente novamente.",
+        blockers: [],
+        retryable: true,
+      });
+    });
+  });
+
+  // -----------------------------------------------------------------------
+  // listTenants — GET /tenants/list?q=&limit=&offset= (EDI-46)
+  // -----------------------------------------------------------------------
+
+  describe("listTenants", () => {
+    const gridItem = {
+      id: "tenant-1",
+      name: "Acme Barbearia",
+      google_calendar_id: "cal@x",
+      allowed_domains: ["acme.com.br"],
+      created_at: "2026-01-10T12:00:00Z",
+      updated_at: null,
+      prompts: [{ id: "p1", titulo: "Prompt", node_type: "operational" }],
+      guardrails: [{ id: "g1", titulo: "Guardrail", is_global: true }],
+    };
+
+    it("lists all tenants with default limit/offset when no params are given", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, { items: [gridItem], total: 1 }));
+
+      const result = await listTenants();
+
+      const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe("http://test-api.example.com/api/v1/tenants/list?limit=20&offset=0");
+      expect(options.method).toBe("GET");
+      expect(result).toEqual({ ok: true, status: 200, items: [gridItem], total: 1 });
+    });
+
+    it("sends q, limit and offset when provided", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, { items: [], total: 0 }));
+
+      await listTenants({ q: "acme", limit: 10, offset: 20 });
+
+      const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe("http://test-api.example.com/api/v1/tenants/list?limit=10&offset=20&q=acme");
+    });
+
+    it("treats an empty result list as a valid success", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, { items: [], total: 0 }));
+
+      const result = await listTenants();
+
+      expect(result).toEqual({ ok: true, status: 200, items: [], total: 0 });
+    });
+
+    it("normalizes a failure response", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(500, { detail: "Erro interno" }));
+
+      const result = await listTenants();
+
+      expect(result).toEqual({
+        ok: false,
+        status: 500,
+        message: "Erro interno",
+        retryable: true,
+      });
+    });
+
+    it("treats a malformed payload as a 502 failure", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, { unexpected: true }));
+
+      const result = await listTenants();
+
+      expect(result).toEqual({
+        ok: false,
+        status: 502,
+        message: "O serviço retornou dados em formato inválido.",
+        retryable: true,
+      });
+    });
+
+    it("handles network failure", async () => {
+      fetchMock.mockRejectedValueOnce(new Error("offline"));
+
+      const result = await listTenants();
 
       expect(result).toEqual({
         ok: false,

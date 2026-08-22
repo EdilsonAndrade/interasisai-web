@@ -4,8 +4,12 @@ import { WhatsAppInstanceForm } from "./WhatsAppInstanceForm";
 const createInstance = jest.fn();
 const loadQrCode = jest.fn();
 const push = jest.fn();
+let searchParams = new URLSearchParams();
 
-jest.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
+  useSearchParams: () => searchParams,
+}));
 jest.mock("@/hooks/useWhatsAppConnection", () => ({
   useWhatsAppConnection: () => ({
     createInstance,
@@ -15,7 +19,10 @@ jest.mock("@/hooks/useWhatsAppConnection", () => ({
 }));
 
 describe("WhatsAppInstanceForm", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    searchParams = new URLSearchParams();
+  });
 
   it("validates required create fields", async () => {
     render(<WhatsAppInstanceForm />);
@@ -61,5 +68,25 @@ describe("WhatsAppInstanceForm", () => {
     expect(push).toHaveBeenCalledWith(
       "/admin/whatsapp/instance-1/qrcode",
     );
+  });
+
+  it("pre-fills Tenant ID and Nome da instância from the query string, editably", () => {
+    searchParams = new URLSearchParams({ tenantId: "tenant-42", instanceName: "Loja Sul" });
+    render(<WhatsAppInstanceForm />);
+
+    const tenantInput = screen.getByLabelText("Tenant ID") as HTMLInputElement;
+    const instanceInput = screen.getByLabelText("Nome da instância") as HTMLInputElement;
+    expect(tenantInput.value).toBe("tenant-42");
+    expect(instanceInput.value).toBe("Loja Sul");
+
+    fireEvent.change(instanceInput, { target: { value: "Loja Sul 02" } });
+    expect(instanceInput.value).toBe("Loja Sul 02");
+  });
+
+  it("keeps the fields empty when no query string is present", () => {
+    render(<WhatsAppInstanceForm />);
+
+    expect((screen.getByLabelText("Tenant ID") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("Nome da instância") as HTMLInputElement).value).toBe("");
   });
 });

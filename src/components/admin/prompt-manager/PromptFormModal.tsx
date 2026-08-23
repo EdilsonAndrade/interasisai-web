@@ -12,6 +12,7 @@ import { AdminDialog } from "@/components/admin/AdminDialog";
 import { GuardrailScopeBadge } from "@/components/admin/GuardrailScopeBadge";
 import { promptFormSchema, type PromptFormData } from "@/lib/promptManagerSchemas";
 import { MarkdownEditorCustom } from "./MarkdownEditorCustom";
+import { PromptPlaceholderHelp } from "./PromptPlaceholderHelp";
 import type { Guardrail, NodeType, Prompt } from "@/services/promptManager.types";
 
 const NODE_OPTIONS: { id: NodeType; label: string }[] = [
@@ -57,6 +58,7 @@ export function PromptFormModal({
 
   const conteudoValue = watch("conteudo");
   const selectedIds = watch("guardrail_ids");
+  const nodeTypeValue = watch("node_type");
 
   // Pre-fill form when editing
   useEffect(() => {
@@ -144,6 +146,9 @@ export function PromptFormModal({
             </p>
           )}
         </div>
+
+        {/* Ajuda de placeholders (EDI-50) */}
+        <PromptPlaceholderHelp nodeType={nodeTypeValue} />
 
         {/* Toggle is_default */}
         <label className="flex items-center gap-3">

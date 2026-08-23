@@ -79,6 +79,28 @@ describe("PromptFormModal — Nó de Destino", () => {
     expect(onSubmit.mock.calls[0][0]).toMatchObject({ node_type: "institutional" });
   });
 
+  it("updates the placeholder help section when node_type changes (EDI-50)", () => {
+    render(
+      <PromptFormModal
+        open
+        mode="create"
+        availableGuardrails={[]}
+        onClose={jest.fn()}
+        onSubmit={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByText("{tenant_id}")).toBeInTheDocument();
+    expect(screen.queryByText("{historico_texto}")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText("Nó de Destino"), {
+      target: { value: "institutional" },
+    });
+
+    expect(screen.getByText("{historico_texto}")).toBeInTheDocument();
+    expect(screen.queryByText("{tenant_id}")).not.toBeInTheDocument();
+  });
+
   it("pre-loads node_type when editing an existing prompt", () => {
     const prompt: Prompt = {
       id: "p1",

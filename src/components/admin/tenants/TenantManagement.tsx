@@ -3,6 +3,7 @@
 import { AlertCircle, CheckCircle2, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AdminDialog } from "@/components/admin/AdminDialog";
+import { useOnboardingGuideContext } from "@/context/OnboardingGuideContext";
 import { useTenantManagement } from "@/hooks/useTenantManagement";
 import { usePrompts } from "@/hooks/usePrompts";
 import { useTenantPromptBinding } from "@/hooks/useTenantPromptBinding";
@@ -19,6 +20,7 @@ type EditorMode = "create" | "edit" | null;
 
 export function TenantManagement() {
   const management = useTenantManagement();
+  const guide = useOnboardingGuideContext();
   const promptsHook = usePrompts();
   const binding = useTenantPromptBinding();
   const deleteImpact = useTenantDeleteImpact();
@@ -75,14 +77,25 @@ export function TenantManagement() {
     <main className="mx-auto w-full max-w-5xl space-y-8 px-4 py-10 sm:px-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold text-text-strong">Tenants</h1>
-        <button
-          type="button"
-          onClick={() => { management.clearFeedback(); setFormDirty(false); setEditor("create"); }}
-          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-card bg-brand-primary px-4 py-3 text-sm font-semibold text-text-inverse hover:scale-[1.02]"
-        >
-          <Plus className="h-4 w-4" aria-hidden="true" />
-          Novo tenant
-        </button>
+        <div className="flex items-center gap-4">
+          {!guide.isEnabled && (
+            <button
+              type="button"
+              onClick={guide.reEnableGuide}
+              className="text-xs font-semibold text-text-weak underline-offset-2 hover:text-text-body hover:underline"
+            >
+              Reativar guia de configuração
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => { management.clearFeedback(); setFormDirty(false); setEditor("create"); }}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-card bg-brand-primary px-4 py-3 text-sm font-semibold text-text-inverse hover:scale-[1.02]"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Novo tenant
+          </button>
+        </div>
       </header>
 
       <TenantGrid
@@ -179,6 +192,7 @@ export function TenantManagement() {
               setEditor(null);
               if (intent.mode === "new") promptsHook.refreshPrompts();
               grid.fetchPage(grid.offset);
+              guide.openGuide(base.tenant_id);
             }
             return success;
           }}

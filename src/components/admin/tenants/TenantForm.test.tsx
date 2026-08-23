@@ -117,6 +117,50 @@ describe("TenantForm", () => {
     );
   });
 
+  it("shows the prerequisite reminder in create mode, and it never blocks submission", async () => {
+    const onCreate = jest.fn().mockResolvedValue(true);
+    render(
+      <TenantForm
+        mode="create"
+        operationalPrompts={prompts}
+        isLoading={false}
+        onCancel={jest.fn()}
+        onCreate={onCreate}
+      />,
+    );
+
+    expect(
+      screen.getByText(/o prompt inicial e a base de conhecimento deste cliente já existem/i),
+    ).toBeInTheDocument();
+
+    fillBaseFields();
+    fireEvent.click(screen.getByRole("radio", { name: /Atendimento Clínica/i }));
+    fireEvent.click(screen.getByRole("button", { name: "Cadastrar tenant" }));
+
+    await waitFor(() => expect(onCreate).toHaveBeenCalled());
+  });
+
+  it("does not render the prerequisite reminder in edit mode", () => {
+    render(
+      <TenantForm
+        mode="edit"
+        initialValues={{
+          tenant_id: "tenant-1",
+          name: "One",
+          google_calendar_id: "calendar",
+          allowed_domains: ["example.com"],
+        }}
+        isLoading={false}
+        onCancel={jest.fn()}
+        onEdit={jest.fn().mockResolvedValue(true)}
+      />,
+    );
+
+    expect(
+      screen.queryByText(/o prompt inicial e a base de conhecimento deste cliente já existem/i),
+    ).not.toBeInTheDocument();
+  });
+
   it("does not render a prompt field in edit mode", () => {
     render(
       <TenantForm

@@ -10,6 +10,7 @@ import {
   type TenantCreateInput,
 } from "@/lib/tenantSchemas";
 import { PromptSelectField } from "@/components/admin/PromptSelectField";
+import { OnboardingPrerequisiteNotice } from "@/components/admin/onboarding/OnboardingPrerequisiteNotice";
 import type { TenantCreateBase, TenantCreateIntent } from "@/hooks/useTenantManagement";
 import type { TenantFieldErrors, TenantWriteInput } from "@/services";
 import type { Prompt, PromptCreateInput } from "@/services/promptManager.types";
@@ -262,6 +263,7 @@ export function TenantForm({
           error={errors.prompt_id?.message}
         />
       )}
+      {mode === "create" && <OnboardingPrerequisiteNotice />}
       <footer className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <button type="button" disabled={isLoading} onClick={onCancel} className="rounded-card border border-border-subtle px-4 py-3 text-sm font-semibold text-text-body hover:bg-surface-subtle disabled:opacity-60">Cancelar</button>
         <button type="submit" disabled={isLoading} className="inline-flex items-center justify-center gap-2 rounded-card bg-brand-primary px-4 py-3 text-sm font-semibold text-text-inverse disabled:opacity-60">

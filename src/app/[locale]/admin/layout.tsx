@@ -1,5 +1,7 @@
 import { cookies } from "next/headers";
 import { AdminNavigation } from "@/components/admin/AdminNavigation";
+import { OnboardingGuidePanel } from "@/components/admin/onboarding/OnboardingGuidePanel";
+import { OnboardingGuideProvider } from "@/context/OnboardingGuideContext";
 import { ADMIN_SESSION_COOKIE, hasValidAdminSession } from "@/lib/adminSession";
 
 export default async function AdminLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -8,10 +10,15 @@ export default async function AdminLayout({ children }: Readonly<{ children: Rea
     cookieStore.get(ADMIN_SESSION_COOKIE)?.value,
   );
 
+  if (!authenticated) {
+    return <>{children}</>;
+  }
+
   return (
-    <>
-      {authenticated && <AdminNavigation />}
+    <OnboardingGuideProvider>
+      <AdminNavigation />
       {children}
-    </>
+      <OnboardingGuidePanel />
+    </OnboardingGuideProvider>
   );
 }

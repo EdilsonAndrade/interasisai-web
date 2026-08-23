@@ -4,6 +4,8 @@ import { useRef, useEffect, useState, useCallback, type KeyboardEvent, type Chan
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { MessageCircle, X, Send, Mic, MicOff } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 
 import { useChat } from "@/context/ChatContext";
 import { useChatAssistant } from "@/hooks/useChatAssistant";
@@ -182,6 +184,7 @@ export default function ChatWidget() {
                   ) : (
                     <div className="max-w-[80%] rounded-card rounded-bl-sm bg-surface-subtle px-4 py-2 text-sm text-text-strong chat-message-content">
                       <ReactMarkdown
+                          rehypePlugins={[rehypeRaw, rehypeSanitize]}
                           components={{
                             li: ({ children, ...props }) => {
                               const flat = Children.map(children, (child) =>

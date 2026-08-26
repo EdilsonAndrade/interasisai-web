@@ -1,26 +1,26 @@
-export type MessageRole = 'user' | 'assistant'
+export type MessageRole = 'human' | 'ai'
 
 export interface ConversationMessage {
-  id: string
-  tenantId: string
-  baseThreadId: string
-  activeThreadId: string
   role: MessageRole
   content: string
-  createdAt: string
+  created_at: string
+}
+
+export interface ConversationHistory {
+  tenant_id: string
+  base_thread_id: string
+  messages: ConversationMessage[]
 }
 
 export interface ConversationHistoryState {
   messages: ConversationMessage[]
   loading: boolean
   error: string | null
-  hasMore: boolean
-  page: number
 }
 
 export interface HistorySearchParams {
   tenantId: string
   baseThreadId: string
-  page?: number
   limit?: number
+  before?: string
 }

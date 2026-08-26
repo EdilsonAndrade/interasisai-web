@@ -1,14 +1,12 @@
-export interface OfferInfo {
-  text: string
-  validUntil: string
-}
-
 export interface TenantConfig {
   id: string
-  tenantId: string
-  ofertaVigente: OfferInfo | null
-  retentionDays: number
-  updatedAt: string
+  name: string
+  google_calendar_id?: string
+  allowed_domains?: string[]
+  oferta_vigente_texto?: string | null
+  oferta_vigente_validade?: string | null
+  retention_days: number
+  [key: string]: unknown  // Allow other fields from backend
 }
 
 export interface TenantConfigState {

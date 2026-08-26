@@ -1,6 +1,6 @@
 # Data Model: Follow-up Admin Panel
 
-**Date**: 2026-08-26 | **Status**: Complete
+**Date**: 2026-08-26 | **Status**: Updated for real API contracts
 
 ## Type Definitions (TypeScript)
 
@@ -11,25 +11,22 @@ type FollowUpStatus = 'pendente' | 'aprovado' | 'enviado' | 'descartado' | 'opt_
 type SessionOutcome = 'fechado' | 'pensando' | 'sem_resposta' | 'recusado' | 'em_andamento'
 
 interface FollowUpQueueEntry {
-  id: string
-  tenantId: string
-  baseThreadId: string
+  id: number  // Backend retorna int
+  base_thread_id: string  // e.g., "acme:123"
   outcome: SessionOutcome
-  summary: string // ~150-250 tokens
-  draftMessage: string
+  summary: string
+  draft_message: string
   status: FollowUpStatus
-  attempts: number
-  createdAt: string // ISO-8601
-  approvedBy?: string // user ID
-  approvedAt?: string // ISO-8601
+  created_at: string  // ISO-8601
+}
+
+interface FollowUpQueueResponse {
+  tenant_id: string
+  entries: FollowUpQueueEntry[]
 }
 
 interface FollowUpFilters {
   status?: FollowUpStatus | null
-  outcome?: SessionOutcome | null
-  tenantId?: string | null
-  page?: number
-  limit?: number
 }
 
 interface FollowUpQueueState {
@@ -37,55 +34,73 @@ interface FollowUpQueueState {
   filters: FollowUpFilters
   loading: boolean
   error: string | null
-  totalCount: number
 }
 ```
+
+**Key Differences from Old Model**:
+- `id` é `number`, não `string`
+- `baseThreadId` → `base_thread_id` (snake_case)
+- `createdAt` → `created_at`
+- `draftMessage` → `draft_message`
+- Sem `attempts`, `approvedBy`, `approvedAt` no response GET (adicionados em PATCH)
+- **Sem filtro por `outcome`** — apenas `status`
+- **Sem `tenantId` no entry** — vem no response root
+
+---
 
 ### Conversation History
 
 ```typescript
-type MessageRole = 'user' | 'assistant'
+type MessageRole = 'human' | 'ai'
 
 interface ConversationMessage {
-  id: string
-  tenantId: string
-  baseThreadId: string
-  activeThreadId: string
-  role: MessageRole
-  content: string // Markdown/plain text
-  createdAt: string // ISO-8601
+  role: MessageRole  // 'human' (cliente) ou 'ai' (atendente)
+  content: string
+  created_at: string  // ISO-8601
+}
+
+interface ConversationHistory {
+  tenant_id: string
+  base_thread_id: string
+  messages: ConversationMessage[]
 }
 
 interface ConversationHistoryState {
   messages: ConversationMessage[]
   loading: boolean
   error: string | null
-  hasMore: boolean // Para paginação
-  page: number
 }
 
 interface HistorySearchParams {
   tenantId: string
   baseThreadId: string
-  page?: number
-  limit?: number
+  limit?: number  // default 200, max 500
+  before?: string  // datetime para paginação reversa
 }
 ```
+
+**Key Differences from Old Model**:
+- `role` é `'human'` ou `'ai'`, não `'user'` ou `'assistant'`
+- Sem `id` nas mensagens
+- Sem `activeThreadId` nem `tenantId` por mensagem
+- `created_at` em snake_case
+- Paginação via `limit` + `before`, não `page`
+- Ordem: cronológica ascendente
+
+---
 
 ### Tenant Configuration
 
 ```typescript
-interface OfferInfo {
-  text: string // Markdown/plain
-  validUntil: string // ISO-8601 date
-}
-
 interface TenantConfig {
   id: string
-  tenantId: string
-  ofertaVigente: OfferInfo | null
-  retentionDays: number
-  updatedAt: string
+  name: string
+  google_calendar_id: string
+  allowed_domains: string[]
+  oferta_vigente_texto?: string | null
+  oferta_vigente_validade?: string | null  // ISO-8601 date
+  retention_days: number
+  // ... outros campos
 }
 
 interface TenantConfigState {
@@ -94,118 +109,62 @@ interface TenantConfigState {
   error: string | null
   saving: boolean
 }
-```
 
-### Admin User Context
-
-```typescript
-interface AdminUser {
-  id: string
+interface UpdateTenantPayload {
+  // Objeto completo — requer name, google_calendar_id, etc
   name: string
-  email: string
-  role: 'admin' | 'cs' | 'vendas'
-}
-
-interface AdminAuthState {
-  user: AdminUser | null
-  isAuthenticated: boolean
-  isAdmin: boolean
+  google_calendar_id: string
+  allowed_domains: string[]
+  oferta_vigente_texto?: string | null
+  oferta_vigente_validade?: string | null
+  retention_days: number
+  // ... outros campos obrigatórios
 }
 ```
+
+**Key Differences from Old Model**:
+- Sem `OfferInfo` nested — campos `oferta_vigente_texto` e `oferta_vigente_validade` são diretos
+- `PUT /tenants/{id}` requer objeto **completo**, não partial
+- Frontend deve buscar tenant inteiro antes de atualizar
+
+---
 
 ### API Request/Response Types
 
 ```typescript
-// GET /follow-up-queue
-interface ListFollowUpResponse {
-  data: FollowUpQueueEntry[]
-  total: number
-  page: number
-  limit: number
+// GET /tenants/{tenant_id}/follow-up-queue
+interface FollowUpQueueResponse {
+  tenant_id: string
+  entries: FollowUpQueueEntry[]
 }
 
-// PATCH /follow-up-queue/:queueId
+// PATCH /tenants/{tenant_id}/follow-up-queue/{entry_id}
 interface UpdateFollowUpRequest {
-  status: FollowUpStatus
-  draftMessage?: string // Se editado
-  approvedBy?: string
+  status?: FollowUpStatus
+  draft_message?: string
+  approved_by?: string
 }
 
-interface UpdateFollowUpResponse {
-  data: FollowUpQueueEntry
-  success: boolean
+interface UpdateFollowUpResponse extends FollowUpQueueEntry {}
+
+// GET /tenants/{tenant_id}/conversation-history/{base_thread_id}
+interface ConversationHistoryResponse {
+  tenant_id: string
+  base_thread_id: string
+  messages: ConversationMessage[]
 }
 
-// GET /conversation-history/:tenantId/:baseThreadId
-interface ListConversationResponse {
-  data: ConversationMessage[]
-  total: number
-  page: number
-  limit: number
-  hasMore: boolean
+// GET /tenants/{tenant_id}
+interface TenantResponse extends TenantConfig {}
+
+// PUT /tenants/{tenant_id}
+interface UpdateTenantRequest extends TenantConfig {}
+interface UpdateTenantResponse extends TenantConfig {}
+
+// Error
+interface ApiErrorResponse {
+  detail: string  // Error message
 }
-
-// GET /tenants/:tenantId
-interface GetTenantResponse {
-  data: TenantConfig
-}
-
-// PATCH /tenants/:tenantId
-interface UpdateTenantRequest {
-  ofertaVigente?: OfferInfo | null
-  retentionDays?: number
-}
-
-interface UpdateTenantResponse {
-  data: TenantConfig
-  success: boolean
-}
-
-// Error Response (todas as endpoints)
-interface ApiError {
-  code: string
-  message: string
-  details?: Record<string, unknown>
-}
-```
-
----
-
-## Validation Schemas (Zod)
-
-```typescript
-import { z } from 'zod'
-
-// Validar edição de draft
-export const EditDraftSchema = z.object({
-  draftMessage: z.string()
-    .min(1, 'Rascunho não pode estar vazio')
-    .max(1000, 'Rascunho muito longo'),
-})
-
-// Validar aprovação (com checagem de oferta)
-export const ApproveFollowUpSchema = z.object({
-  queueId: z.string(),
-  draftMessage: z.string(),
-  tenantOferta: z.string().optional(),
-}).refine((data) => {
-  // Lógica: se draft contém "desconto", validar contra oferta
-  if (data.draftMessage.toLowerCase().includes('desconto')) {
-    return data.tenantOferta !== undefined
-  }
-  return true
-}, {
-  message: 'Desconto mencionado mas oferta não definida para tenant',
-})
-
-// Validar config de tenant
-export const UpdateTenantConfigSchema = z.object({
-  ofertaVigente: z.object({
-    text: z.string().min(1),
-    validUntil: z.string().datetime(),
-  }).nullable(),
-  retentionDays: z.number().int().positive('Deve ser > 0'),
-})
 ```
 
 ---
@@ -223,19 +182,13 @@ export const UpdateTenantConfigSchema = z.object({
 <FollowUpContext>
   ├── state: FollowUpQueueState
   ├── filters: FollowUpFilters
-  ├── updateStatus(id, status)
-  ├── editDraft(id, newText)
-  └── applyFilters(filters)
+  ├── updateEntryStatus(id, status)
+  └── setEntries(entries)
 
-<ConversationContext>
-  ├── state: ConversationHistoryState
-  ├── loadHistory(tenantId, threadId)
-  └── loadMore()
-
-<TenantConfigContext>
-  ├── config: TenantConfig
-  ├── updateConfig(oferta, retentionDays)
-  └── fetchConfig(tenantId)
+<TenantContext> (optional)
+  ├── tenants: TenantConfig[]
+  ├── selectedTenant: TenantConfig | null
+  └── selectTenant(id)
 ```
 
 ---
@@ -244,13 +197,12 @@ export const UpdateTenantConfigSchema = z.object({
 
 ```
 Tenant
-  ├─ TenantConfig (1:1)
-  │   └─ OfferInfo
-  └─ FollowUpQueueEntry (1:N)
-      └─ ConversationMessage (1:N via baseThreadId)
+  ├─ FollowUpQueueEntry (1:N via base_thread_id)
+  │   └─ ConversationMessage (1:N via base_thread_id)
+  └─ Config (oferta_vigente_texto, retention_days)
 
 AdminUser
-  └─ role (determines access to FollowUpContext, TenantConfigContext)
+  └─ role (determines access to Follow-up Queue, Config)
 ```
 
 ---
@@ -259,11 +211,11 @@ AdminUser
 
 | Entity | Field | Rule |
 |--------|-------|------|
-| FollowUpQueueEntry | draftMessage | Não pode conter oferta fora de `tenantConfig.ofertaVigente` |
-| FollowUpQueueEntry | status | Transição: pendente → aprovado/descartado/opt_out (sem volta) |
-| OfferInfo | validUntil | Deve ser data futura (validar no form) |
-| TenantConfig | retentionDays | > 0 (não pode ser zero ou negativo) |
-| ConversationMessage | content | Rendered como markdown (sanitizado via DOMPurify) |
+| FollowUpQueueEntry | `draft_message` | Não pode conter oferta fora de `tenant.oferta_vigente_texto` |
+| FollowUpQueueEntry | `status` | Transição: pendente → aprovado/descartado/opt_out (sem volta) |
+| TenantConfig | `retention_days` | > 0 (não pode ser zero ou negativo) |
+| TenantConfig | `oferta_vigente_validade` | Deve ser data futura (validar no form) |
+| ConversationMessage | `content` | Rendered como markdown (sanitizado via DOMPurify) |
 
 ---
 
@@ -288,8 +240,24 @@ AdminUser
            │ OPT_OUT │
            └─────────┘
 
-ENVIADO é set apenas pelo worker/cron (EDI-53, out-of-scope para this feature)
+ENVIADO é set apenas pelo worker/cron (backend, out-of-scope para this feature)
 ```
+
+---
+
+## Field Mapping: Backend Response → Frontend Types
+
+| Backend Response | Frontend Type | Notes |
+|------------------|---------------|-------|
+| `id` (int) | `number` | - |
+| `base_thread_id` | `string` | Use como-é |
+| `outcome` | `SessionOutcome` | Enum validation |
+| `summary` | `string` | Display apenas |
+| `draft_message` | `string` | Editável no modal |
+| `status` | `FollowUpStatus` | Enum validation |
+| `created_at` | `string` | Formatado via `formatDate()` |
+| `role` (history) | `MessageRole` | 'human' \| 'ai' |
+| `content` (history) | `string` | Renderizado como markdown |
 
 ---
 
@@ -303,12 +271,12 @@ Todas as respostas devem ser tratadas com:
 
 ```typescript
 // Exemplo hook
-const { status, error, data } = useUpdateFollowUp(queueId, { status: 'aprovado' })
+const { status, error, data } = useFollowUpQueue()
 
 if (status === 'loading') return <Spinner />
 if (status === 'error') return <Toast variant="error" message={error} />
 if (status === 'success') {
-  // Context actualiza; component re-renderiza
+  // Context atualiza; component re-renderiza
   return <Toast variant="success" message="Aprovado!" />
 }
 ```

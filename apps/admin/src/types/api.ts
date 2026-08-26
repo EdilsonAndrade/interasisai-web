@@ -1,49 +1,36 @@
-import { FollowUpQueueEntry, FollowUpFilters } from './followup'
-import { ConversationMessage, HistorySearchParams } from './conversation'
-import { TenantConfig, OfferInfo } from './tenant'
+import { FollowUpQueueEntry, FollowUpQueueResponse, FollowUpStatus } from './followup'
+import { ConversationMessage, ConversationHistory } from './conversation'
+import { TenantConfig } from './tenant'
 
-export interface ListFollowUpResponse {
-  data: FollowUpQueueEntry[]
-  total: number
-  page: number
-  limit: number
-}
+// GET /tenants/{tenant_id}/follow-up-queue
+export interface GetFollowUpQueueResponse extends FollowUpQueueResponse {}
 
+// PATCH /tenants/{tenant_id}/follow-up-queue/{entry_id}
 export interface UpdateFollowUpRequest {
-  status: FollowUpQueueEntry['status']
-  draftMessage?: string
-  approvedBy?: string
+  status?: FollowUpStatus
+  draft_message?: string
+  approved_by?: string
 }
 
-export interface UpdateFollowUpResponse {
-  data: FollowUpQueueEntry
-  success: boolean
+export interface UpdateFollowUpResponse extends FollowUpQueueEntry {}
+
+// GET /tenants/{tenant_id}/conversation-history/{base_thread_id}
+export interface GetConversationHistoryResponse extends ConversationHistory {}
+
+// GET /tenants/{tenant_id}
+export interface GetTenantResponse extends TenantConfig {}
+
+// PUT /tenants/{tenant_id}
+export interface UpdateTenantRequest extends TenantConfig {}
+
+export interface UpdateTenantResponse extends TenantConfig {}
+
+// List tenants
+export interface ListTenantsResponse {
+  tenants: TenantConfig[]
 }
 
-export interface ListConversationResponse {
-  data: ConversationMessage[]
-  total: number
-  page: number
-  limit: number
-  hasMore: boolean
-}
-
-export interface GetTenantResponse {
-  data: TenantConfig
-}
-
-export interface UpdateTenantRequest {
-  ofertaVigente?: OfferInfo | null
-  retentionDays?: number
-}
-
-export interface UpdateTenantResponse {
-  data: TenantConfig
-  success: boolean
-}
-
-export interface ApiError {
-  code: string
-  message: string
-  details?: Record<string, unknown>
+// Error
+export interface ApiErrorResponse {
+  detail: string
 }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { TenantConfig, OfferInfo } from '../types'
+import { TenantConfig } from '../types'
 import { apiClient } from '../services/api'
 
 interface UseTenantConfigResult {
@@ -10,7 +10,7 @@ interface UseTenantConfigResult {
   error: string | null
   saving: boolean
   fetchConfig: (tenantId: string) => Promise<void>
-  updateConfig: (tenantId: string, oferta?: OfferInfo | null, retentionDays?: number) => Promise<void>
+  updateConfig: (tenantId: string, updates: Partial<TenantConfig>) => Promise<void>
 }
 
 export const useTenantConfig = (): UseTenantConfigResult => {
@@ -24,7 +24,7 @@ export const useTenantConfig = (): UseTenantConfigResult => {
     setError(null)
     try {
       const response = await apiClient.getTenantConfig(tenantId)
-      setConfig(response.data)
+      setConfig(response)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao carregar configuração'
       setError(message)
@@ -34,25 +34,31 @@ export const useTenantConfig = (): UseTenantConfigResult => {
     }
   }, [])
 
-  const updateConfig = useCallback(
-    async (tenantId: string, oferta?: OfferInfo | null, retentionDays?: number) => {
-      setSaving(true)
-      setError(null)
-      try {
-        const response = await apiClient.updateTenantConfig(tenantId, {
-          ofertaVigente: oferta,
-          retentionDays,
-        })
-        setConfig(response.data)
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Erro ao salvar configuração'
-        setError(message)
-      } finally {
-        setSaving(false)
+  const updateConfig = useCallback(async (tenantId: string, updates: Partial<TenantConfig>) => {
+    if (!config) {
+      setError('Configuração não carregada')
+      return
+    }
+
+    setSaving(true)
+    setError(null)
+
+    try {
+      // PUT requires complete object — merge updates with current config
+      const completePayload: TenantConfig = {
+        ...config,
+        ...updates,
       }
-    },
-    []
-  )
+
+      const response = await apiClient.updateTenantConfig(tenantId, completePayload)
+      setConfig(response)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao salvar configuração'
+      setError(message)
+    } finally {
+      setSaving(false)
+    }
+  }, [config])
 
   return {
     config,

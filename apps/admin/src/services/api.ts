@@ -1,17 +1,17 @@
 import {
-  ListFollowUpResponse,
+  GetFollowUpQueueResponse,
   UpdateFollowUpRequest,
   UpdateFollowUpResponse,
-  ListConversationResponse,
+  GetConversationHistoryResponse,
   GetTenantResponse,
   UpdateTenantRequest,
   UpdateTenantResponse,
-  FollowUpFilters,
-  HistorySearchParams,
-  ApiError,
+  ListTenantsResponse,
+  ApiErrorResponse,
 } from '../types'
+import { FollowUpStatus } from '../types/followup'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
 interface FetchOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>
@@ -50,8 +50,8 @@ class APIClient {
         })
 
         if (!response.ok) {
-          const error = (await response.json()) as ApiError
-          throw new Error(error.message || `HTTP ${response.status}`)
+          const error = (await response.json()) as ApiErrorResponse
+          throw new Error(error.detail || `HTTP ${response.status}`)
         }
 
         return (await response.json()) as T
@@ -76,38 +76,42 @@ class APIClient {
     throw lastError || new Error('Request failed')
   }
 
-  async getFollowUpQueue(filters?: FollowUpFilters): Promise<ListFollowUpResponse> {
-    return this.request<ListFollowUpResponse>('/follow-up-queue', {
-      params: {
-        status: filters?.status,
-        outcome: filters?.outcome,
-        tenant_id: filters?.tenantId,
-        page: filters?.page || 1,
-        limit: filters?.limit || 20,
-      },
-    })
+  async getFollowUpQueue(
+    tenantId: string,
+    status?: FollowUpStatus
+  ): Promise<GetFollowUpQueueResponse> {
+    return this.request<GetFollowUpQueueResponse>(
+      `/tenants/${tenantId}/follow-up-queue`,
+      {
+        params: { status },
+      }
+    )
   }
 
   async updateFollowUpStatus(
-    queueId: string,
+    tenantId: string,
+    entryId: number,
     request: UpdateFollowUpRequest
   ): Promise<UpdateFollowUpResponse> {
-    return this.request<UpdateFollowUpResponse>(`/follow-up-queue/${queueId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(request),
-    })
+    return this.request<UpdateFollowUpResponse>(
+      `/tenants/${tenantId}/follow-up-queue/${entryId}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(request),
+      }
+    )
   }
 
   async getConversationHistory(
     tenantId: string,
     baseThreadId: string,
-    page = 1,
-    limit = 50
-  ): Promise<ListConversationResponse> {
-    return this.request<ListConversationResponse>(
-      `/conversation-history/${tenantId}/${baseThreadId}`,
+    limit = 200,
+    before?: string
+  ): Promise<GetConversationHistoryResponse> {
+    return this.request<GetConversationHistoryResponse>(
+      `/tenants/${tenantId}/conversation-history/${baseThreadId}`,
       {
-        params: { page, limit },
+        params: { limit, before },
       }
     )
   }
@@ -121,8 +125,14 @@ class APIClient {
     request: UpdateTenantRequest
   ): Promise<UpdateTenantResponse> {
     return this.request<UpdateTenantResponse>(`/tenants/${tenantId}`, {
-      method: 'PATCH',
+      method: 'PUT',
       body: JSON.stringify(request),
+    })
+  }
+
+  async listTenants(q?: string, limit = 50, offset = 0): Promise<ListTenantsResponse> {
+    return this.request<ListTenantsResponse>('/tenants', {
+      params: { q, limit, offset },
     })
   }
 }

@@ -1,306 +1,238 @@
 # API Contracts: Follow-up Admin Panel
 
-**Date**: 2026-08-26 | **Frontend Integration**: React/Next.js
+**Date**: 2026-08-26 | **Frontend Integration**: React/Next.js | **Backend**: EDI-53
 
 ---
 
-## 1. List Follow-up Queue
+## 1. Get Conversation History
 
-**Endpoint**: `GET /follow-up-queue`
+**Endpoint**: `GET /tenants/{tenant_id}/conversation-history/{base_thread_id}`
+
+**Path Parameters**:
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `tenant_id` | string | ID do tenant (e.g., "acme") |
+| `base_thread_id` | string | ID da thread base (e.g., "acme:123") |
 
 **Query Parameters**:
 
-| Param | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `status` | string | No | - | Filter por status: `pendente`, `aprovado`, `descartado`, `enviado`, `opt_out` |
-| `outcome` | string | No | - | Filter por outcome: `fechado`, `pensando`, `sem_resposta`, `recusado`, `em_andamento` |
-| `tenant_id` | string | No | - | Filter por tenant |
-| `page` | number | No | 1 | Página (1-indexed) |
-| `limit` | number | No | 20 | Itens por página (max 100) |
+| Param | Type | Default | Max | Description |
+|-------|------|---------|-----|-------------|
+| `limit` | int | 200 | 500 | Número de mensagens a retornar |
+| `before` | datetime | - | - | (Optional) Datetime para paginação reversa |
 
 **Response (200 OK)**:
 
 ```json
 {
-  "data": [
+  "tenant_id": "acme",
+  "base_thread_id": "acme:123",
+  "messages": [
     {
-      "id": "queue-123",
-      "tenantId": "tenant-456",
-      "baseThreadId": "thread-789",
-      "outcome": "pensando",
-      "summary": "Cliente mostrou interesse em solução mas solicitou mais informações sobre implementação",
-      "draftMessage": "Olá João, obrigado pelo interesse! Seguem mais detalhes sobre...",
-      "status": "pendente",
-      "attempts": 0,
-      "createdAt": "2026-08-26T10:15:00Z",
-      "approvedBy": null,
-      "approvedAt": null
+      "role": "human",
+      "content": "Olá, gostaria de saber mais sobre a solução",
+      "created_at": "2026-08-20T14:30:00Z"
+    },
+    {
+      "role": "ai",
+      "content": "Olá! Claro, ficarei feliz em explicar. Nossa solução oferece...",
+      "created_at": "2026-08-20T14:31:00Z"
     }
-  ],
-  "total": 45,
-  "page": 1,
-  "limit": 20
+  ]
 }
 ```
 
-**Response (400 Bad Request)**:
+**Notes**:
+- `role` é `"human"` (cliente) ou `"ai"` (atendente)
+- Mensagens em ordem cronológica ascendente
+- Sem paginação manual; usar `limit` e `before` para controlar volume
+
+---
+
+## 2. Get Follow-up Queue
+
+**Endpoint**: `GET /tenants/{tenant_id}/follow-up-queue`
+
+**Path Parameters**:
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `tenant_id` | string | ID do tenant |
+
+**Query Parameters**:
+
+| Param | Type | Optional | Description |
+|-------|------|----------|-------------|
+| `status` | string | Yes | Filter: `pendente`, `aprovado`, `enviado`, `descartado`, `opt_out` |
+
+**Response (200 OK)**:
 
 ```json
 {
-  "code": "INVALID_FILTER",
-  "message": "Status inválido: xyz",
-  "details": { "validStatuses": ["pendente", "aprovado", "descartado", "enviado", "opt_out"] }
+  "tenant_id": "acme",
+  "entries": [
+    {
+      "id": 1,
+      "base_thread_id": "acme:123",
+      "outcome": "sem_resposta",
+      "summary": "Cliente perguntou sobre X e sumiu.",
+      "draft_message": "Oi! Vi que você tinha interesse em...",
+      "status": "pendente",
+      "created_at": "2026-08-26T20:00:00Z"
+    }
+  ]
+}
+```
+
+**Response (422 Unprocessable Entity)**:
+
+```json
+{
+  "detail": "Invalid status: xyz"
 }
 ```
 
 ---
 
-## 2. Update Follow-up Status
+## 3. Update Follow-up Queue Entry
 
-**Endpoint**: `PATCH /follow-up-queue/:queueId`
+**Endpoint**: `PATCH /tenants/{tenant_id}/follow-up-queue/{entry_id}`
 
 **Path Parameters**:
 
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| `queueId` | string | Yes | ID do rascunho na fila |
+| Param | Type | Description |
+|-------|------|-------------|
+| `tenant_id` | string | ID do tenant |
+| `entry_id` | int | ID da entrada (e.g., 1) |
 
-**Request Body**:
+**Request Body** (todos opcionais, mas pelo menos 1 obrigatório):
 
 ```json
 {
   "status": "aprovado",
-  "draftMessage": "Olá João, obrigado pelo interesse! Seguem mais detalhes sobre a solução...",
-  "approvedBy": "user-123"
+  "draft_message": "Oi! Vi que você tinha interesse...",
+  "approved_by": "admin@acme.com"
 }
 ```
+
+**Response (200 OK)** — retorna o registro atualizado:
+
+```json
+{
+  "id": 1,
+  "base_thread_id": "acme:123",
+  "outcome": "sem_resposta",
+  "summary": "...",
+  "draft_message": "Oi! Vi que você tinha interesse...",
+  "status": "aprovado",
+  "created_at": "2026-08-26T20:00:00Z"
+}
+```
+
+**Erros**:
+- `404`: entry_id não existe ou pertence a outro tenant
+- `422`: status inválido ou nenhum campo enviado
+
+---
+
+## 4. Get Tenant
+
+**Endpoint**: `GET /tenants/{tenant_id}`
 
 **Response (200 OK)**:
 
 ```json
 {
-  "data": {
-    "id": "queue-123",
-    "tenantId": "tenant-456",
-    "baseThreadId": "thread-789",
-    "outcome": "pensando",
-    "summary": "...",
-    "draftMessage": "Olá João, obrigado pelo interesse! Seguem mais detalhes sobre...",
-    "status": "aprovado",
-    "attempts": 0,
-    "createdAt": "2026-08-26T10:15:00Z",
-    "approvedBy": "user-123",
-    "approvedAt": "2026-08-26T10:35:00Z"
-  },
-  "success": true
+  "id": "acme",
+  "name": "ACME Inc",
+  "google_calendar_id": "...",
+  "allowed_domains": [...],
+  "oferta_vigente_texto": "Desconto de 10% + frete grátis",
+  "oferta_vigente_validade": "2026-12-31T23:59:59Z",
+  "retention_days": 90,
+  ...
 }
 ```
 
-**Response (404 Not Found)**:
-
-```json
-{
-  "code": "QUEUE_NOT_FOUND",
-  "message": "Follow-up queue entry not found",
-  "details": { "queueId": "queue-123" }
-}
-```
+**Nota**: Retorna objeto **completo** do tenant (não parcial)
 
 ---
 
-## 3. Get Conversation History
+## 5. Update Tenant
 
-**Endpoint**: `GET /conversation-history/:tenantId/:baseThreadId`
+**Endpoint**: `PUT /tenants/{tenant_id}` ⚠️ **É `PUT`, não `PATCH`**
 
-**Path Parameters**:
+**Request Body** — objeto **completo** (inclui `name`, `google_calendar_id`, `allowed_domains`, etc):
 
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| `tenantId` | string | Yes | ID do tenant |
-| `baseThreadId` | string | Yes | ID da thread base |
+```json
+{
+  "name": "ACME Inc",
+  "google_calendar_id": "...",
+  "allowed_domains": [...],
+  "oferta_vigente_texto": "Desconto de 15% + frete grátis",
+  "oferta_vigente_validade": "2027-01-31T23:59:59Z",
+  "retention_days": 120,
+  ...
+}
+```
+
+**Response (200 OK)** — objeto completo atualizado
+
+**Nota**: Frontend deve buscar tenant completo primeiro, então reenviar tudo
+
+---
+
+## 6. List/Search Tenants
+
+**Endpoints**:
+- `GET /tenants?q=` 
+- `GET /tenants/list?q=&limit=&offset=`
 
 **Query Parameters**:
 
-| Param | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `page` | number | No | 1 | Página (1-indexed) |
-| `limit` | number | No | 50 | Mensagens por página (max 200) |
+| Param | Type | Description |
+|-------|------|-------------|
+| `q` | string | Query string para buscar (e.g., "acme") |
+| `limit` | int | Opcional, default depende do backend |
+| `offset` | int | Opcional, para paginação |
 
-**Response (200 OK)**:
-
-```json
-{
-  "data": [
-    {
-      "id": "msg-001",
-      "tenantId": "tenant-456",
-      "baseThreadId": "thread-789",
-      "activeThreadId": "active-999",
-      "role": "user",
-      "content": "Olá, gostaria de saber mais sobre a solução",
-      "createdAt": "2026-08-20T14:30:00Z"
-    },
-    {
-      "id": "msg-002",
-      "tenantId": "tenant-456",
-      "baseThreadId": "thread-789",
-      "activeThreadId": "active-999",
-      "role": "assistant",
-      "content": "Olá! Claro, ficarei feliz em explicar. Nossa solução oferece...",
-      "createdAt": "2026-08-20T14:31:00Z"
-    }
-  ],
-  "total": 24,
-  "page": 1,
-  "limit": 50,
-  "hasMore": false
-}
-```
-
-**Response (404 Not Found)**:
-
-```json
-{
-  "code": "HISTORY_NOT_FOUND",
-  "message": "Conversation history not found",
-  "details": { "tenantId": "tenant-456", "baseThreadId": "thread-789" }
-}
-```
-
----
-
-## 4. Get Tenant Configuration
-
-**Endpoint**: `GET /tenants/:tenantId`
-
-**Path Parameters**:
-
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| `tenantId` | string | Yes | ID do tenant |
-
-**Response (200 OK)**:
-
-```json
-{
-  "data": {
-    "id": "tenant-config-123",
-    "tenantId": "tenant-456",
-    "ofertaVigente": {
-      "text": "Desconto de 10% + frete grátis até 31/12/2026",
-      "validUntil": "2026-12-31T23:59:59Z"
-    },
-    "retentionDays": 90,
-    "updatedAt": "2026-08-20T10:00:00Z"
-  }
-}
-```
-
-**Response (404 Not Found)**:
-
-```json
-{
-  "code": "TENANT_NOT_FOUND",
-  "message": "Tenant not found",
-  "details": { "tenantId": "tenant-456" }
-}
-```
-
----
-
-## 5. Update Tenant Configuration
-
-**Endpoint**: `PATCH /tenants/:tenantId`
-
-**Path Parameters**:
-
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| `tenantId` | string | Yes | ID do tenant |
-
-**Request Body**:
-
-```json
-{
-  "ofertaVigente": {
-    "text": "Desconto de 15% + frete grátis até 31/01/2027",
-    "validUntil": "2027-01-31T23:59:59Z"
-  },
-  "retentionDays": 120
-}
-```
-
-**Response (200 OK)**:
-
-```json
-{
-  "data": {
-    "id": "tenant-config-123",
-    "tenantId": "tenant-456",
-    "ofertaVigente": {
-      "text": "Desconto de 15% + frete grátis até 31/01/2027",
-      "validUntil": "2027-01-31T23:59:59Z"
-    },
-    "retentionDays": 120,
-    "updatedAt": "2026-08-26T11:00:00Z"
-  },
-  "success": true
-}
-```
-
-**Response (400 Bad Request)**:
-
-```json
-{
-  "code": "INVALID_CONFIG",
-  "message": "Retention days must be greater than 0",
-  "details": { "retentionDays": -5 }
-}
-```
+**Response**: Array de tenants ou listagem paginada
 
 ---
 
 ## Error Handling
 
-Todas as endpoints podem retornar:
-
 **401 Unauthorized**:
 ```json
-{
-  "code": "UNAUTHORIZED",
-  "message": "Authentication required"
-}
+{ "detail": "Authentication required" }
 ```
 
-**403 Forbidden** (não é admin):
+**403 Forbidden**:
 ```json
-{
-  "code": "FORBIDDEN",
-  "message": "Only admin users can access this resource"
-}
+{ "detail": "Only admin users can access this resource" }
+```
+
+**404 Not Found**:
+```json
+{ "detail": "Tenant/Entry not found" }
+```
+
+**422 Unprocessable Entity**:
+```json
+{ "detail": "Invalid parameter: xyz" }
 ```
 
 **500 Internal Server Error**:
 ```json
-{
-  "code": "INTERNAL_ERROR",
-  "message": "An unexpected error occurred",
-  "details": { "requestId": "req-12345" }
-}
+{ "detail": "Internal server error" }
 ```
 
 ---
 
-## Rate Limiting
+## Retry Strategy
 
-- Limite: 100 requisições por minuto por user
-- Header resposta: `X-RateLimit-Remaining: 45`
-- Excesso: HTTP 429 "Too Many Requests"
-
----
-
-## Timeout & Retry
-
-- Timeout padrão: 10 segundos
-- Frontend deve implementar retry com exponential backoff (3 tentativas max)
-- Status retry-able: 408, 429, 500, 502, 503, 504
+- Timeout: 10 segundos
+- Exponential backoff: 1s, 2s, 4s (3 tentativas max)
+- Retry-able: 408, 429, 500, 502, 503, 504
+- Non-retry-able: 400, 401, 403, 404, 422

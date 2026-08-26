@@ -2,25 +2,22 @@ export type FollowUpStatus = 'pendente' | 'aprovado' | 'enviado' | 'descartado' 
 export type SessionOutcome = 'fechado' | 'pensando' | 'sem_resposta' | 'recusado' | 'em_andamento'
 
 export interface FollowUpQueueEntry {
-  id: string
-  tenantId: string
-  baseThreadId: string
+  id: number
+  base_thread_id: string
   outcome: SessionOutcome
   summary: string
-  draftMessage: string
+  draft_message: string
   status: FollowUpStatus
-  attempts: number
-  createdAt: string
-  approvedBy?: string
-  approvedAt?: string
+  created_at: string
+}
+
+export interface FollowUpQueueResponse {
+  tenant_id: string
+  entries: FollowUpQueueEntry[]
 }
 
 export interface FollowUpFilters {
   status?: FollowUpStatus | null
-  outcome?: SessionOutcome | null
-  tenantId?: string | null
-  page?: number
-  limit?: number
 }
 
 export interface FollowUpQueueState {
@@ -28,5 +25,4 @@ export interface FollowUpQueueState {
   filters: FollowUpFilters
   loading: boolean
   error: string | null
-  totalCount: number
 }

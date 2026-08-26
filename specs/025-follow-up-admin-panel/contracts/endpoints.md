@@ -50,7 +50,7 @@
 
 ---
 
-## 2. Get Follow-up Queue
+## 2. Get Follow-up Queue (by Tenant)
 
 **Endpoint**: `GET /tenants/{tenant_id}/follow-up-queue`
 
@@ -65,6 +65,7 @@
 | Param | Type | Optional | Description |
 |-------|------|----------|-------------|
 | `status` | string | Yes | Filter: `pendente`, `aprovado`, `enviado`, `descartado`, `opt_out` |
+| `outcome` | string | Yes | Filter: `fechado`, `pensando`, `sem_resposta`, `recusado`, `em_andamento` |
 
 **Response (200 OK)**:
 
@@ -74,9 +75,11 @@
   "entries": [
     {
       "id": 1,
-      "base_thread_id": "acme:123",
+      "tenant_id": "acme",
+      "base_thread_id": "acme:5511999999999",
+      "customer_name": "Maria",
       "outcome": "sem_resposta",
-      "summary": "Cliente perguntou sobre X e sumiu.",
+      "summary": "Cliente perguntou sobre horário e não respondeu mais.",
       "draft_message": "Oi! Vi que você tinha interesse em...",
       "status": "pendente",
       "created_at": "2026-08-26T20:00:00Z"
@@ -85,13 +88,62 @@
 }
 ```
 
+**Notes**:
+- `customer_name` pode ser `null` — só existe após sessão gerar resumo com nome extraído
+- `outcome` é novo filtro disponível
+
 **Response (422 Unprocessable Entity)**:
 
 ```json
 {
-  "detail": "Invalid status: xyz"
+  "detail": "Invalid status/outcome: xyz"
 }
 ```
+
+---
+
+## 2b. Get Follow-up Queue (Global, todos os tenants)
+
+**Endpoint**: `GET /follow-up-queue` ⭐ **NOVO**
+
+**Query Parameters**:
+
+| Param | Type | Optional | Description |
+|-------|------|----------|-------------|
+| `tenant_id` | string | Yes | Filter por tenant (se omitido, retorna de todos) |
+| `status` | string | Yes | Filter: `pendente`, `aprovado`, `enviado`, `descartado`, `opt_out` |
+| `outcome` | string | Yes | Filter: `fechado`, `pensando`, `sem_resposta`, `recusado`, `em_andamento` |
+
+**Response (200 OK)** — Visão consolidada entre tenants:
+
+```json
+{
+  "entries": [
+    {
+      "id": 1,
+      "tenant_id": "acme",
+      "base_thread_id": "acme:5511999999999",
+      "customer_name": "Maria",
+      "outcome": "sem_resposta",
+      "status": "pendente",
+      "created_at": "2026-08-26T20:00:00Z"
+    },
+    {
+      "id": 7,
+      "tenant_id": "outra_empresa",
+      "base_thread_id": "outra:123",
+      "customer_name": null,
+      "outcome": "pensando",
+      "status": "pendente",
+      "created_at": "2026-08-26T20:01:00Z"
+    }
+  ]
+}
+```
+
+**Notes**:
+- ⚠️ **Sem autenticação/autorização própria** — restrição a admin é responsabilidade do frontend/gateway
+- `tenant_id` na query é opcional (retorna todos se omitido)
 
 ---
 
@@ -111,7 +163,7 @@
 ```json
 {
   "status": "aprovado",
-  "draft_message": "Oi! Vi que você tinha interesse...",
+  "draft_message": "Texto revisado (opcional)",
   "approved_by": "admin@acme.com"
 }
 ```
@@ -121,10 +173,12 @@
 ```json
 {
   "id": 1,
-  "base_thread_id": "acme:123",
+  "tenant_id": "acme",
+  "base_thread_id": "acme:5511999999999",
+  "customer_name": "Maria",
   "outcome": "sem_resposta",
-  "summary": "...",
-  "draft_message": "Oi! Vi que você tinha interesse...",
+  "summary": "Cliente perguntou sobre horário e não respondeu mais.",
+  "draft_message": "Texto revisado (opcional)",
   "status": "aprovado",
   "created_at": "2026-08-26T20:00:00Z"
 }
@@ -132,7 +186,7 @@
 
 **Erros**:
 - `404`: entry_id não existe ou pertence a outro tenant
-- `422`: status inválido ou nenhum campo enviado
+- `422`: status inválido ou body vazio
 
 ---
 

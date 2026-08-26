@@ -1,5 +1,6 @@
 import {
   GetFollowUpQueueResponse,
+  FollowUpQueueGlobalResponse,
   UpdateFollowUpRequest,
   UpdateFollowUpResponse,
   GetConversationHistoryResponse,
@@ -9,7 +10,7 @@ import {
   ListTenantsResponse,
   ApiErrorResponse,
 } from '../types'
-import { FollowUpStatus } from '../types/followup'
+import { FollowUpStatus, SessionOutcome } from '../types/followup'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
@@ -78,14 +79,25 @@ class APIClient {
 
   async getFollowUpQueue(
     tenantId: string,
-    status?: FollowUpStatus
+    status?: FollowUpStatus,
+    outcome?: SessionOutcome
   ): Promise<GetFollowUpQueueResponse> {
     return this.request<GetFollowUpQueueResponse>(
       `/tenants/${tenantId}/follow-up-queue`,
       {
-        params: { status },
+        params: { status, outcome },
       }
     )
+  }
+
+  async getFollowUpQueueGlobal(
+    tenantId?: string,
+    status?: FollowUpStatus,
+    outcome?: SessionOutcome
+  ): Promise<FollowUpQueueGlobalResponse> {
+    return this.request<FollowUpQueueGlobalResponse>('/follow-up-queue', {
+      params: { tenant_id: tenantId, status, outcome },
+    })
   }
 
   async updateFollowUpStatus(

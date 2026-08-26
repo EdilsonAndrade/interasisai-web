@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { FollowUpQueueEntry, FollowUpStatus } from '../../types'
+import { FollowUpQueueEntry, FollowUpStatus, SessionOutcome } from '../../types'
 import { useFollowUpQueue } from '../../hooks/useFollowUpQueue'
 import { useTenantConfig } from '../../hooks/useTenantConfig'
 import { apiClient } from '../../services/api'
@@ -21,13 +21,14 @@ export const FollowUpQueue: React.FC<FollowUpQueueProps> = ({ tenantId }) => {
   const { user } = useAdminAuth()
   const [selectedEntry, setSelectedEntry] = useState<FollowUpQueueEntry | null>(null)
   const [currentStatus, setCurrentStatus] = useState<FollowUpStatus | undefined>()
+  const [currentOutcome, setCurrentOutcome] = useState<SessionOutcome | undefined>()
   const [actionLoading, setActionLoading] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
   React.useEffect(() => {
     // Carregar fila inicial
-    fetchQueue(tenantId, currentStatus)
-  }, [tenantId, currentStatus, fetchQueue])
+    fetchQueue(tenantId, currentStatus, currentOutcome)
+  }, [tenantId, currentStatus, currentOutcome, fetchQueue])
 
   React.useEffect(() => {
     // Carregar config do tenant para validação de oferta
@@ -36,8 +37,9 @@ export const FollowUpQueue: React.FC<FollowUpQueueProps> = ({ tenantId }) => {
     }
   }, [tenantId, fetchConfig])
 
-  const handleFilterChange = (status?: FollowUpStatus) => {
+  const handleFilterChange = (status?: FollowUpStatus, outcome?: SessionOutcome) => {
     setCurrentStatus(status)
+    setCurrentOutcome(outcome)
   }
 
   const handleEdit = (entry: FollowUpQueueEntry) => {
@@ -109,6 +111,7 @@ export const FollowUpQueue: React.FC<FollowUpQueueProps> = ({ tenantId }) => {
       <FollowUpFilterBar
         onFilterChange={handleFilterChange}
         currentStatus={currentStatus}
+        currentOutcome={currentOutcome}
       />
 
       {actionError && (

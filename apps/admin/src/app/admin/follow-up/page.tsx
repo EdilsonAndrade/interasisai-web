@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   },
 }
 
+// TODO: Obter tenantId da URL, query params ou context
+const DEFAULT_TENANT_ID = 'demo'
+
 export default function FollowUpPage() {
   return (
     <ErrorBoundary>
@@ -27,7 +30,7 @@ export default function FollowUpPage() {
               </p>
             </div>
 
-            <FollowUpQueue />
+            <FollowUpQueue tenantId={DEFAULT_TENANT_ID} />
           </main>
         </FollowUpProvider>
       </AdminAuthProvider>

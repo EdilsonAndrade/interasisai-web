@@ -41,14 +41,14 @@ export const FollowUpEditModal: React.FC<FollowUpEditModalProps> = ({
     // Validar com Zod
     const validation = EditDraftSchema.safeParse({ draftMessage: draft })
     if (!validation.success) {
-      setError(validation.error.errors[0].message)
+      setError(validation.error.errors[0]?.message || 'Erro de validação')
       return
     }
 
     // Validar oferta
     const offerValidation = validateOfferText(draft, tenantOferta)
     if (!offerValidation.isValid) {
-      setError(offerValidation.message)
+      setError(offerValidation.message || 'Desconto não autorizado')
       return
     }
 

@@ -33,9 +33,9 @@ export const FollowUpCard: React.FC<FollowUpCardProps> = ({
               {formatOutcome(entry.outcome)}
             </span>
           </div>
-          <p className="text-sm text-gray-500">{entry.tenantId}</p>
+          <p className="text-sm text-gray-500">{entry.base_thread_id}</p>
         </div>
-        <p className="text-xs text-gray-400">{formatDate(entry.createdAt)}</p>
+        <p className="text-xs text-gray-400">{formatDate(entry.created_at)}</p>
       </div>
 
       <div className="mb-3">
@@ -45,7 +45,7 @@ export const FollowUpCard: React.FC<FollowUpCardProps> = ({
 
       <div className="bg-gray-50 rounded p-3 mb-4">
         <p className="text-sm font-medium text-gray-900 mb-2">Rascunho:</p>
-        <p className="text-sm text-gray-700 line-clamp-3">{entry.draftMessage}</p>
+        <p className="text-sm text-gray-700 line-clamp-3">{entry.draft_message}</p>
       </div>
 
       {isPendente && (
@@ -74,14 +74,6 @@ export const FollowUpCard: React.FC<FollowUpCardProps> = ({
           >
             Opt-out
           </button>
-        </div>
-      )}
-
-      {!isPendente && (
-        <div className="text-xs text-gray-500">
-          {entry.approvedBy && entry.approvedAt && (
-            <p>Aprovado por {entry.approvedBy} em {formatDate(entry.approvedAt)}</p>
-          )}
         </div>
       )}
     </div>

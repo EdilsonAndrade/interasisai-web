@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { FollowUpQueueEntry, FollowUpFilters } from '../../types'
+import React, { useState } from 'react'
+import { FollowUpQueueEntry, FollowUpStatus } from '../../types'
 import { useFollowUpQueue } from '../../hooks/useFollowUpQueue'
 import { useTenantConfig } from '../../hooks/useTenantConfig'
 import { apiClient } from '../../services/api'
@@ -9,25 +9,35 @@ import { FollowUpCard } from './FollowUpCard'
 import { FollowUpFilterBar } from './FollowUpFilterBar'
 import { FollowUpEditModal } from './FollowUpEditModal'
 import { LoadingSpinner } from '../shared/LoadingSpinner'
+import { useAdminAuth } from '../../context/AdminAuthContext'
 
-export const FollowUpQueue: React.FC = () => {
-  const { data, loading, error, totalCount, fetchQueue, refetch } = useFollowUpQueue()
+interface FollowUpQueueProps {
+  tenantId: string
+}
+
+export const FollowUpQueue: React.FC<FollowUpQueueProps> = ({ tenantId }) => {
   const { config: tenantConfig, fetchConfig } = useTenantConfig()
+  const { data, loading, error, fetchQueue, refetch } = useFollowUpQueue()
+  const { user } = useAdminAuth()
   const [selectedEntry, setSelectedEntry] = useState<FollowUpQueueEntry | null>(null)
-  const [currentFilters, setCurrentFilters] = useState<FollowUpFilters>({})
+  const [currentStatus, setCurrentStatus] = useState<FollowUpStatus | undefined>()
   const [actionLoading, setActionLoading] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
-  useEffect(() => {
-    // Carregar config do tenant quando tiver entrada selecionada
-    if (selectedEntry && selectedEntry.tenantId) {
-      fetchConfig(selectedEntry.tenantId)
-    }
-  }, [selectedEntry, fetchConfig])
+  React.useEffect(() => {
+    // Carregar fila inicial
+    fetchQueue(tenantId, currentStatus)
+  }, [tenantId, currentStatus, fetchQueue])
 
-  const handleFilterChange = async (filters: FollowUpFilters) => {
-    setCurrentFilters(filters)
-    await fetchQueue(filters)
+  React.useEffect(() => {
+    // Carregar config do tenant para validação de oferta
+    if (tenantId) {
+      fetchConfig(tenantId)
+    }
+  }, [tenantId, fetchConfig])
+
+  const handleFilterChange = (status?: FollowUpStatus) => {
+    setCurrentStatus(status)
   }
 
   const handleEdit = (entry: FollowUpQueueEntry) => {
@@ -35,16 +45,16 @@ export const FollowUpQueue: React.FC = () => {
   }
 
   const handleApprove = async (newDraft: string) => {
-    if (!selectedEntry) return
+    if (!selectedEntry || !user) return
 
     setActionLoading(true)
     setActionError(null)
 
     try {
-      await apiClient.updateFollowUpStatus(selectedEntry.id, {
+      await apiClient.updateFollowUpStatus(tenantId, selectedEntry.id, {
         status: 'aprovado',
-        draftMessage: newDraft,
-        approvedBy: 'current-user-id',
+        draft_message: newDraft,
+        approved_by: user.email,
       })
       setSelectedEntry(null)
       await refetch()
@@ -62,7 +72,7 @@ export const FollowUpQueue: React.FC = () => {
     setActionError(null)
 
     try {
-      await apiClient.updateFollowUpStatus(selectedEntry.id, {
+      await apiClient.updateFollowUpStatus(tenantId, selectedEntry.id, {
         status: 'descartado',
       })
       setSelectedEntry(null)
@@ -79,7 +89,7 @@ export const FollowUpQueue: React.FC = () => {
     setActionError(null)
 
     try {
-      await apiClient.updateFollowUpStatus(entry.id, {
+      await apiClient.updateFollowUpStatus(tenantId, entry.id, {
         status: 'opt_out',
       })
       await refetch()
@@ -96,7 +106,10 @@ export const FollowUpQueue: React.FC = () => {
 
   return (
     <div>
-      <FollowUpFilterBar onFilterChange={handleFilterChange} />
+      <FollowUpFilterBar
+        onFilterChange={handleFilterChange}
+        currentStatus={currentStatus}
+      />
 
       {actionError && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -115,29 +128,23 @@ export const FollowUpQueue: React.FC = () => {
           <p className="text-gray-500">Nenhum follow-up encontrado</p>
         </div>
       ) : (
-        <>
-          <div className="grid gap-4 mb-4">
-            {data.map(entry => (
-              <FollowUpCard
-                key={entry.id}
-                entry={entry}
-                onEdit={handleEdit}
-                onApprove={() => handleEdit(entry)}
-                onDiscard={() => handleOptOut(entry)}
-                onOptOut={() => handleOptOut(entry)}
-              />
-            ))}
-          </div>
-
-          <div className="text-center py-4 text-sm text-gray-600">
-            Mostrando {data.length} de {totalCount} registros
-          </div>
-        </>
+        <div className="grid gap-4 mb-4">
+          {data.map(entry => (
+            <FollowUpCard
+              key={entry.id}
+              entry={entry}
+              onEdit={handleEdit}
+              onApprove={() => handleEdit(entry)}
+              onDiscard={() => handleDiscard()}
+              onOptOut={() => handleOptOut(entry)}
+            />
+          ))}
+        </div>
       )}
 
       <FollowUpEditModal
         entry={selectedEntry}
-        tenantOferta={tenantConfig?.ofertaVigente?.text}
+        tenantOferta={tenantConfig?.oferta_vigente_texto}
         onApprove={handleApprove}
         onDiscard={handleDiscard}
         onClose={() => setSelectedEntry(null)}

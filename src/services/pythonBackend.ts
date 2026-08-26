@@ -38,6 +38,15 @@ import type {
   KnowledgeBaseWriteResult,
   KnowledgeBaseDeleteResult,
   KnowledgeBaseFailure,
+  TenantUsage,
+  TenantUsageResult,
+  TenantMessageLimitConfig,
+  TenantMessageLimitConfigResult,
+  GlobalRecipient,
+  GlobalRecipientListResult,
+  GlobalRecipientOperationResult,
+  GlobalRecipientDeleteResult,
+  GlobalRecipientFailure,
 } from "./pythonBackend.types";
 
 // ---------------------------------------------------------------------------
@@ -450,7 +459,11 @@ function isTenant(value: unknown): value is Tenant {
     typeof tenant.scheduling_enabled === "boolean" &&
     typeof tenant.created_at === "string" &&
     (typeof tenant.updated_at === "string" || tenant.updated_at === null) &&
-    (typeof tenant.deleted_at === "string" || tenant.deleted_at === null)
+    (typeof tenant.deleted_at === "string" || tenant.deleted_at === null) &&
+    (tenant.monthly_message_limit === null ||
+      typeof tenant.monthly_message_limit === "number") &&
+    Array.isArray(tenant.notification_emails) &&
+    tenant.notification_emails.every((email) => typeof email === "string")
   );
 }
 
@@ -466,7 +479,9 @@ function toTenantFieldErrors(
       field === "google_calendar_id" ||
       field === "allowed_domains" ||
       field === "prompt_id" ||
-      field === "scheduling_enabled"
+      field === "scheduling_enabled" ||
+      field === "monthly_message_limit" ||
+      field === "notification_emails"
     ) {
       result[field] = msg;
     }
@@ -538,6 +553,8 @@ export function createTenant(
       allowed_domains: input.allowed_domains,
       scheduling_enabled: input.scheduling_enabled,
       prompt_id: input.prompt_id,
+      monthly_message_limit: input.monthly_message_limit ?? null,
+      notification_emails: input.notification_emails ?? [],
     }),
     signal,
   });
@@ -568,6 +585,8 @@ export function updateTenant(
         google_calendar_id: input.google_calendar_id,
         allowed_domains: input.allowed_domains,
         scheduling_enabled: input.scheduling_enabled,
+        monthly_message_limit: input.monthly_message_limit ?? null,
+        notification_emails: input.notification_emails ?? [],
       }),
       signal,
     },
@@ -882,4 +901,256 @@ export async function deleteKnowledgeBase(
         ? success.message.trim()
         : "Base de conhecimento removida com sucesso.",
   };
+}
+
+// ---------------------------------------------------------------------------
+// Tenant usage — GET /tenants/{id}/usage (EDI-63)
+// ---------------------------------------------------------------------------
+
+function isTenantUsage(value: unknown): value is TenantUsage {
+  if (!value || typeof value !== "object") return false;
+  const usage = value as Partial<TenantUsage>;
+  return (
+    typeof usage.tenant_id === "string" &&
+    (usage.monthly_message_limit === null || typeof usage.monthly_message_limit === "number") &&
+    typeof usage.current_month_calls === "number" &&
+    (usage.percentage_used === null || typeof usage.percentage_used === "number") &&
+    typeof usage.blocked === "boolean"
+  );
+}
+
+export async function getTenantUsage(
+  tenantId: string,
+  signal?: AbortSignal,
+): Promise<TenantUsageResult> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getPythonBackendBaseUrl()}/api/v1/tenants/${encodeURIComponent(tenantId)}/usage`,
+      { method: "GET", signal },
+    );
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      message:
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Solicitação cancelada."
+          : NETWORK_ERROR_MSG,
+      retryable: true,
+    };
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      message: getOperationErrorMessage(payload),
+      retryable: isRetryableStatus(response.status),
+    };
+  }
+  if (!isTenantUsage(payload)) {
+    return {
+      ok: false,
+      status: 502,
+      message: "O serviço retornou dados de consumo em formato inválido.",
+      retryable: true,
+    };
+  }
+  return { ok: true, status: response.status, data: payload };
+}
+
+// ---------------------------------------------------------------------------
+// Tenant message-limit config — GET /tenants/message-limit-config (EDI-63)
+// ---------------------------------------------------------------------------
+
+function isTenantMessageLimitConfig(value: unknown): value is TenantMessageLimitConfig {
+  if (!value || typeof value !== "object") return false;
+  const config = value as Partial<TenantMessageLimitConfig>;
+  return (
+    typeof config.worst_case_calls_per_message === "number" &&
+    typeof config.average_calls_per_message === "number"
+  );
+}
+
+export async function getMessageLimitConfig(
+  signal?: AbortSignal,
+): Promise<TenantMessageLimitConfigResult> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getPythonBackendBaseUrl()}/api/v1/tenants/message-limit-config`,
+      { method: "GET", signal },
+    );
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      message:
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Solicitação cancelada."
+          : NETWORK_ERROR_MSG,
+      retryable: true,
+    };
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) {
+    return {
+      ok: false,
+      status: response.status,
+      message: getOperationErrorMessage(payload),
+      retryable: isRetryableStatus(response.status),
+    };
+  }
+  if (!isTenantMessageLimitConfig(payload)) {
+    return {
+      ok: false,
+      status: 502,
+      message: "O serviço retornou configuração em formato inválido.",
+      retryable: true,
+    };
+  }
+  return { ok: true, status: response.status, data: payload };
+}
+
+// ---------------------------------------------------------------------------
+// Global notification recipients — CRUD /global-notification-recipients/ (EDI-63)
+// ---------------------------------------------------------------------------
+
+function isGlobalRecipient(value: unknown): value is GlobalRecipient {
+  if (!value || typeof value !== "object") return false;
+  const recipient = value as Partial<GlobalRecipient>;
+  return (
+    typeof recipient.id === "number" &&
+    typeof recipient.email === "string" &&
+    typeof recipient.active === "boolean" &&
+    typeof recipient.created_at === "string"
+  );
+}
+
+function globalRecipientFailure(status: number, payload?: unknown): GlobalRecipientFailure {
+  if (status === 404) {
+    return { ok: false, status, message: "Destinatário não encontrado.", retryable: false };
+  }
+  if (status === 409) {
+    return {
+      ok: false,
+      status,
+      code: "EMAIL_ALREADY_EXISTS",
+      message: getOperationErrorMessage(payload),
+      retryable: false,
+    };
+  }
+  const normalized = normalizeApiError(status, payload);
+  return {
+    ok: false,
+    status,
+    message: normalized.message,
+    retryable: normalized.retryable,
+  };
+}
+
+export async function listGlobalRecipients(
+  signal?: AbortSignal,
+): Promise<GlobalRecipientListResult> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getPythonBackendBaseUrl()}/api/v1/global-notification-recipients/`,
+      { method: "GET", signal },
+    );
+  } catch (error) {
+    return {
+      ok: false,
+      status: 0,
+      message:
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Solicitação cancelada."
+          : NETWORK_ERROR_MSG,
+      retryable: true,
+    };
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) return globalRecipientFailure(response.status, payload);
+  if (!Array.isArray(payload) || !payload.every(isGlobalRecipient)) {
+    return {
+      ok: false,
+      status: 502,
+      message: "O serviço retornou dados em formato inválido.",
+      retryable: true,
+    };
+  }
+  return { ok: true, status: response.status, items: payload };
+}
+
+export async function createGlobalRecipient(
+  email: string,
+  signal?: AbortSignal,
+): Promise<GlobalRecipientOperationResult> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getPythonBackendBaseUrl()}/api/v1/global-notification-recipients/`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+        signal,
+      },
+    );
+  } catch {
+    return globalRecipientFailure(0);
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) return globalRecipientFailure(response.status, payload);
+  if (!isGlobalRecipient(payload)) return globalRecipientFailure(502);
+  return { ok: true, status: response.status, recipient: payload };
+}
+
+export async function updateGlobalRecipient(
+  id: number,
+  active: boolean,
+  signal?: AbortSignal,
+): Promise<GlobalRecipientOperationResult> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getPythonBackendBaseUrl()}/api/v1/global-notification-recipients/${id}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ active }),
+        signal,
+      },
+    );
+  } catch {
+    return globalRecipientFailure(0);
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) return globalRecipientFailure(response.status, payload);
+  if (!isGlobalRecipient(payload)) return globalRecipientFailure(502);
+  return { ok: true, status: response.status, recipient: payload };
+}
+
+export async function deleteGlobalRecipient(
+  id: number,
+  signal?: AbortSignal,
+): Promise<GlobalRecipientDeleteResult> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${getPythonBackendBaseUrl()}/api/v1/global-notification-recipients/${id}`,
+      { method: "DELETE", signal },
+    );
+  } catch {
+    return globalRecipientFailure(0);
+  }
+
+  if (response.ok) return { ok: true, status: response.status };
+  return globalRecipientFailure(response.status, await parseJsonSafely(response));
 }

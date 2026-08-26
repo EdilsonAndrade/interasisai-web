@@ -1,8 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { TenantDetails } from "./TenantDetails";
+import { useTenantUsage } from "@/hooks/useTenantUsage";
 
 const push = jest.fn();
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
+
+jest.mock("@/hooks/useTenantUsage", () => ({ useTenantUsage: jest.fn() }));
+const useTenantUsageMock = jest.mocked(useTenantUsage);
 
 const tenant = {
   id: "tenant-1",
@@ -37,7 +41,21 @@ const bindingProps = {
 };
 
 describe("TenantDetails", () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useTenantUsageMock.mockReturnValue({
+      usage: {
+        tenant_id: "tenant-1",
+        monthly_message_limit: 500,
+        current_month_calls: 156,
+        percentage_used: 31.2,
+        blocked: false,
+      },
+      loading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+  });
 
   it("navigates to the WhatsApp instances screen with Tenant ID and Nome pre-filled", () => {
     render(
@@ -172,5 +190,75 @@ describe("TenantDetails", () => {
 
     expect(screen.getByText("Chitchat")).toBeInTheDocument();
     expect(screen.getByText("Nenhum prompt vinculado (usa o padrão da plataforma).")).toBeInTheDocument();
+  });
+
+  describe("EDI-63 — indicador de consumo do mês", () => {
+    it("renders the usage indicator for an active tenant", () => {
+      render(
+        <TenantDetails tenant={tenant} onEdit={jest.fn()} onDelete={jest.fn()} {...bindingProps} />,
+      );
+
+      expect(screen.getByText("156 / 500 mensagens (31%)")).toBeInTheDocument();
+      expect(useTenantUsageMock).toHaveBeenCalledWith("tenant-1");
+    });
+
+    it("does not fetch usage for a deleted tenant", () => {
+      render(
+        <TenantDetails
+          tenant={{ ...tenant, deleted_at: "2026-08-08T12:00:00Z" }}
+          onEdit={jest.fn()}
+          onDelete={jest.fn()}
+          {...bindingProps}
+        />,
+      );
+
+      expect(useTenantUsageMock).toHaveBeenCalledWith(null);
+      expect(screen.queryByText(/mensagens \(/)).not.toBeInTheDocument();
+    });
+
+    it("degrades gracefully without breaking the rest of the page on usage error", () => {
+      useTenantUsageMock.mockReturnValue({
+        usage: null,
+        loading: false,
+        error: "Erro de rede",
+        refetch: jest.fn(),
+      });
+
+      render(
+        <TenantDetails tenant={tenant} onEdit={jest.fn()} onDelete={jest.fn()} {...bindingProps} />,
+      );
+
+      expect(screen.getByText(/indisponível/i)).toBeInTheDocument();
+      expect(screen.getByRole("heading", { name: "Tenant One" })).toBeInTheDocument();
+    });
+  });
+
+  describe("EDI-63 — e-mails de aviso de consumo", () => {
+    it("shows the configured notification e-mails", () => {
+      render(
+        <TenantDetails
+          tenant={{ ...tenant, notification_emails: ["admin@buffet.com", "manager@buffet.com"] }}
+          onEdit={jest.fn()}
+          onDelete={jest.fn()}
+          {...bindingProps}
+        />,
+      );
+
+      expect(screen.getByText("admin@buffet.com")).toBeInTheDocument();
+      expect(screen.getByText("manager@buffet.com")).toBeInTheDocument();
+    });
+
+    it("shows a neutral message when no notification e-mail is configured", () => {
+      render(
+        <TenantDetails
+          tenant={{ ...tenant, notification_emails: [] }}
+          onEdit={jest.fn()}
+          onDelete={jest.fn()}
+          {...bindingProps}
+        />,
+      );
+
+      expect(screen.getByText("Nenhum e-mail configurado.")).toBeInTheDocument();
+    });
   });
 });

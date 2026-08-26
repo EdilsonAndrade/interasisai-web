@@ -9,8 +9,11 @@ import {
   tenantDomainSchema,
   type TenantCreateInput,
 } from "@/lib/tenantSchemas";
+import { estimateRealMessages } from "@/lib/messageLimitEstimate";
 import { PromptSelectField } from "@/components/admin/PromptSelectField";
 import { OnboardingPrerequisiteNotice } from "@/components/admin/onboarding/OnboardingPrerequisiteNotice";
+import { EmailListEditor } from "@/components/admin/tenants/EmailListEditor";
+import { useMessageLimitConfig } from "@/hooks/useMessageLimitConfig";
 import type { TenantCreateBase, TenantCreateIntent } from "@/hooks/useTenantManagement";
 import type { TenantFieldErrors, TenantWriteInput } from "@/services";
 import type { Prompt, PromptCreateInput } from "@/services/promptManager.types";
@@ -62,13 +65,22 @@ export function TenantForm({
       allowed_domains: initialValues?.allowed_domains ?? [],
       scheduling_enabled: initialValues?.scheduling_enabled ?? true,
       prompt_id: mode === "edit" ? EDIT_MODE_PROMPT_PLACEHOLDER : "",
+      monthly_message_limit: initialValues?.monthly_message_limit ?? null,
+      notification_emails: initialValues?.notification_emails ?? [],
     },
   });
   const allowedDomains = useWatch({ control, name: "allowed_domains" }) ?? [];
+  const notificationEmails = useWatch({ control, name: "notification_emails" }) ?? [];
+  const monthlyMessageLimit = useWatch({ control, name: "monthly_message_limit" });
   const promptId = useWatch({ control, name: "prompt_id" });
   const [domainInput, setDomainInput] = useState("");
   const [domainError, setDomainError] = useState<string>();
   const [newPromptDraft, setNewPromptDraft] = useState<PromptCreateInput | null>(null);
+  const { config: messageLimitConfig } = useMessageLimitConfig();
+  const messageLimitEstimate =
+    typeof monthlyMessageLimit === "number"
+      ? estimateRealMessages(monthlyMessageLimit, messageLimitConfig.worst_case_calls_per_message)
+      : null;
 
   useEffect(() => {
     onDirtyChange?.(isDirty);
@@ -87,6 +99,12 @@ export function TenantForm({
     }
     if (fieldErrors?.prompt_id) {
       setError("prompt_id", { message: fieldErrors.prompt_id });
+    }
+    if (fieldErrors?.monthly_message_limit) {
+      setError("monthly_message_limit", { message: fieldErrors.monthly_message_limit });
+    }
+    if (fieldErrors?.notification_emails) {
+      setError("notification_emails", { message: fieldErrors.notification_emails });
     }
   }, [fieldErrors, setError]);
 
@@ -107,6 +125,8 @@ export function TenantForm({
         google_calendar_id: values.google_calendar_id,
         allowed_domains: values.allowed_domains,
         scheduling_enabled: values.scheduling_enabled,
+        monthly_message_limit: values.monthly_message_limit,
+        notification_emails: values.notification_emails,
       });
       if (ok) reset();
       return;
@@ -118,6 +138,8 @@ export function TenantForm({
       google_calendar_id: values.google_calendar_id,
       allowed_domains: values.allowed_domains,
       scheduling_enabled: values.scheduling_enabled,
+      monthly_message_limit: values.monthly_message_limit,
+      notification_emails: values.notification_emails,
     };
     const intent: TenantCreateIntent = newPromptDraft
       ? { mode: "new", prompt: newPromptDraft }
@@ -158,7 +180,7 @@ export function TenantForm({
   const loadingLabel = mode === "create" ? "Cadastrando" : "Salvando";
 
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-5">
+    <form onSubmit={handleSubmit(submit)} noValidate className="space-y-5">
       {mode === "create" && (
         <div className="space-y-2">
           <label htmlFor="tenant-create-id" className="text-sm font-medium text-text-body">ID do tenant</label>
@@ -252,6 +274,43 @@ export function TenantForm({
           </span>
         </label>
       </div>
+      <div className="space-y-2">
+        <label htmlFor="tenant-monthly-limit" className="text-sm font-medium text-text-body">
+          Limite mensal de chamadas de LLM (opcional)
+        </label>
+        <input
+          id="tenant-monthly-limit"
+          type="number"
+          min={1}
+          step={1}
+          disabled={isLoading}
+          aria-invalid={Boolean(errors.monthly_message_limit)}
+          aria-describedby={errors.monthly_message_limit ? "tenant-monthly-limit-error" : undefined}
+          {...register("monthly_message_limit", {
+            setValueAs: (value) => (value === "" || value === null ? null : Number(value)),
+          })}
+          className="w-full rounded-card border border-border-subtle bg-surface-subtle px-4 py-3 text-text-strong outline-none focus:border-brand-primary disabled:opacity-60"
+        />
+        <p className="text-xs text-text-weak">
+          Contado por chamada de LLM, não por mensagem real do cliente final.
+          {messageLimitEstimate !== null && (
+            <> Estimativa: ≈ {messageLimitEstimate} mensagens reais no pior caso.</>
+          )}
+        </p>
+        {errors.monthly_message_limit && (
+          <p id="tenant-monthly-limit-error" role="alert" className="text-sm text-red-300">
+            {errors.monthly_message_limit.message}
+          </p>
+        )}
+      </div>
+      <EmailListEditor
+        id="tenant-notification-emails"
+        label="E-mails de aviso de consumo (opcional)"
+        value={notificationEmails}
+        onChange={(emails) => setValue("notification_emails", emails, { shouldValidate: true, shouldDirty: true })}
+        disabled={isLoading}
+        error={errors.notification_emails?.message}
+      />
       {mode === "create" && (
         <PromptSelectField
           prompts={operationalPrompts}

@@ -18,6 +18,16 @@ jest.mock("@/components/admin/prompt-manager/MarkdownEditorCustom", () => ({
   ),
 }));
 
+// Evita chamada de rede real (sem NEXT_PUBLIC_PYTHON_BACKEND_URL neste teste)
+// e torna a dica de estimativa determinística (EDI-63).
+jest.mock("@/hooks/useMessageLimitConfig", () => ({
+  useMessageLimitConfig: () => ({
+    config: { worst_case_calls_per_message: 3, average_calls_per_message: 3 },
+    loading: false,
+    error: null,
+  }),
+}));
+
 const prompts: Prompt[] = [
   {
     id: "p-default",
@@ -111,6 +121,8 @@ describe("TenantForm", () => {
           google_calendar_id: "calendar",
           allowed_domains: ["example.com"],
           scheduling_enabled: true,
+          monthly_message_limit: null,
+          notification_emails: [],
         },
         { mode: "existing", prompt_id: "p-clinica" },
       ),
@@ -227,6 +239,8 @@ describe("TenantForm", () => {
         google_calendar_id: "calendar",
         allowed_domains: ["example.com"],
         scheduling_enabled: true,
+        monthly_message_limit: null,
+        notification_emails: [],
       }),
     );
   });
@@ -287,5 +301,101 @@ describe("TenantForm", () => {
         },
       }),
     );
+  });
+
+  describe("EDI-63 — limite mensal e e-mails de notificação", () => {
+    it("submits monthly_message_limit and notification_emails filled in by the admin", async () => {
+      const onCreate = jest.fn().mockResolvedValue(true);
+      render(
+        <TenantForm
+          mode="create"
+          operationalPrompts={prompts}
+          isLoading={false}
+          onCancel={jest.fn()}
+          onCreate={onCreate}
+        />,
+      );
+
+      fillBaseFields();
+      fireEvent.click(screen.getByRole("radio", { name: /Atendimento Clínica/i }));
+      fireEvent.change(screen.getByLabelText(/Limite mensal de chamadas de LLM/i), {
+        target: { value: "500" },
+      });
+      const emailInput = screen.getByLabelText(/E-mails de aviso de consumo/i);
+      fireEvent.change(emailInput, { target: { value: "manager@buffet.com" } });
+      fireEvent.keyDown(emailInput, { key: "Enter" });
+      fireEvent.click(screen.getByRole("button", { name: "Cadastrar tenant" }));
+
+      await waitFor(() =>
+        expect(onCreate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            monthly_message_limit: 500,
+            notification_emails: ["manager@buffet.com"],
+          }),
+          expect.anything(),
+        ),
+      );
+    });
+
+    it("shows an estimate hint next to the limit field once a value is entered", () => {
+      render(
+        <TenantForm
+          mode="create"
+          operationalPrompts={prompts}
+          isLoading={false}
+          onCancel={jest.fn()}
+          onCreate={jest.fn()}
+        />,
+      );
+
+      fireEvent.change(screen.getByLabelText(/Limite mensal de chamadas de LLM/i), {
+        target: { value: "1000" },
+      });
+
+      expect(screen.getByText(/≈ 334 mensagens reais/i)).toBeInTheDocument();
+    });
+
+    it("maps server-side field errors for the new fields onto the form", () => {
+      render(
+        <TenantForm
+          mode="create"
+          operationalPrompts={prompts}
+          isLoading={false}
+          fieldErrors={{
+            monthly_message_limit: "Deve ser maior que zero.",
+            notification_emails: "Um dos e-mails é inválido.",
+          }}
+          onCancel={jest.fn()}
+          onCreate={jest.fn()}
+        />,
+      );
+
+      expect(screen.getByText("Deve ser maior que zero.")).toBeInTheDocument();
+      expect(screen.getByText("Um dos e-mails é inválido.")).toBeInTheDocument();
+    });
+
+    it("allows saving without any notification e-mail (optional field)", async () => {
+      const onCreate = jest.fn().mockResolvedValue(true);
+      render(
+        <TenantForm
+          mode="create"
+          operationalPrompts={prompts}
+          isLoading={false}
+          onCancel={jest.fn()}
+          onCreate={onCreate}
+        />,
+      );
+
+      fillBaseFields();
+      fireEvent.click(screen.getByRole("radio", { name: /Atendimento Clínica/i }));
+      fireEvent.click(screen.getByRole("button", { name: "Cadastrar tenant" }));
+
+      await waitFor(() =>
+        expect(onCreate).toHaveBeenCalledWith(
+          expect.objectContaining({ notification_emails: [] }),
+          expect.anything(),
+        ),
+      );
+    });
   });
 });

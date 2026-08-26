@@ -22,5 +22,9 @@ describe("AdminNavigation", () => {
       "href",
       "/admin/whatsapp",
     );
+    expect(screen.getByRole("link", { name: "Configurações Globais" })).toHaveAttribute(
+      "href",
+      "/admin/global-settings",
+    );
   });
 });

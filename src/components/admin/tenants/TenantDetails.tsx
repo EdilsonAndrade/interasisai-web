@@ -1,11 +1,14 @@
 "use client";
 
-import { CalendarDays, CalendarOff, Globe2, MessageCircleMore, Pencil } from "lucide-react";
+import { CalendarDays, CalendarOff, Globe2, Mail, MessageCircleMore, Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef } from "react";
 import type { Tenant } from "@/services";
 import { DeleteAction } from "@/components/admin/DeleteAction";
 import { GuardrailScopeBadge } from "@/components/admin/GuardrailScopeBadge";
 import { TenantPromptBindingCard } from "@/components/admin/TenantPromptBindingCard";
+import { TenantUsageIndicator } from "@/components/admin/tenants/TenantUsageIndicator";
+import { useTenantUsage } from "@/hooks/useTenantUsage";
 import type { TenantPromptBindingState } from "@/hooks/useTenantPromptBinding";
 import type { TenantNodePromptEntry } from "@/hooks/useTenantNodePrompts";
 import type { Prompt, TenantPromptDetail } from "@/services/promptManager.types";
@@ -90,6 +93,17 @@ export function TenantDetails({
 }: TenantDetailsProps) {
   const active = tenant.deleted_at === null;
   const router = useRouter();
+  const { usage, loading: usageLoading, error: usageError, refetch: refetchUsage } = useTenantUsage(active ? tenant.id : null);
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    // Reflete imediatamente um novo monthly_message_limit salvo na edição —
+    // GET /tenants/{id}/usage não é refeito automaticamente pois o id do
+    // tenant não muda, então reagimos a updated_at (pula a 1ª renderização,
+    // já coberta pelo fetch interno do hook).
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    if (active) refetchUsage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant.updated_at]);
   const goToWhatsApp = () => {
     const params = new URLSearchParams({ tenantId: tenant.id, instanceName: tenant.name });
     router.push(`/admin/whatsapp?${params.toString()}`);
@@ -118,10 +132,31 @@ export function TenantDetails({
         <div><dt className="text-xs font-semibold uppercase text-text-muted">Google Calendar</dt><dd className="mt-1 flex min-w-0 gap-2 break-all text-sm text-text-strong"><CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" />{tenant.google_calendar_id}</dd></div>
         <div><dt className="text-xs font-semibold uppercase text-text-muted">Agendamento</dt><dd className="mt-1 flex min-w-0 items-center gap-2 text-sm text-text-strong">{tenant.scheduling_enabled ? <CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" /> : <CalendarOff className="h-4 w-4 shrink-0" aria-hidden="true" />}{tenant.scheduling_enabled ? "Habilitado" : "Desabilitado"}</dd></div>
         <div className="sm:col-span-2"><dt className="text-xs font-semibold uppercase text-text-muted">Domínios permitidos</dt><dd className="mt-2 flex flex-wrap gap-2">{tenant.allowed_domains.map((domain) => <span key={domain} className="inline-flex max-w-full items-center gap-2 rounded-card border border-brand-primary/30 bg-brand-primary/10 px-3 py-2 text-sm text-text-strong"><Globe2 className="h-4 w-4 shrink-0" aria-hidden="true" /><span className="break-all">{domain}</span></span>)}</dd></div>
+        <div className="sm:col-span-2">
+          <dt className="text-xs font-semibold uppercase text-text-muted">E-mails de aviso de consumo</dt>
+          <dd className="mt-2 flex flex-wrap gap-2">
+            {tenant.notification_emails && tenant.notification_emails.length > 0 ? (
+              tenant.notification_emails.map((email) => (
+                <span key={email} className="inline-flex max-w-full items-center gap-2 rounded-card border border-brand-primary/30 bg-brand-primary/10 px-3 py-2 text-sm text-text-strong">
+                  <Mail className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span className="break-all">{email}</span>
+                </span>
+              ))
+            ) : (
+              <span className="text-sm text-text-weak">Nenhum e-mail configurado.</span>
+            )}
+          </dd>
+        </div>
         <div><dt className="text-xs font-semibold uppercase text-text-muted">Criado em</dt><dd className="mt-1 text-sm text-text-strong">{formatDate(tenant.created_at)}</dd></div>
         <div><dt className="text-xs font-semibold uppercase text-text-muted">Atualizado em</dt><dd className="mt-1 text-sm text-text-strong">{formatDate(tenant.updated_at, "Nunca atualizado")}</dd></div>
         {tenant.deleted_at && <div><dt className="text-xs font-semibold uppercase text-text-muted">Excluído em</dt><dd className="mt-1 text-sm text-text-strong">{formatDate(tenant.deleted_at)}</dd></div>}
       </dl>
+      {active && (
+        <div>
+          <p className="mb-2 text-xs font-semibold uppercase text-text-muted">Consumo do mês</p>
+          <TenantUsageIndicator usage={usage} loading={usageLoading} error={usageError} />
+        </div>
+      )}
       {active && (
         <TenantPromptBindingCard
           state={bindingState}

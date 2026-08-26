@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, LayoutDashboard, MessageCircleMore, Settings, ShieldCheck } from "lucide-react";
+import { Building2, ClipboardCheck, LayoutDashboard, MessageCircleMore, Settings, ShieldCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 const items = [
   { href: "/admin", label: "Painel", icon: LayoutDashboard },
   { href: "/admin/whatsapp", label: "WhatsApp", icon: MessageCircleMore },
   { href: "/admin/tenants", label: "Tenants", icon: Building2 },
+  { href: "/admin/follow-up", label: "Follow-up", icon: ClipboardCheck },
   { href: "/admin/prompt-manager", label: "Prompts & Guardrails", icon: ShieldCheck },
   { href: "/admin/global-settings", label: "Configurações Globais", icon: Settings },
 ];

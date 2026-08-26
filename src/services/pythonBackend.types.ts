@@ -162,6 +162,11 @@ export type TenantWriteInput = {
   google_calendar_id: string;
   allowed_domains: string[];
   scheduling_enabled: boolean;
+  // EDI-63: teto mensal de chamadas de LLM (null = sem limite) + e-mails que
+  // recebem os avisos de 50/80/100%/reset. Opcionais para não quebrar chamadas
+  // existentes; a camada de serviço aplica os defaults (null / []) ao enviar.
+  monthly_message_limit?: number | null;
+  notification_emails?: string[];
 };
 
 export type TenantCreateInput = TenantWriteInput & {
@@ -178,6 +183,11 @@ export type Tenant = {
   deleted_at: string | null;
   allowed_domains: string[];
   scheduling_enabled: boolean;
+  // EDI-63: sempre presentes nas respostas reais do backend; opcionais aqui
+  // apenas para não quebrar fixtures de teste existentes que constroem um
+  // Tenant manualmente sem esses campos (mesmo raciocínio de TenantWriteInput).
+  monthly_message_limit?: number | null;
+  notification_emails?: string[];
 };
 
 export type TenantFieldErrors = Partial<
@@ -351,3 +361,102 @@ export type KnowledgeBaseFailure = {
 export type KnowledgeBaseReadResult = KnowledgeBaseReadSuccess | KnowledgeBaseFailure;
 export type KnowledgeBaseWriteResult = KnowledgeBaseWriteSuccess | KnowledgeBaseFailure;
 export type KnowledgeBaseDeleteResult = KnowledgeBaseDeleteSuccess | KnowledgeBaseFailure;
+
+// ---------------------------------------------------------------------------
+// Tenant usage — GET /tenants/{id}/usage (EDI-63)
+// Source: specs/024-tenant-message-limit-admin-ui/contracts/, backend
+// specs/010-tenant-message-limit/contracts/tenant-message-limit.md
+// ---------------------------------------------------------------------------
+
+export type TenantUsage = {
+  tenant_id: string;
+  monthly_message_limit: number | null;
+  current_month_calls: number;
+  percentage_used: number | null;
+  blocked: boolean;
+};
+
+export type TenantUsageSuccess = {
+  ok: true;
+  status: number;
+  data: TenantUsage;
+};
+
+export type TenantUsageFailure = {
+  ok: false;
+  status: number;
+  message: string;
+  retryable: boolean;
+};
+
+export type TenantUsageResult = TenantUsageSuccess | TenantUsageFailure;
+
+// ---------------------------------------------------------------------------
+// Tenant message-limit config — GET /tenants/message-limit-config (EDI-63)
+// ---------------------------------------------------------------------------
+
+export type TenantMessageLimitConfig = {
+  worst_case_calls_per_message: number;
+  average_calls_per_message: number;
+};
+
+export type TenantMessageLimitConfigSuccess = {
+  ok: true;
+  status: number;
+  data: TenantMessageLimitConfig;
+};
+
+export type TenantMessageLimitConfigFailure = {
+  ok: false;
+  status: number;
+  message: string;
+  retryable: boolean;
+};
+
+export type TenantMessageLimitConfigResult =
+  | TenantMessageLimitConfigSuccess
+  | TenantMessageLimitConfigFailure;
+
+// ---------------------------------------------------------------------------
+// Global notification recipients — CRUD /global-notification-recipients/ (EDI-63)
+// ---------------------------------------------------------------------------
+
+export type GlobalRecipient = {
+  id: number;
+  email: string;
+  active: boolean;
+  created_at: string;
+};
+
+export type GlobalRecipientListSuccess = {
+  ok: true;
+  status: number;
+  items: GlobalRecipient[];
+};
+
+export type GlobalRecipientFailure = {
+  ok: false;
+  status: number;
+  code?: "EMAIL_ALREADY_EXISTS";
+  message: string;
+  retryable: boolean;
+};
+
+export type GlobalRecipientListResult = GlobalRecipientListSuccess | GlobalRecipientFailure;
+
+export type GlobalRecipientOperationSuccess = {
+  ok: true;
+  status: number;
+  recipient: GlobalRecipient;
+};
+
+export type GlobalRecipientOperationResult =
+  | GlobalRecipientOperationSuccess
+  | GlobalRecipientFailure;
+
+export type GlobalRecipientDeleteSuccess = {
+  ok: true;
+  status: number;
+};
+
+export type GlobalRecipientDeleteResult = GlobalRecipientDeleteSuccess | GlobalRecipientFailure;

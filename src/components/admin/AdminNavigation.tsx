@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, LayoutDashboard, MessageCircleMore, ShieldCheck } from "lucide-react";
+import { Building2, LayoutDashboard, MessageCircleMore, Settings, ShieldCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
 
 const items = [
@@ -9,6 +9,7 @@ const items = [
   { href: "/admin/whatsapp", label: "WhatsApp", icon: MessageCircleMore },
   { href: "/admin/tenants", label: "Tenants", icon: Building2 },
   { href: "/admin/prompt-manager", label: "Prompts & Guardrails", icon: ShieldCheck },
+  { href: "/admin/global-settings", label: "Configurações Globais", icon: Settings },
 ];
 
 export function AdminNavigation() {

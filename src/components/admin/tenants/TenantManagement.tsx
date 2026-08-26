@@ -172,6 +172,8 @@ export function TenantManagement() {
             google_calendar_id: editing.google_calendar_id,
             allowed_domains: editing.allowed_domains,
             scheduling_enabled: editing.scheduling_enabled,
+            monthly_message_limit: editing.monthly_message_limit ?? null,
+            notification_emails: editing.notification_emails ?? [],
           } : undefined}
           operationalPrompts={operationalPrompts}
           isLoading={management.operation === "create" || management.operation === "update"}

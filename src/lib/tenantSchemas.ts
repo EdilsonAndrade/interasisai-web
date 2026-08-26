@@ -8,6 +8,11 @@ export const tenantDomainSchema = z
   .min(1, "Informe um domínio.")
   .regex(domainPattern, "Informe apenas o domínio, sem http, https, porta ou caminho.");
 
+export const notificationEmailSchema = z
+  .string()
+  .trim()
+  .email("E-mail inválido.");
+
 export const tenantWriteSchema = z.object({
   name: z.string().trim().min(1, "O nome do tenant é obrigatório."),
   google_calendar_id: z
@@ -18,6 +23,16 @@ export const tenantWriteSchema = z.object({
     .array(tenantDomainSchema)
     .min(1, "Adicione pelo menos um domínio permitido."),
   scheduling_enabled: z.boolean(),
+  // EDI-63: teto mensal de chamadas de LLM (opcional, null = sem limite) e
+  // e-mails de aviso de consumo (opcional, lista vazia = nenhum aviso).
+  monthly_message_limit: z
+    .number({ error: "Informe um número inteiro." })
+    .int("Informe um número inteiro.")
+    .positive("O limite deve ser maior que zero.")
+    .nullable(),
+  notification_emails: z
+    .array(notificationEmailSchema)
+    .max(10, "Máximo de 10 e-mails."),
 });
 
 export const tenantCreateSchema = tenantWriteSchema.extend({

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { useOnboardingGuideContext } from "@/context/OnboardingGuideContext";
 import { useTenantManagement } from "@/hooks/useTenantManagement";
 import { usePrompts } from "@/hooks/usePrompts";
@@ -35,6 +35,20 @@ jest.mock("@/hooks/useTenantGrid", () => ({
 
 jest.mock("@/context/OnboardingGuideContext", () => ({
   useOnboardingGuideContext: jest.fn(),
+}));
+
+jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }) }));
+
+jest.mock("@/hooks/useTenantUsage", () => ({
+  useTenantUsage: () => ({ usage: null, loading: false, error: null, refetch: jest.fn() }),
+}));
+
+jest.mock("@/hooks/useMessageLimitConfig", () => ({
+  useMessageLimitConfig: () => ({
+    config: { worst_case_calls_per_message: 3, average_calls_per_message: 3 },
+    loading: false,
+    error: null,
+  }),
 }));
 
 const useTenantMock = jest.mocked(useTenantManagement);
@@ -193,5 +207,36 @@ describe("TenantManagement", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Descartar alterações" }));
     expect(screen.queryByRole("dialog", { name: "Novo tenant" })).not.toBeInTheDocument();
+  });
+
+  it("pre-fills the edit form with the tenant's saved monthly_message_limit and notification_emails (EDI-63)", () => {
+    useTenantMock.mockReturnValue({
+      tenant: {
+        id: "tenant-1",
+        name: "Tenant One",
+        google_calendar_id: "calendar",
+        allowed_domains: ["example.com"],
+        scheduling_enabled: true,
+        monthly_message_limit: 500,
+        notification_emails: ["admin@buffet.com"],
+        created_at: "2026-08-08T10:00:00Z",
+        updated_at: null,
+        deleted_at: null,
+      },
+      operation: null,
+      isLoading: false,
+      error: null,
+      feedback: null,
+      fieldErrors: undefined,
+      pendingPromptId: null,
+      ...actions,
+    });
+    render(<TenantManagement />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Editar" }));
+
+    const dialog = screen.getByRole("dialog", { name: "Editar tenant" });
+    expect(within(dialog).getByLabelText(/Limite mensal de chamadas de LLM/i)).toHaveValue(500);
+    expect(within(dialog).getByText("admin@buffet.com")).toBeInTheDocument();
   });
 });

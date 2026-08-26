@@ -23,6 +23,12 @@ export {
   getKnowledgeBase,
   saveKnowledgeBase,
   deleteKnowledgeBase,
+  getTenantUsage,
+  getMessageLimitConfig,
+  listGlobalRecipients,
+  createGlobalRecipient,
+  updateGlobalRecipient,
+  deleteGlobalRecipient,
 } from "./pythonBackend";
 export type {
   PythonBackendConfig,
@@ -62,6 +68,15 @@ export type {
   KnowledgeBaseReadResult,
   KnowledgeBaseWriteResult,
   KnowledgeBaseDeleteResult,
+  TenantUsage,
+  TenantUsageResult,
+  TenantMessageLimitConfig,
+  TenantMessageLimitConfigResult,
+  GlobalRecipient,
+  GlobalRecipientListResult,
+  GlobalRecipientOperationResult,
+  GlobalRecipientDeleteResult,
+  GlobalRecipientFailure,
 } from "./pythonBackend.types";
 
 // Prompt Manager — Prompts & Guardrails

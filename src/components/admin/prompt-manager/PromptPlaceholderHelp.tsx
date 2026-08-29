@@ -3,7 +3,7 @@
 // um exemplo de texto bem formado para o node_type selecionado no formulário.
 // ============================================================================
 
-import { promptPlaceholderHelp } from "./promptPlaceholderHelp";
+import { promptPlaceholderHelp } from "@/lib/promptPlaceholders";
 import type { NodeType } from "@/services/promptManager.types";
 
 interface PromptPlaceholderHelpProps {
@@ -12,6 +12,7 @@ interface PromptPlaceholderHelpProps {
 
 export function PromptPlaceholderHelp({ nodeType }: PromptPlaceholderHelpProps) {
   const entry = promptPlaceholderHelp[nodeType];
+  const requiredPlaceholders = entry.placeholders.filter((p) => p.required);
 
   return (
     <section
@@ -27,7 +28,7 @@ export function PromptPlaceholderHelp({ nodeType }: PromptPlaceholderHelpProps) 
       </div>
 
       <ul className="flex flex-col gap-2">
-        {entry.placeholders.map((placeholder) => (
+        {requiredPlaceholders.map((placeholder) => (
           <li key={placeholder.token} className="flex flex-col gap-0.5">
             <div className="flex items-center gap-2">
               <code className="rounded bg-surface-subtle px-1.5 py-0.5 text-xs font-semibold text-brand-primary">

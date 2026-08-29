@@ -9,7 +9,7 @@
 import { Sparkles, Star, X } from "lucide-react";
 import { useId, useState } from "react";
 import { MarkdownEditorCustom } from "@/components/admin/prompt-manager/MarkdownEditorCustom";
-import { hasGuardrailsPlaceholder } from "@/lib/promptContent";
+import { missingRequiredPlaceholders } from "@/lib/promptPlaceholders";
 import type { Prompt, PromptCreateInput } from "@/services/promptManager.types";
 
 type PromptSelectFieldProps = {
@@ -108,7 +108,7 @@ export function PromptSelectField({
   }
 
   if (isNewMode && templateId) {
-    const missingPlaceholder = !hasGuardrailsPlaceholder(conteudo);
+    const missingPlaceholders = missingRequiredPlaceholders(conteudo, "operational");
     return (
       <div className="space-y-3 rounded-card border border-brand-primary/20 bg-surface-base/60 p-4">
         <div className="flex items-center justify-between">
@@ -148,10 +148,17 @@ export function PromptSelectField({
           }}
           label="Conteúdo (Markdown)"
         />
-        {missingPlaceholder && (
+        {missingPlaceholders.length > 0 && (
           <p role="alert" className="text-sm text-amber-300">
-            O marcador <code>{"{guardrails}"}</code> não está presente neste texto. As proteções
-            deixarão de ser aplicadas dinamicamente a este prompt.
+            Os placeholders obrigatórios{" "}
+            {missingPlaceholders.map((token, index) => (
+              <span key={token}>
+                <code>{token}</code>
+                {index < missingPlaceholders.length - 1 ? ", " : " "}
+              </span>
+            ))}
+            não estão presentes neste texto. Funcionalidades ligadas a eles deixarão de funcionar
+            dinamicamente para este tenant.
           </p>
         )}
       </div>

@@ -1,5 +1,6 @@
 // ============================================================================
-// promptPlaceholderHelp — Mapa estático de placeholders aceitos por node_type
+// promptPlaceholders — Mapa estático de placeholders aceitos por node_type +
+// funções puras de validação dos obrigatórios (026)
 // Fonte: EDI-50, confirmado contra prompts/load_prompt.py, modules/ia/agent_graph.py
 // e prompts/*.md no repositório agendamento-ia. Atualizar manualmente aqui caso
 // o motor de renderização do backend passe a aceitar/exigir novos placeholders.
@@ -95,3 +96,13 @@ User Question: {pergunta_usuario}`,
 Converse de forma leve e amigável, mantendo o tom da marca.`,
   },
 };
+
+export function requiredPlaceholdersFor(nodeType: NodeType): string[] {
+  const entry = promptPlaceholderHelp[nodeType];
+  if (!entry) return [];
+  return entry.placeholders.filter((p) => p.required).map((p) => p.token);
+}
+
+export function missingRequiredPlaceholders(content: string, nodeType: NodeType): string[] {
+  return requiredPlaceholdersFor(nodeType).filter((token) => !content.includes(token));
+}

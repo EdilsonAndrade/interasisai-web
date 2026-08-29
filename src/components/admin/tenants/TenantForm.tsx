@@ -10,7 +10,9 @@ import {
   type TenantCreateInput,
 } from "@/lib/tenantSchemas";
 import { estimateRealMessages } from "@/lib/messageLimitEstimate";
+import { missingRequiredPlaceholders } from "@/lib/promptPlaceholders";
 import { PromptSelectField } from "@/components/admin/PromptSelectField";
+import { MissingPlaceholdersAlert } from "@/components/admin/prompt-manager/MissingPlaceholdersAlert";
 import { OnboardingPrerequisiteNotice } from "@/components/admin/onboarding/OnboardingPrerequisiteNotice";
 import { EmailListEditor } from "@/components/admin/tenants/EmailListEditor";
 import { useMessageLimitConfig } from "@/hooks/useMessageLimitConfig";
@@ -76,6 +78,8 @@ export function TenantForm({
   const [domainInput, setDomainInput] = useState("");
   const [domainError, setDomainError] = useState<string>();
   const [newPromptDraft, setNewPromptDraft] = useState<PromptCreateInput | null>(null);
+  const [missingTokens, setMissingTokens] = useState<string[] | null>(null);
+  const [pendingCreateValues, setPendingCreateValues] = useState<TenantCreateInput | null>(null);
   const { config: messageLimitConfig } = useMessageLimitConfig();
   const messageLimitEstimate =
     typeof monthlyMessageLimit === "number"
@@ -115,23 +119,12 @@ export function TenantForm({
 
   const changeNewPromptDraft = (draft: PromptCreateInput | null) => {
     setNewPromptDraft(draft);
+    setMissingTokens(null);
+    setPendingCreateValues(null);
     setValue("prompt_id", draft ? NEW_PROMPT_SENTINEL : "", { shouldValidate: true });
   };
 
-  const submit = async (values: TenantCreateInput) => {
-    if (mode === "edit") {
-      const ok = await onEdit?.({
-        name: values.name,
-        google_calendar_id: values.google_calendar_id,
-        allowed_domains: values.allowed_domains,
-        scheduling_enabled: values.scheduling_enabled,
-        monthly_message_limit: values.monthly_message_limit,
-        notification_emails: values.notification_emails,
-      });
-      if (ok) reset();
-      return;
-    }
-
+  const submitCreate = async (values: TenantCreateInput) => {
     const base: TenantCreateBase = {
       tenant_id: values.tenant_id,
       name: values.name,
@@ -149,6 +142,44 @@ export function TenantForm({
     if (ok) {
       reset();
       setNewPromptDraft(null);
+    }
+  };
+
+  const submit = async (values: TenantCreateInput) => {
+    if (mode === "edit") {
+      const ok = await onEdit?.({
+        name: values.name,
+        google_calendar_id: values.google_calendar_id,
+        allowed_domains: values.allowed_domains,
+        scheduling_enabled: values.scheduling_enabled,
+        monthly_message_limit: values.monthly_message_limit,
+        notification_emails: values.notification_emails,
+      });
+      if (ok) reset();
+      return;
+    }
+
+    if (newPromptDraft) {
+      const missing = missingRequiredPlaceholders(newPromptDraft.conteudo, newPromptDraft.node_type);
+      if (missing.length > 0) {
+        setMissingTokens(missing);
+        setPendingCreateValues(values);
+        return;
+      }
+    }
+    await submitCreate(values);
+  };
+
+  const handleFixMissingPlaceholders = () => {
+    setMissingTokens(null);
+    setPendingCreateValues(null);
+  };
+
+  const handleSaveAnyway = async () => {
+    setMissingTokens(null);
+    if (pendingCreateValues) {
+      await submitCreate(pendingCreateValues);
+      setPendingCreateValues(null);
     }
   };
 
@@ -181,6 +212,13 @@ export function TenantForm({
 
   return (
     <form onSubmit={handleSubmit(submit)} noValidate className="space-y-5">
+      {missingTokens && missingTokens.length > 0 && (
+        <MissingPlaceholdersAlert
+          missingTokens={missingTokens}
+          onFix={handleFixMissingPlaceholders}
+          onSaveAnyway={handleSaveAnyway}
+        />
+      )}
       {mode === "create" && (
         <div className="space-y-2">
           <label htmlFor="tenant-create-id" className="text-sm font-medium text-text-body">ID do tenant</label>

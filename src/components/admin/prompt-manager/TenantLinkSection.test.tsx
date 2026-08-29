@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { TenantLinkSection } from "./TenantLinkSection";
 import type { Prompt } from "@/services/promptManager.types";
 
@@ -152,5 +152,74 @@ describe("TenantLinkSection — Nó de Destino", () => {
     renderSection({ tenantDetail });
 
     expect(screen.getByText("Global")).toBeInTheDocument();
+  });
+});
+
+describe("TenantLinkSection — validação de placeholders na customização (US4, 026)", () => {
+  const fillAndSubmit = (override: string) => {
+    fireEvent.click(screen.getByRole("button", { name: "Chitchat" }));
+    fireEvent.change(screen.getByLabelText("ID do Tenant"), { target: { value: "tenant-1" } });
+    fireEvent.change(screen.getByLabelText("Prompt"), { target: { value: "chit-1" } });
+    fireEvent.change(screen.getByLabelText("Customização de Conteúdo (opcional)"), {
+      target: { value: override },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Vincular Tenant" }));
+  };
+
+  it("blocks the link and lists missing tokens when the override lacks a required placeholder", async () => {
+    const { onLink } = renderSection();
+
+    fillAndSubmit("Customização sem o marcador.");
+
+    const alert = await screen.findByRole("alertdialog", { name: "Placeholders obrigatórios ausentes" });
+    expect(within(alert).getByText("{guardrails}")).toBeInTheDocument();
+    expect(onLink).not.toHaveBeenCalled();
+  });
+
+  it("'Corrigir' closes the alert and preserves tenant_id/prompt_id/override", async () => {
+    const { onLink } = renderSection();
+
+    fillAndSubmit("Customização sem o marcador.");
+    await screen.findByRole("alertdialog", { name: "Placeholders obrigatórios ausentes" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Corrigir" }));
+
+    expect(screen.queryByRole("alertdialog", { name: "Placeholders obrigatórios ausentes" })).not.toBeInTheDocument();
+    expect(screen.getByLabelText("ID do Tenant")).toHaveValue("tenant-1");
+    expect(screen.getByLabelText("Prompt")).toHaveValue("chit-1");
+    expect(screen.getByLabelText("Customização de Conteúdo (opcional)")).toHaveValue(
+      "Customização sem o marcador.",
+    );
+    expect(onLink).not.toHaveBeenCalled();
+  });
+
+  it("'Salvar mesmo assim' proceeds with onLink using the pending data", async () => {
+    const { onLink } = renderSection();
+
+    fillAndSubmit("Customização sem o marcador.");
+    await screen.findByRole("alertdialog", { name: "Placeholders obrigatórios ausentes" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Salvar mesmo assim" }));
+
+    await waitFor(() =>
+      expect(onLink).toHaveBeenCalledWith(
+        { tenant_id: "tenant-1", prompt_id: "chit-1", custom_content_override: "Customização sem o marcador." },
+        "chitchat",
+      ),
+    );
+  });
+
+  it("does not validate when the override is empty", async () => {
+    const { onLink } = renderSection();
+
+    fireEvent.click(screen.getByRole("button", { name: "Chitchat" }));
+    fireEvent.change(screen.getByLabelText("ID do Tenant"), { target: { value: "tenant-1" } });
+    fireEvent.change(screen.getByLabelText("Prompt"), { target: { value: "chit-1" } });
+    fireEvent.click(screen.getByRole("button", { name: "Vincular Tenant" }));
+
+    await waitFor(() =>
+      expect(onLink).toHaveBeenCalledWith({ tenant_id: "tenant-1", prompt_id: "chit-1" }, "chitchat"),
+    );
+    expect(screen.queryByRole("alertdialog", { name: "Placeholders obrigatórios ausentes" })).not.toBeInTheDocument();
   });
 });

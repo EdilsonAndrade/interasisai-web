@@ -12,6 +12,8 @@ describe("PromptPlaceholderHelp", () => {
     expect(screen.getByText("{hora_atual_str}")).toBeInTheDocument();
     expect(screen.getByText("{data_hoje_iso}")).toBeInTheDocument();
     expect(screen.getAllByText("Obrigatório")).toHaveLength(6);
+    expect(screen.queryByText("{pergunta_usuario}")).not.toBeInTheDocument();
+    expect(screen.queryByText("{historico_texto}")).not.toBeInTheDocument();
 
     const example = screen.getByText((_, element) => element?.tagName === "CODE" && element.closest("pre") !== null);
     expect(example.textContent).toContain("{tenant_id}");
@@ -38,6 +40,7 @@ describe("PromptPlaceholderHelp", () => {
     expect(screen.getAllByText("Obrigatório")).toHaveLength(1);
     expect(screen.queryByText("{contexto_formatado}")).not.toBeInTheDocument();
     expect(screen.queryByText("{historico_texto}")).not.toBeInTheDocument();
+    expect(screen.queryByText("{pergunta_usuario}")).not.toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Placeholders aceitos para este tipo de prompt" }).textContent).not.toContain(
       "contexto_formatado",
     );

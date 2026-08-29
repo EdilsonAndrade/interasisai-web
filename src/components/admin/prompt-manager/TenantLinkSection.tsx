@@ -10,7 +10,9 @@ import { useForm } from "react-hook-form";
 import { Link, Loader2, Search, Shield, Star, X } from "lucide-react";
 import { GuardrailScopeBadge } from "@/components/admin/GuardrailScopeBadge";
 import { tenantLinkSchema, type TenantLinkFormData } from "@/lib/promptManagerSchemas";
+import { missingRequiredPlaceholders } from "@/lib/promptPlaceholders";
 import { MarkdownEditorCustom } from "./MarkdownEditorCustom";
+import { MissingPlaceholdersAlert } from "./MissingPlaceholdersAlert";
 import type { NodeType, Prompt, TenantLinkInput, TenantPromptDetail } from "@/services/promptManager.types";
 
 const NODE_TABS: { id: NodeType; label: string }[] = [
@@ -64,6 +66,9 @@ export function TenantLinkSection({
 
   const overrideValue = watch("custom_content_override");
 
+  const [missingTokens, setMissingTokens] = useState<string[] | null>(null);
+  const [pendingLinkData, setPendingLinkData] = useState<TenantLinkFormData | null>(null);
+
   // Pre-fill form when tenant detail is loaded
   useEffect(() => {
     if (tenantDetail) {
@@ -83,6 +88,8 @@ export function TenantLinkSection({
 
   const handleSelectNode = (node: NodeType) => {
     setSelectedNode(node);
+    setMissingTokens(null);
+    setPendingLinkData(null);
     setValue("prompt_id", "");
     const tenantId = getValues("tenant_id").trim();
     // Se já havia um tenant carregado, atualiza o card para o novo nó sem
@@ -97,7 +104,7 @@ export function TenantLinkSection({
     reset({ tenant_id: "", prompt_id: "", custom_content_override: "" });
   };
 
-  const onFormSubmit = async (data: TenantLinkFormData) => {
+  const submitLink = async (data: TenantLinkFormData) => {
     const input: TenantLinkInput = {
       tenant_id: data.tenant_id,
       prompt_id: data.prompt_id,
@@ -122,6 +129,32 @@ export function TenantLinkSection({
     // On success, onLink already refreshed tenantDetail — the effect above
     // re-populates the form from it, so the "Vínculo Atual" card reflects
     // the change immediately without needing another search or page refresh.
+  };
+
+  const onFormSubmit = async (data: TenantLinkFormData) => {
+    const override = data.custom_content_override?.trim();
+    if (override) {
+      const missing = missingRequiredPlaceholders(override, selectedNode);
+      if (missing.length > 0) {
+        setMissingTokens(missing);
+        setPendingLinkData(data);
+        return;
+      }
+    }
+    await submitLink(data);
+  };
+
+  const handleFixMissingPlaceholders = () => {
+    setMissingTokens(null);
+    setPendingLinkData(null);
+  };
+
+  const handleSaveAnyway = async () => {
+    setMissingTokens(null);
+    if (pendingLinkData) {
+      await submitLink(pendingLinkData);
+      setPendingLinkData(null);
+    }
   };
 
   if (loading) {
@@ -172,6 +205,13 @@ export function TenantLinkSection({
       </div>
 
       <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-5">
+        {missingTokens && missingTokens.length > 0 && (
+          <MissingPlaceholdersAlert
+            missingTokens={missingTokens}
+            onFix={handleFixMissingPlaceholders}
+            onSaveAnyway={handleSaveAnyway}
+          />
+        )}
         {/* tenant_id + Buscar */}
         <div className="flex flex-col gap-1.5">
           <label htmlFor="tenant-id" className="text-sm font-semibold text-text-strong">

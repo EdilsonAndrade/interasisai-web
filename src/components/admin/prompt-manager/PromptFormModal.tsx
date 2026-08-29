@@ -5,13 +5,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Loader2 } from "lucide-react";
 import { AdminDialog } from "@/components/admin/AdminDialog";
 import { GuardrailScopeBadge } from "@/components/admin/GuardrailScopeBadge";
 import { promptFormSchema, type PromptFormData } from "@/lib/promptManagerSchemas";
+import { missingRequiredPlaceholders } from "@/lib/promptPlaceholders";
 import { MarkdownEditorCustom } from "./MarkdownEditorCustom";
+import { MissingPlaceholdersAlert } from "./MissingPlaceholdersAlert";
 import { PromptPlaceholderHelp } from "./PromptPlaceholderHelp";
 import type { Guardrail, NodeType, Prompt } from "@/services/promptManager.types";
 
@@ -60,9 +62,15 @@ export function PromptFormModal({
   const selectedIds = watch("guardrail_ids");
   const nodeTypeValue = watch("node_type");
 
+  const [missingTokens, setMissingTokens] = useState<string[] | null>(null);
+  const [pendingSubmitData, setPendingSubmitData] = useState<PromptFormData | null>(null);
+
   // Pre-fill form when editing
   useEffect(() => {
-    if (open && mode === "edit" && initial) {
+    if (!open) return;
+    setMissingTokens(null);
+    setPendingSubmitData(null);
+    if (mode === "edit" && initial) {
       const selectedGuardrailIds =
         initial.guardrail_ids?.length
           ? initial.guardrail_ids
@@ -86,10 +94,33 @@ export function PromptFormModal({
     }
   }, [open, mode, initial, reset]);
 
-  const onFormSubmit = async (data: PromptFormData) => {
+  const submitPrompt = async (data: PromptFormData) => {
     const ok = await onSubmit(data);
     if (ok) {
       onClose();
+    }
+  };
+
+  const onFormSubmit = async (data: PromptFormData) => {
+    const missing = missingRequiredPlaceholders(data.conteudo, data.node_type);
+    if (missing.length > 0) {
+      setMissingTokens(missing);
+      setPendingSubmitData(data);
+      return;
+    }
+    await submitPrompt(data);
+  };
+
+  const handleFixMissingPlaceholders = () => {
+    setMissingTokens(null);
+    setPendingSubmitData(null);
+  };
+
+  const handleSaveAnyway = async () => {
+    setMissingTokens(null);
+    if (pendingSubmitData) {
+      await submitPrompt(pendingSubmitData);
+      setPendingSubmitData(null);
     }
   };
 
@@ -113,6 +144,13 @@ export function PromptFormModal({
       className="md:w-[60vw] md:max-w-[60vw]"
     >
       <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col gap-5">
+        {missingTokens && missingTokens.length > 0 && (
+          <MissingPlaceholdersAlert
+            missingTokens={missingTokens}
+            onFix={handleFixMissingPlaceholders}
+            onSaveAnyway={handleSaveAnyway}
+          />
+        )}
         {/* Título */}
         <div className="flex flex-col gap-1.5">
           <label htmlFor="prompt-titulo" className="text-sm font-semibold text-text-strong">

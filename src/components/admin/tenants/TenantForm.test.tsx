@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { TenantForm } from "./TenantForm";
 import type { Prompt } from "@/services/promptManager.types";
 
@@ -267,7 +267,7 @@ describe("TenantForm", () => {
     expect(onDirtyChange).toHaveBeenLastCalledWith(true);
   });
 
-  it("creates a new prompt from a template, preserving the {guardrails} placeholder, and submits the new intent", async () => {
+  it("creates a new prompt from a template with every required placeholder, and submits the new intent", async () => {
     const onCreate = jest.fn().mockResolvedValue(true);
     render(
       <TenantForm
@@ -279,6 +279,9 @@ describe("TenantForm", () => {
       />,
     );
 
+    const conteudoCompleto =
+      "{guardrails} {tenant_id} {contexto_formatado} {tabela_calendario_str} {hora_atual_str} {data_hoje_iso}";
+
     fillBaseFields();
     fireEvent.click(screen.getByRole("button", { name: /Criar novo a partir de um modelo/i }));
     fireEvent.change(screen.getByLabelText("Modelo de prompt"), {
@@ -287,6 +290,9 @@ describe("TenantForm", () => {
     fireEvent.change(screen.getByLabelText("Título do novo prompt"), {
       target: { value: "Atendimento Clínica (cópia)" },
     });
+    fireEvent.change(screen.getByLabelText("Conteúdo (Markdown)"), {
+      target: { value: conteudoCompleto },
+    });
     fireEvent.click(screen.getByRole("button", { name: "Cadastrar tenant" }));
 
     await waitFor(() =>
@@ -294,13 +300,101 @@ describe("TenantForm", () => {
         mode: "new",
         prompt: {
           titulo: "Atendimento Clínica (cópia)",
-          conteudo: "Você atende uma clínica.\n\n{guardrails}",
+          conteudo: conteudoCompleto,
           is_default: false,
           node_type: "operational",
           guardrail_ids: [],
         },
       }),
     );
+  });
+
+  describe("026 — validação de placeholders obrigatórios no rascunho de novo prompt", () => {
+    function startNewPromptDraft(conteudo: string) {
+      fireEvent.click(screen.getByRole("button", { name: /Criar novo a partir de um modelo/i }));
+      fireEvent.change(screen.getByLabelText("Modelo de prompt"), {
+        target: { value: "p-clinica" },
+      });
+      fireEvent.change(screen.getByLabelText("Título do novo prompt"), {
+        target: { value: "Atendimento Clínica (cópia)" },
+      });
+      fireEvent.change(screen.getByLabelText("Conteúdo (Markdown)"), {
+        target: { value: conteudo },
+      });
+    }
+
+    it("blocks the create and lists the missing tokens when the draft lacks required placeholders", async () => {
+      const onCreate = jest.fn().mockResolvedValue(true);
+      render(
+        <TenantForm
+          mode="create"
+          operationalPrompts={prompts}
+          isLoading={false}
+          onCancel={jest.fn()}
+          onCreate={onCreate}
+        />,
+      );
+
+      fillBaseFields();
+      startNewPromptDraft("{guardrails} conteúdo sem os demais marcadores.");
+      fireEvent.click(screen.getByRole("button", { name: "Cadastrar tenant" }));
+
+      const alert = await screen.findByRole("alertdialog", { name: "Placeholders obrigatórios ausentes" });
+      expect(within(alert).getByText("{tenant_id}")).toBeInTheDocument();
+      expect(onCreate).not.toHaveBeenCalled();
+    });
+
+    it("'Corrigir' closes the alert and preserves the tenant fields and the draft", async () => {
+      const onCreate = jest.fn().mockResolvedValue(true);
+      render(
+        <TenantForm
+          mode="create"
+          operationalPrompts={prompts}
+          isLoading={false}
+          onCancel={jest.fn()}
+          onCreate={onCreate}
+        />,
+      );
+
+      fillBaseFields();
+      startNewPromptDraft("{guardrails} conteúdo sem os demais marcadores.");
+      fireEvent.click(screen.getByRole("button", { name: "Cadastrar tenant" }));
+      await screen.findByRole("alertdialog", { name: "Placeholders obrigatórios ausentes" });
+
+      fireEvent.click(screen.getByRole("button", { name: "Corrigir" }));
+
+      expect(screen.queryByRole("alertdialog", { name: "Placeholders obrigatórios ausentes" })).not.toBeInTheDocument();
+      expect(screen.getByLabelText("ID do tenant")).toHaveValue("tenant-1");
+      expect(screen.getByLabelText("Título do novo prompt")).toHaveValue("Atendimento Clínica (cópia)");
+      expect(onCreate).not.toHaveBeenCalled();
+    });
+
+    it("'Salvar mesmo assim' proceeds with onCreate using the pending draft", async () => {
+      const onCreate = jest.fn().mockResolvedValue(true);
+      render(
+        <TenantForm
+          mode="create"
+          operationalPrompts={prompts}
+          isLoading={false}
+          onCancel={jest.fn()}
+          onCreate={onCreate}
+        />,
+      );
+
+      fillBaseFields();
+      startNewPromptDraft("{guardrails} conteúdo sem os demais marcadores.");
+      fireEvent.click(screen.getByRole("button", { name: "Cadastrar tenant" }));
+      await screen.findByRole("alertdialog", { name: "Placeholders obrigatórios ausentes" });
+
+      fireEvent.click(screen.getByRole("button", { name: "Salvar mesmo assim" }));
+
+      await waitFor(() =>
+        expect(onCreate).toHaveBeenCalledWith(expect.anything(), {
+          mode: "new",
+          prompt: expect.objectContaining({ conteudo: "{guardrails} conteúdo sem os demais marcadores." }),
+        }),
+      );
+    });
   });
 
   describe("EDI-63 — limite mensal e e-mails de notificação", () => {

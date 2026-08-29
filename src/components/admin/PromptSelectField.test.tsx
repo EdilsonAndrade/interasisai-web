@@ -115,7 +115,7 @@ describe("PromptSelectField", () => {
     });
   });
 
-  it("warns, without blocking, when the {guardrails} placeholder is removed from the copied content", () => {
+  it("warns, without blocking, listing every missing required placeholder for the copied content", () => {
     render(
       <PromptSelectField
         prompts={prompts}
@@ -131,13 +131,42 @@ describe("PromptSelectField", () => {
       target: { value: "p-clinica" },
     });
 
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    // Template content only has {guardrails} — the other 5 required operational
+    // placeholders are missing, so the (non-blocking) warning already shows.
+    expect(screen.getByRole("alert")).toHaveTextContent("{tenant_id}");
+    expect(screen.getByRole("alert")).toHaveTextContent("{contexto_formatado}");
 
     fireEvent.change(screen.getByLabelText("Conteúdo (Markdown)"), {
-      target: { value: "Você atende uma clínica, sem marcador." },
+      target: { value: "Você atende uma clínica, sem nenhum marcador." },
     });
 
-    expect(screen.getByRole("alert")).toHaveTextContent(/deixarão de ser aplicadas/i);
+    expect(screen.getByRole("alert")).toHaveTextContent("{guardrails}");
+    expect(screen.getByRole("alert")).toHaveTextContent(/deixarão de funcionar/i);
+  });
+
+  it("shows no warning once every required operational placeholder is present", () => {
+    render(
+      <PromptSelectField
+        prompts={prompts}
+        selectedPromptId=""
+        newPromptDraft={null}
+        onSelectExisting={jest.fn()}
+        onNewPromptDraftChange={jest.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Criar novo a partir de um modelo/i }));
+    fireEvent.change(screen.getByLabelText("Modelo de prompt"), {
+      target: { value: "p-clinica" },
+    });
+    fireEvent.change(screen.getByLabelText("Conteúdo (Markdown)"), {
+      target: {
+        value:
+          "{guardrails} {tenant_id} {contexto_formatado} {tabela_calendario_str} {hora_atual_str} {data_hoje_iso}",
+      },
+    });
+
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("cancels the new-prompt flow and clears the draft", () => {

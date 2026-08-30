@@ -1,0 +1,52 @@
+{
+  "scripts": {
+    "seo:audit": "node seo-monitor.js https://www.interasisai.com.br",
+    "seo:audit:json": "node seo-monitor.js https://www.interasisai.com.br --json > reports/seo-audit-$(date +%Y-%m-%d).json",
+    "seo:audit:all": "npm run seo:audit && npm run seo:audit:json",
+    "seo:compare": "node seo-compare.js",
+    "seo:compare:json": "node seo-compare.js --json > reports/comparison-$(date +%Y-%m-%d).json",
+    "seo:niche:escolas": "node seo-niche-analysis.js escolas",
+    "seo:niche:buffets": "node seo-niche-analysis.js buffets",
+    "seo:niche:agencias": "node seo-niche-analysis.js agencias-software",
+    "seo:niche:clinicas": "node seo-niche-analysis.js clinicas",
+    "seo:niche:ecommerce": "node seo-niche-analysis.js ecommerce",
+    "seo:niche:list": "node seo-niche-analysis.js --list",
+    "seo:monitor": "npm run seo:audit:all",
+    "seo:weekly": "mkdir -p reports && npm run seo:audit:all && npm run seo:compare:json && echo '✅ Auditoria semanal concluída'",
+    "ci:test": "jest && npm run seo:audit"
+  },
+  "devDependencies": {
+    "puppeteer": "^22.0.0",
+    "cli-table3": "^0.6.0",
+    "jest": "^29.0.0"
+  },
+  "seo": {
+    "baseline": "77/100",
+    "target": "85/100",
+    "updateDate": "2026-08-30",
+    "competitors": [
+      {
+        "name": "Concorrente 1",
+        "url": "https://exemplo1.com.br",
+        "nicho": "agencias-software"
+      },
+      {
+        "name": "Concorrente 2",
+        "url": "https://exemplo2.com.br",
+        "nicho": "agencias-software"
+      }
+    ],
+    "nichos": [
+      {
+        "name": "escolas",
+        "priority": "alta",
+        "status": "validando"
+      },
+      {
+        "name": "buffets",
+        "priority": "média",
+        "status": "prospectando"
+      }
+    ]
+  }
+}

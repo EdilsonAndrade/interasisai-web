@@ -8,7 +8,12 @@ import HeroChatCta from "@/components/ui/HeroChatCta";
 import HeroCover from "@/components/ui/HeroCover";
 import PortfolioSection from "@/components/ui/PortfolioSection";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
   const t = await getTranslations("home");
 
   return {
@@ -17,6 +22,9 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: t("metadata.title"),
       description: t("metadata.description"),
+      url: `/${locale}`,
+      type: "website",
+      locale,
       images: [
         {
           url: "/images/interasisai_coverpage.png",
@@ -89,7 +97,7 @@ export default async function Home() {
     <div data-testid="landing-page" className="bg-surface-page text-text-strong">
       <FadeIn>
         <section
-          id="top"
+          id="hero"
           data-testid="hero-section"
           className="min-h-[80vh] bg-gradient-hero px-6 pt-10 pb-20 sm:px-8 lg:px-12"
         >

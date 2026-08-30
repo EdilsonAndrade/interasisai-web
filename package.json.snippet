@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "seo:audit": "node seo-monitor.js https://www.interasisai.com.br",
+    "seo:audit:json": "node seo-monitor.js https://www.interasisai.com.br --json > seo-audit-$(date +%Y-%m-%d).json",
+    "seo:monitor": "npm run seo:audit && npm run seo:audit:json",
+    "seo:baseline": "mkdir -p reports && npm run seo:audit:json && mv seo-audit-*.json reports/",
+    "test": "jest && npm run seo:audit"
+  },
+  "devDependencies": {
+    "puppeteer": "^22.0.0"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "niche": "Escolas (Validação de Nicho)",
+  "timestamp": "2026-08-30T14:54:59.009Z",
+  "results": [
+    {
+      "name": "Escola Exemplo 1",
+      "url": "https://escolaexemplo1.com.br",
+      "error": "net::ERR_NAME_NOT_RESOLVED at https://escolaexemplo1.com.br",
+      "score": 0
+    },
+    {
+      "name": "Escola Exemplo 2",
+      "url": "https://escolaexemplo2.com.br",
+      "error": "net::ERR_NAME_NOT_RESOLVED at https://escolaexemplo2.com.br",
+      "score": 0
+    },
+    {
+      "name": "Escola Exemplo 3",
+      "url": "https://escolaexemplo3.com.br",
+      "error": "net::ERR_NAME_NOT_RESOLVED at https://escolaexemplo3.com.br",
+      "score": 0
+    }
+  ]
+}

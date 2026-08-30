@@ -26,6 +26,26 @@ export type ConnectStep = {
   description: string;
 };
 
+export type IntegrationCategoryId = "crm" | "database" | "api" | "mcp" | "hr" | "others";
+
+export type IntegrationCategory = {
+  id: IntegrationCategoryId;
+  label: string;
+  description: string;
+};
+
+export type ConnectIntegrationsContent = {
+  title: string;
+  description: string;
+  closedScope: string;
+  categories: IntegrationCategory[];
+  diagram: {
+    nucleusLabel: string;
+    ariaLabel: string;
+    caption: string;
+  };
+};
+
 export type ConnectPageContent = {
   metadata: {
     title: string;
@@ -64,4 +84,5 @@ export type ConnectPageContent = {
     buttonLabel: string;
   };
   verticals: VerticalScenario[];
+  integrations: ConnectIntegrationsContent;
 };

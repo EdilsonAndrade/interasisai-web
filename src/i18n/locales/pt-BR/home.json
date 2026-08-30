@@ -89,13 +89,14 @@
       "chatAssistant": {
         "title": "InterasisAI Connect",
         "category": "IA Conversacional • Widget Web & WhatsApp",
-        "description": "Agente inteligente treinado com base na ingestão de dados e regras de negócio do cliente. Atende 24/7 sem alucinação, executa agendamentos e integra diretamente no WhatsApp e Widget web customizado.",
-        "impactText": "Não é um chatbot com respostas prontas. É a arquitetura de atendimento que entende o negócio do seu cliente antes da primeira mensagem — e nunca deixa ninguém preso em um menu.",
+        "description": "Agente inteligente treinado com base na ingestão de dados e regras de negócio do cliente. Vai além do agendamento (funcionalidade básica): integra-se a CRMs, bases de dados e APIs, e é expansível sob medida via projeto de escopo fechado.",
+        "impactText": "Não é só um assistente que agenda horários. É uma arquitetura que vai além do agendamento — conectando-se a CRMs, bases de dados e outros sistemas do seu negócio, e expansível sob medida conforme a necessidade do cliente.",
         "highlights": [
           "Respostas precisas e sem alucinação ancoradas em RAG",
           "Widget flutuante embarcável no site institucional do cliente",
           "Integração nativa com WhatsApp Business 24/7",
-          "Agendamento automático conectado ao Google Calendar"
+          "Agendamento automático conectado ao Google Calendar",
+          "Integração com CRM, base de dados e APIs via projeto de escopo fechado"
         ],
         "tags": ["RAG", "LLM Ingestion", "WhatsApp API", "Web Widget", "NestJS"]
       },

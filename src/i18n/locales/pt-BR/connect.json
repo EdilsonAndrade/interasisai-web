@@ -107,5 +107,23 @@
       "commonVerdict": "O funcionário vai até o RH pessoalmente.",
       "connectVerdict": "O RH ganha a manhã de volta."
     }
-  ]
+  ],
+  "integrations": {
+    "title": "Vai muito além do agendamento",
+    "description": "O agendamento é só a funcionalidade básica. O InterasisAI Connect se integra a CRMs, bases de dados, APIs e outros sistemas que o seu negócio já usa — tudo dimensionado à necessidade de cada cliente.",
+    "closedScope": "Cada integração é entregue como um projeto de escopo fechado: conversamos sobre o que precisa se conectar, combinamos por escrito e entregamos exatamente o que foi definido, sem custos ocultos.",
+    "categories": [
+      { "id": "crm", "label": "CRM", "description": "Sincroniza contatos, oportunidades e histórico de conversas com o CRM que o negócio já usa." },
+      { "id": "database", "label": "Base de dados", "description": "Consulta e atualiza informações diretamente na base de dados existente do negócio, sem duplicar cadastros." },
+      { "id": "api", "label": "API", "description": "Conecta com sistemas internos ou de terceiros por API, trocando dados em tempo real." },
+      { "id": "mcp", "label": "MCP", "description": "Adota o padrão MCP para conectar o assistente a ferramentas e agentes externos de forma padronizada." },
+      { "id": "hr", "label": "Sistemas de RH", "description": "Integra com sistemas de RH para consultar férias, holerites e outras informações do colaborador." },
+      { "id": "others", "label": "Outras integrações", "description": "Outros sistemas do negócio também podem ser conectados, avaliados caso a caso." }
+    ],
+    "diagram": {
+      "nucleusLabel": "InterasisAI Connect — chat e agentes",
+      "ariaLabel": "Diagrama: núcleo do InterasisAI Connect (chat e agentes) conectado a CRM, base de dados, API, MCP, sistemas de RH e outras integrações",
+      "caption": "O núcleo de chat e agentes se conecta a cada ambiente do seu negócio."
+    }
+  }
 }

@@ -107,5 +107,23 @@
       "commonVerdict": "The employee walks over to HR in person.",
       "connectVerdict": "HR gets their morning back."
     }
-  ]
+  ],
+  "integrations": {
+    "title": "Goes far beyond scheduling",
+    "description": "Scheduling is just the base feature. InterasisAI Connect integrates with CRMs, databases, APIs and other systems your business already uses — all scoped to each client's needs.",
+    "closedScope": "Every integration is delivered as a closed-scope project: we discuss what needs to connect, agree on it in writing, and deliver exactly what was defined, with no hidden costs.",
+    "categories": [
+      { "id": "crm", "label": "CRM", "description": "Syncs contacts, deals and conversation history with the CRM your business already uses." },
+      { "id": "database", "label": "Database", "description": "Reads and updates information directly in your existing database, without duplicating records." },
+      { "id": "api", "label": "API", "description": "Connects to internal or third-party systems via API, exchanging data in real time." },
+      { "id": "mcp", "label": "MCP", "description": "Adopts the MCP standard to connect the assistant to external tools and agents in a standardized way." },
+      { "id": "hr", "label": "HR systems", "description": "Integrates with HR systems to look up vacation balances, pay stubs and other employee information." },
+      { "id": "others", "label": "Other integrations", "description": "Other business systems can also be connected, evaluated case by case." }
+    ],
+    "diagram": {
+      "nucleusLabel": "InterasisAI Connect — chat and agents",
+      "ariaLabel": "Diagram: the InterasisAI Connect core (chat and agents) connected to CRM, database, API, MCP, HR systems and other integrations",
+      "caption": "The chat and agents core connects to every environment in your business."
+    }
+  }
 }

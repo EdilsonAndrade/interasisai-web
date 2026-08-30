@@ -1,5 +1,6 @@
 import PortfolioOpenChatButton from "@/components/ui/PortfolioOpenChatButton";
 
+import ConnectIntegrationDiagram from "./ConnectIntegrationDiagram";
 import ConnectVerticalComparison from "./ConnectVerticalComparison";
 import type { ConnectPageContent } from "./types";
 
@@ -40,6 +41,37 @@ export default function ConnectPage({ content, ctaButtonLabel }: ConnectPageProp
         <p className="mt-4 text-base font-semibold leading-relaxed text-brand-primary">
           {content.architecture.highlight}
         </p>
+      </section>
+
+      <section className="mt-16">
+        <h2 className="text-2xl font-bold text-text-strong sm:text-3xl">
+          {content.integrations.title}
+        </h2>
+        <p className="mt-4 text-base leading-relaxed text-text-body">
+          {content.integrations.description}
+        </p>
+        <p className="mt-4 rounded-card border border-border-subtle/60 bg-surface-page/50 p-4 text-base leading-relaxed text-text-body">
+          {content.integrations.closedScope}
+        </p>
+        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {content.integrations.categories.map((category) => (
+            <li
+              key={category.id}
+              className="rounded-card border border-border-subtle/60 bg-surface-page/50 p-4"
+            >
+              <h3 className="text-sm font-bold text-text-strong">{category.label}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-text-body">
+                {category.description}
+              </p>
+            </li>
+          ))}
+        </ul>
+        <ConnectIntegrationDiagram
+          categories={content.integrations.categories}
+          nucleusLabel={content.integrations.diagram.nucleusLabel}
+          ariaLabel={content.integrations.diagram.ariaLabel}
+          caption={content.integrations.diagram.caption}
+        />
       </section>
 
       <section className="mt-16">

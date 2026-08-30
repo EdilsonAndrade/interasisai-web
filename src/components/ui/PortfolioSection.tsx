@@ -13,12 +13,7 @@ export default async function PortfolioSection() {
       category: t("portfolio.projects.chatAssistant.category"),
       description: t("portfolio.projects.chatAssistant.description"),
       impactText: t("portfolio.projects.chatAssistant.impactText"),
-      highlights: [
-        t("portfolio.projects.chatAssistant.highlights.0"),
-        t("portfolio.projects.chatAssistant.highlights.1"),
-        t("portfolio.projects.chatAssistant.highlights.2"),
-        t("portfolio.projects.chatAssistant.highlights.3"),
-      ],
+      highlights: t.raw("portfolio.projects.chatAssistant.highlights") as string[],
       tags: ["RAG", "LLM Ingestion", "WhatsApp API", "Web Widget", "NestJS"],
       status: t("portfolio.status.omnichannel"),
       Icon: Bot,

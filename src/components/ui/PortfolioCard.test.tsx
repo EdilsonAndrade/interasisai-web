@@ -37,6 +37,22 @@ describe("PortfolioCard", () => {
     expect(screen.getByText(baseProps.description)).toBeInTheDocument();
   });
 
+  it("renders all 5 highlights when the chatAssistant card provides them", () => {
+    const highlights = [
+      "Destaque 1",
+      "Destaque 2",
+      "Destaque 3",
+      "Destaque 4",
+      "Integração com CRM, base de dados e APIs via projeto de escopo fechado",
+    ];
+
+    render(<PortfolioCard {...baseProps} highlights={highlights} />);
+
+    for (const highlight of highlights) {
+      expect(screen.getByText(highlight)).toBeInTheDocument();
+    }
+  });
+
   it("does not render the 'Saiba mais' link when learnMoreLabel/learnMoreHref are missing", () => {
     render(<PortfolioCard {...baseProps} />);
 

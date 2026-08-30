@@ -89,13 +89,14 @@
       "chatAssistant": {
         "title": "InterasisAI Connect",
         "category": "Conversational AI • Web Widget & WhatsApp",
-        "description": "Intelligent agent grounded in customer knowledge base ingestion. Provides 24/7 zero-hallucination support, handles scheduling, and embeds directly via Web Widget and official WhatsApp.",
-        "impactText": "Not just a chatbot with canned replies. It's the service architecture that understands your customer's business before the first message — and never leaves anyone stuck in a menu.",
+        "description": "Intelligent agent grounded in customer knowledge base ingestion. Goes beyond scheduling (a base feature): integrates with CRMs, databases and APIs, and is expandable on demand through a closed-scope project.",
+        "impactText": "Not just an assistant that books appointments. It's an architecture that goes beyond scheduling — connecting to CRMs, databases and other systems in your business, and expandable to fit the client's needs through a closed-scope project.",
         "highlights": [
           "Zero-hallucination responses grounded in custom RAG ingestion",
           "Embeddable floating Web Widget for client websites",
           "Native 24/7 WhatsApp Business integration",
-          "Automated appointment scheduling integrated with Google Calendar"
+          "Automated appointment scheduling integrated with Google Calendar",
+          "CRM, database and API integration via a closed-scope project"
         ],
         "tags": ["RAG", "LLM Ingestion", "WhatsApp API", "Web Widget", "NestJS"]
       },

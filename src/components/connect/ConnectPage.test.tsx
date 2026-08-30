@@ -44,6 +44,24 @@ const content: ConnectPageContent = {
     buttonLabel: "Testar Assistente ao Vivo",
   },
   verticals: [],
+  integrations: {
+    title: "Vai muito além do agendamento",
+    description: "Descrição acessível das categorias integráveis.",
+    closedScope: "Explicação do projeto de escopo fechado.",
+    categories: [
+      { id: "crm", label: "CRM", description: "Sincroniza contatos e oportunidades." },
+      { id: "database", label: "Base de dados", description: "Consulta e atualiza dados existentes." },
+      { id: "api", label: "API", description: "Troca dados em tempo real." },
+      { id: "mcp", label: "MCP", description: "Conecta com ferramentas via padrão MCP." },
+      { id: "hr", label: "Sistemas de RH", description: "Consulta informações do colaborador." },
+      { id: "others", label: "Outras integrações", description: "Avaliadas caso a caso." },
+    ],
+    diagram: {
+      nucleusLabel: "InterasisAI Connect — chat e agentes",
+      ariaLabel: "Diagrama: núcleo conectado a CRM, base de dados, API, MCP e sistemas de RH",
+      caption: "O núcleo se conecta a cada ambiente do negócio.",
+    },
+  },
 };
 
 function renderConnectPage() {
@@ -86,6 +104,27 @@ describe("ConnectPage", () => {
     expect(screen.getByText(content.architecture.description)).toBeInTheDocument();
     expect(screen.getByText(content.architecture.analogy)).toBeInTheDocument();
     expect(screen.getByText(content.architecture.highlight)).toBeInTheDocument();
+  });
+
+  it("renders the integrations section (title, closed-scope text and all category labels)", () => {
+    renderConnectPage();
+
+    expect(
+      screen.getByRole("heading", { level: 2, name: content.integrations.title }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(content.integrations.description)).toBeInTheDocument();
+    expect(screen.getByText(content.integrations.closedScope)).toBeInTheDocument();
+    for (const category of content.integrations.categories) {
+      expect(screen.getAllByText(category.label).length).toBeGreaterThan(0);
+    }
+  });
+
+  it("renders the integration diagram with its aria-label inside the integrations section", () => {
+    renderConnectPage();
+
+    expect(
+      screen.getByRole("img", { name: content.integrations.diagram.ariaLabel }),
+    ).toBeInTheDocument();
   });
 
   it("renders the comparison table rows", () => {

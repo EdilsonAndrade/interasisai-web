@@ -91,6 +91,17 @@ export default async function InterasisAIConnectPage({ params }: PageProps) {
       buttonLabel: t("cta.buttonLabel"),
     },
     verticals: t.raw("verticals"),
+    integrations: {
+      title: t("integrations.title"),
+      description: t("integrations.description"),
+      closedScope: t("integrations.closedScope"),
+      categories: t.raw("integrations.categories"),
+      diagram: {
+        nucleusLabel: t("integrations.diagram.nucleusLabel"),
+        ariaLabel: t("integrations.diagram.ariaLabel"),
+        caption: t("integrations.diagram.caption"),
+      },
+    },
   };
 
   const serviceJsonLd = buildConnectServiceJsonLd({

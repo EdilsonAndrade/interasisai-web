@@ -1,0 +1,67 @@
+import type { ReactNode } from "react";
+
+export type VerticalScenarioId = "buffet" | "clinica" | "escola" | "imob" | "rh";
+
+export type VerticalScenario = {
+  id: VerticalScenarioId;
+  tabLabel: string;
+  customerQuestion: string;
+  followUpQuestion: string;
+  commonReply1: string;
+  commonReply2: string;
+  connectReply1: string;
+  connectReply2: string;
+  commonVerdict: string;
+  connectVerdict: string;
+};
+
+export type ConnectComparisonTableRow = {
+  label: string;
+  common: string;
+  connect: string;
+};
+
+export type ConnectStep = {
+  title: string;
+  description: string;
+};
+
+export type ConnectPageContent = {
+  metadata: {
+    title: string;
+    description: string;
+    breadcrumbHomeLabel: string;
+  };
+  eyebrow: string;
+  /** Rendered via `t.rich` from an i18n string with `<em>` segments — see ConnectPage's h1. */
+  title: ReactNode;
+  lead: string;
+  comparisonLabels: {
+    common: string;
+    connect: string;
+  };
+  comparisonBadges: {
+    common: string;
+    connect: string;
+  };
+  architecture: {
+    title: string;
+    description: string;
+    analogy: string;
+    highlight: string;
+  };
+  comparisonTable: {
+    title: string;
+    rows: ConnectComparisonTableRow[];
+  };
+  steps: {
+    title: string;
+    items: ConnectStep[];
+  };
+  cta: {
+    title: string;
+    description: string;
+    buttonLabel: string;
+  };
+  verticals: VerticalScenario[];
+};

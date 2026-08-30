@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { ArrowUpRight, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 
 import TechBadge from "@/components/ui/TechBadge";
 import PortfolioOpenChatButton from "@/components/ui/PortfolioOpenChatButton";
@@ -9,6 +10,7 @@ export type PortfolioCardProps = {
   title: string;
   category: string;
   description: string;
+  impactText?: string;
   highlights: string[];
   tags: string[];
   status: string;
@@ -16,6 +18,8 @@ export type PortfolioCardProps = {
   actionText: string;
   actionHref?: string;
   isInteractiveChat?: boolean;
+  learnMoreLabel?: string;
+  learnMoreHref?: string;
   featuresLabel?: string;
   ownershipLabel?: string;
   extraBadge?: ReactNode;
@@ -25,6 +29,7 @@ export default function PortfolioCard({
   title,
   category,
   description,
+  impactText,
   highlights,
   tags,
   status,
@@ -32,6 +37,8 @@ export default function PortfolioCard({
   actionText,
   actionHref,
   isInteractiveChat,
+  learnMoreLabel,
+  learnMoreHref,
   featuresLabel = "Diferenciais & Recursos",
   ownershipLabel,
 }: PortfolioCardProps) {
@@ -77,6 +84,14 @@ export default function PortfolioCard({
           <p className="mt-3 text-sm leading-relaxed text-text-body sm:text-base">
             {description}
           </p>
+          {impactText && (
+            <p
+              data-testid="portfolio-impact-text"
+              className="mt-3 text-sm font-semibold leading-relaxed text-brand-primary sm:text-base"
+            >
+              {impactText}
+            </p>
+          )}
         </div>
 
         {/* Highlights List */}
@@ -109,7 +124,7 @@ export default function PortfolioCard({
       </div>
 
       {/* Footer Action */}
-      <div className="mt-8 pt-4 border-t border-border-subtle/40 flex items-center justify-between">
+      <div className="mt-8 pt-4 border-t border-border-subtle/40 flex flex-wrap items-center gap-3">
         {isInteractiveChat ? (
           <PortfolioOpenChatButton
             label={actionText}
@@ -127,6 +142,17 @@ export default function PortfolioCard({
             <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
           </a>
         ) : null}
+
+        {learnMoreLabel && learnMoreHref && (
+          <Link
+            href={learnMoreHref}
+            data-testid="portfolio-learn-more-link"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-button border border-brand-primary/40 px-5 py-2.5 text-sm font-semibold text-brand-primary transition hover:bg-brand-primary/10 focus:outline-none focus:ring-2 focus:ring-brand-primary/60 active:scale-[0.98] sm:w-auto"
+          >
+            <span>{learnMoreLabel}</span>
+            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        )}
       </div>
     </article>
   );

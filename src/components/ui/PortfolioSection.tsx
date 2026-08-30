@@ -1,12 +1,34 @@
 import { BarChart3, Bot, Factory, PartyPopper, Sparkles, Truck } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import PortfolioCard from "@/components/ui/PortfolioCard";
 
 export default async function PortfolioSection() {
   const t = await getTranslations("home");
+  const locale = await getLocale();
 
   const projects = [
+    {
+      title: t("portfolio.projects.chatAssistant.title"),
+      category: t("portfolio.projects.chatAssistant.category"),
+      description: t("portfolio.projects.chatAssistant.description"),
+      impactText: t("portfolio.projects.chatAssistant.impactText"),
+      highlights: [
+        t("portfolio.projects.chatAssistant.highlights.0"),
+        t("portfolio.projects.chatAssistant.highlights.1"),
+        t("portfolio.projects.chatAssistant.highlights.2"),
+        t("portfolio.projects.chatAssistant.highlights.3"),
+      ],
+      tags: ["RAG", "LLM Ingestion", "WhatsApp API", "Web Widget", "NestJS"],
+      status: t("portfolio.status.omnichannel"),
+      Icon: Bot,
+      actionText: t("portfolio.actions.testAssistant"),
+      isInteractiveChat: true,
+      learnMoreLabel: t("portfolio.actions.learnMore"),
+      learnMoreHref: `/${locale}/interasisai-connect`,
+      featuresLabel: t("portfolio.actions.featuresLabel"),
+      ownershipLabel: t("portfolio.ownershipLabel"),
+    },
     {
       title: t("portfolio.projects.simplificandoai.title"),
       category: t("portfolio.projects.simplificandoai.category"),
@@ -21,24 +43,6 @@ export default async function PortfolioSection() {
       actionText: t("portfolio.actions.visitSite"),
       actionHref: "https://simplificandoai.com.br",
       isInteractiveChat: false,
-      featuresLabel: t("portfolio.actions.featuresLabel"),
-      ownershipLabel: t("portfolio.ownershipLabel"),
-    },
-    {
-      title: t("portfolio.projects.chatAssistant.title"),
-      category: t("portfolio.projects.chatAssistant.category"),
-      description: t("portfolio.projects.chatAssistant.description"),
-      highlights: [
-        t("portfolio.projects.chatAssistant.highlights.0"),
-        t("portfolio.projects.chatAssistant.highlights.1"),
-        t("portfolio.projects.chatAssistant.highlights.2"),
-        t("portfolio.projects.chatAssistant.highlights.3"),
-      ],
-      tags: ["RAG", "LLM Ingestion", "WhatsApp API", "Web Widget", "NestJS"],
-      status: t("portfolio.status.omnichannel"),
-      Icon: Bot,
-      actionText: t("portfolio.actions.testAssistant"),
-      isInteractiveChat: true,
       featuresLabel: t("portfolio.actions.featuresLabel"),
       ownershipLabel: t("portfolio.ownershipLabel"),
     },

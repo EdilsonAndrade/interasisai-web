@@ -72,6 +72,7 @@
     "actions": {
       "visitSite": "Conhecer Plataforma",
       "testAssistant": "Testar Assistente ao Vivo",
+      "learnMore": "Saiba mais",
       "featuresLabel": "Diferenciais & Recursos"
     },
     "projects": {
@@ -86,9 +87,10 @@
         "tags": ["Next.js", "Vision AI", "Meta API", "TailwindCSS", "Node.js"]
       },
       "chatAssistant": {
-        "title": "Assistente IA Omnichannel (RAG)",
+        "title": "InterasisAI Connect",
         "category": "IA Conversacional • Widget Web & WhatsApp",
         "description": "Agente inteligente treinado com base na ingestão de dados e regras de negócio do cliente. Atende 24/7 sem alucinação, executa agendamentos e integra diretamente no WhatsApp e Widget web customizado.",
+        "impactText": "Não é um chatbot com respostas prontas. É a arquitetura de atendimento que entende o negócio do seu cliente antes da primeira mensagem — e nunca deixa ninguém preso em um menu.",
         "highlights": [
           "Respostas precisas e sem alucinação ancoradas em RAG",
           "Widget flutuante embarcável no site institucional do cliente",

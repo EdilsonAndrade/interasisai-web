@@ -16,6 +16,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       about: (await import(`./locales/${locale}/about.json`)).default,
       privacy: (await import(`./locales/${locale}/privacy.json`)).default,
       terms: (await import(`./locales/${locale}/terms.json`)).default,
+      connect: (await import(`./locales/${locale}/connect.json`)).default,
       chat: (await import(`./locales/${locale}/chat.json`)).default,
       admin: (await import(`./locales/${locale}/admin.json`)).default,
       validation: (await import(`./locales/${locale}/validation.json`)).default,

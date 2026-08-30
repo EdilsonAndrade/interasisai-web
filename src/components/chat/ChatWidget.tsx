@@ -62,6 +62,29 @@ export default function ChatWidget() {
     return () => mq.removeEventListener("change", handler);
   }, []);
 
+  // Track the visual viewport on mobile so the panel stays above the on-screen keyboard
+  const [mobileViewportStyle, setMobileViewportStyle] = useState<{ top: number; height: number } | null>(null);
+
+  useEffect(() => {
+    if (!isMobile || !isOpen || typeof window === "undefined" || !window.visualViewport) {
+      return;
+    }
+    const vv = window.visualViewport;
+    const updateViewport = () => {
+      const desiredHeight = Math.min(window.innerHeight * 0.85, vv.height);
+      const top = vv.offsetTop + vv.height - desiredHeight;
+      setMobileViewportStyle({ top, height: desiredHeight });
+    };
+    updateViewport();
+    vv.addEventListener("resize", updateViewport);
+    vv.addEventListener("scroll", updateViewport);
+    return () => {
+      vv.removeEventListener("resize", updateViewport);
+      vv.removeEventListener("scroll", updateViewport);
+      setMobileViewportStyle(null);
+    };
+  }, [isMobile, isOpen]);
+
   // Auto-scroll to latest message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -156,6 +179,11 @@ export default function ChatWidget() {
             initial="hidden"
             animate="visible"
             exit="exit"
+            style={
+              isMobile && mobileViewportStyle
+                ? { top: mobileViewportStyle.top, height: mobileViewportStyle.height, bottom: "auto" }
+                : undefined
+            }
             className={`${panelClasses} border border-brand-primary/20 bg-surface-base/80 shadow-floating backdrop-blur-xl`}
           >
             {/* Header */}

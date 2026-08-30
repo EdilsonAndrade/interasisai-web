@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "title": "InterasisAI Connect — The architecture behind support that never fumbles the answer",
+    "description": "See the RAG architecture that makes InterasisAI Connect answer like someone who already read everything about your business — no menus, no hallucination, 24/7.",
+    "breadcrumbHomeLabel": "Home"
+  },
+  "eyebrow": "The difference shows up in the first message",
+  "title": "A chatbot <em>offers options.</em> InterasisAI Connect <em>already knows the answer.</em>",
+  "lead": "Most automated support makes the customer pick option 1, 2, or 3 — and breaks the moment they type something else. InterasisAI Connect read the business documents before it ever started. It understands the question and answers directly.",
+  "comparisonLabels": {
+    "common": "Common chatbot",
+    "connect": "InterasisAI Connect"
+  },
+  "comparisonBadges": {
+    "common": "Today",
+    "connect": "Live"
+  },
+  "architecture": {
+    "title": "It read everything about the business before the first conversation",
+    "description": "Common automated support needs someone to register questions one by one. InterasisAI Connect works the other way around: the business hands over the documents it already has, and it learns from them — no reprogramming needed when something changes.",
+    "analogy": "It's like hiring someone and handing them the folder with everything about the business: prices, rules, hours, what's allowed and what isn't. That person reads it all before day one and can then support any customer with confidence — except it happens in minutes, nothing is ever forgotten, and it works at 3am too.",
+    "highlight": "Prices changed? Just swap the document. It relearns on its own — no reprogramming needed."
+  },
+  "comparisonTable": {
+    "title": "Where the difference shows up, in practice",
+    "rows": [
+      { "label": "How the customer asks", "common": "Has to pick from menu options", "connect": "Types however they want, like talking to a person" },
+      { "label": "Where the answer comes from", "common": "From manually registered phrases, one by one", "connect": "From the business's real documents, read in full" },
+      { "label": "Information that changes", "common": "Stays outdated until someone reprograms it", "connect": "Checks the schedule and data at the moment of the question" },
+      { "label": "When it doesn't know something", "common": "Repeats the menu or says \"I didn't understand\"", "connect": "Lets the customer know it's bringing in a person, and hands off the conversation" },
+      { "label": "To update it", "common": "Call support and reprogram the flow", "connect": "Swap the document. It relearns on its own" },
+      { "label": "Risk of a wrong answer", "common": "Answers out of context when the menu doesn't cover it", "connect": "Only answers within what was authorized" }
+    ]
+  },
+  "steps": {
+    "title": "Four steps to going live",
+    "items": [
+      { "title": "Initial conversation", "description": "We learn how support works today and which questions come up most. No cost, no commitment." },
+      { "title": "Setup", "description": "It reads the business documents; we define its tone and the limits of what it can answer on its own." },
+      { "title": "Custom adjustments", "description": "If it needs to connect to the schedule or the system already in use, that's set up and agreed in writing." },
+      { "title": "Live, with support", "description": "We follow the first real conversations and fine-tune. The first month of support is included." }
+    ]
+  },
+  "cta": {
+    "title": "Want to see this working for your business?",
+    "description": "Test the live assistant right now, no strings attached, and see the difference for yourself.",
+    "buttonLabel": "Test Live Assistant"
+  },
+  "verticals": [
+    {
+      "id": "buffet",
+      "tabLabel": "Catering & events",
+      "customerQuestion": "Hi, do you have an open date for November 15th?",
+      "followUpQuestion": "And what would it cost for 80 people?",
+      "commonReply1": "Hello! Choose an option:\n1 · Hours\n2 · Pricing\n3 · Talk to an agent",
+      "commonReply2": "I didn't understand. Choose an option:\n1 · Hours\n2 · Pricing\n3 · Talk to an agent",
+      "connectReply1": "Hi! Let me check the calendar… November 15th is open in the afternoon. Want me to book it now?",
+      "connectReply2": "For 80 people the package is $4,200, with a 4-hour event, full catering, and staff.",
+      "commonVerdict": "The customer gives up and looks elsewhere.",
+      "connectVerdict": "The customer books, at 11:47pm."
+    },
+    {
+      "id": "clinica",
+      "tabLabel": "Clinic",
+      "customerQuestion": "Good evening, do you accept Unimed insurance?",
+      "followUpQuestion": "Do you have an opening Thursday morning?",
+      "commonReply1": "Hello! Choose an option:\n1 · Book\n2 · Cancel\n3 · Talk to an agent",
+      "commonReply2": "I didn't understand. Choose an option:\n1 · Book\n2 · Cancel\n3 · Talk to an agent",
+      "connectReply1": "Good evening! Yes, we accept Unimed for consultations and follow-ups. An authorization form is only needed for exams.",
+      "connectReply2": "I have Thursday at 9:20am and 10:40am with Dr. Helena. Want me to book one for you?",
+      "commonVerdict": "The patient calls another clinic.",
+      "connectVerdict": "The patient leaves already booked."
+    },
+    {
+      "id": "escola",
+      "tabLabel": "School",
+      "customerQuestion": "Hi, what time is the 5th grade parents' meeting?",
+      "followUpQuestion": "Do I need to bring any documents?",
+      "commonReply1": "Hello! Choose an option:\n1 · Enrollment\n2 · Front office\n3 · Talk to an agent",
+      "commonReply2": "I didn't understand. Choose an option:\n1 · Enrollment\n2 · Front office\n3 · Talk to an agent",
+      "connectReply1": "Hi! The 5th grade meeting is on 09/12, at 7pm, in the auditorium. Enter through gate 2.",
+      "connectReply2": "No documents needed, just confirm attendance by the 10th — I can confirm it for you right here, if you'd like.",
+      "commonVerdict": "The front office replies the next day.",
+      "connectVerdict": "The front office never had to get involved."
+    },
+    {
+      "id": "imob",
+      "tabLabel": "Real estate",
+      "customerQuestion": "Does that downtown apartment allow pets?",
+      "followUpQuestion": "What's the HOA fee?",
+      "commonReply1": "Hello! Choose an option:\n1 · Rent\n2 · Buy\n3 · Talk to an agent",
+      "commonReply2": "I didn't understand. Choose an option:\n1 · Rent\n2 · Buy\n3 · Talk to an agent",
+      "connectReply1": "It does! The building allows pets up to 15kg, per the house rules.",
+      "connectReply2": "The HOA fee is $480, water and gas included. Want to schedule a visit?",
+      "commonVerdict": "The prospect looks at another listing.",
+      "connectVerdict": "The agent gets the visit booked."
+    },
+    {
+      "id": "rh",
+      "tabLabel": "HR",
+      "customerQuestion": "How many vacation days do I have accrued?",
+      "followUpQuestion": "How do I request them?",
+      "commonReply1": "Hello! Choose an option:\n1 · Benefits\n2 · Pay stub\n3 · Talk to HR",
+      "commonReply2": "I didn't understand. Choose an option:\n1 · Benefits\n2 · Pay stub\n3 · Talk to HR",
+      "connectReply1": "You have 22 days available, with your accrual period ending in March.",
+      "connectReply2": "It's through the internal form, with 30 days' notice. Want me to send you the link?",
+      "commonVerdict": "The employee walks over to HR in person.",
+      "connectVerdict": "HR gets their morning back."
+    }
+  ]
+}

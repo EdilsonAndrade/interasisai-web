@@ -72,6 +72,7 @@
     "actions": {
       "visitSite": "Visit Platform",
       "testAssistant": "Test Live Assistant",
+      "learnMore": "Learn more",
       "featuresLabel": "Key Features & Highlights"
     },
     "projects": {
@@ -86,9 +87,10 @@
         "tags": ["Next.js", "Vision AI", "Meta API", "TailwindCSS", "Node.js"]
       },
       "chatAssistant": {
-        "title": "Omnichannel AI Assistant (RAG)",
+        "title": "InterasisAI Connect",
         "category": "Conversational AI • Web Widget & WhatsApp",
         "description": "Intelligent agent grounded in customer knowledge base ingestion. Provides 24/7 zero-hallucination support, handles scheduling, and embeds directly via Web Widget and official WhatsApp.",
+        "impactText": "Not just a chatbot with canned replies. It's the service architecture that understands your customer's business before the first message — and never leaves anyone stuck in a menu.",
         "highlights": [
           "Zero-hallucination responses grounded in custom RAG ingestion",
           "Embeddable floating Web Widget for client websites",

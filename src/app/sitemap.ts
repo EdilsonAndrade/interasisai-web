@@ -6,6 +6,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://interasisai.com.br"
 
 const ROUTES: { path: string; priority: number; changeFrequency: "weekly" | "monthly" }[] = [
   { path: "", priority: 1, changeFrequency: "weekly" },
+  { path: "/interasisai-connect", priority: 0.7, changeFrequency: "monthly" },
   { path: "/sobre", priority: 0.6, changeFrequency: "monthly" },
   { path: "/politica-de-privacidade", priority: 0.3, changeFrequency: "monthly" },
   { path: "/termos", priority: 0.3, changeFrequency: "monthly" },

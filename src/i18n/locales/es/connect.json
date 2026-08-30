@@ -1,0 +1,111 @@
+{
+  "metadata": {
+    "title": "InterasisAI Connect — La arquitectura detrás de una atención que nunca falla la respuesta",
+    "description": "Conozca la arquitectura RAG que hace que InterasisAI Connect responda como alguien que ya leyó todo sobre su negocio — sin menús, sin alucinaciones, 24/7.",
+    "breadcrumbHomeLabel": "Inicio"
+  },
+  "eyebrow": "La diferencia aparece en el primer mensaje",
+  "title": "Un chatbot <em>ofrece opciones.</em> InterasisAI Connect <em>ya sabe la respuesta.</em>",
+  "lead": "La mayoría de las atenciones automáticas hacen que el cliente elija entre 1, 2 o 3 — y se traban cuando escribe de otra forma. InterasisAI Connect leyó los documentos del negocio antes de empezar. Entiende la pregunta y responde directo.",
+  "comparisonLabels": {
+    "common": "Chatbot común",
+    "connect": "InterasisAI Connect"
+  },
+  "comparisonBadges": {
+    "common": "Hoy",
+    "connect": "En vivo"
+  },
+  "architecture": {
+    "title": "Leyó todo sobre el negocio antes de la primera atención",
+    "description": "Una atención automática común necesita que alguien registre pregunta por pregunta, una por una. InterasisAI Connect funciona al revés: el negocio entrega los documentos que ya existen, y él aprende a partir de ellos — sin reprogramar nada cuando algo cambia.",
+    "analogy": "Es como contratar a alguien y entregarle la carpeta con todo sobre el negocio: precios, reglas, horarios, qué puede y qué no puede hacer. Esa persona lee todo antes del primer día y puede atender a cualquier cliente con seguridad — solo que en minutos, sin olvidar ningún detalle, y atendiendo de madrugada.",
+    "highlight": "¿Cambió un precio? Solo cambie el documento. Él vuelve a aprender solo, sin reprogramar nada."
+  },
+  "comparisonTable": {
+    "title": "Dónde está la diferencia, en la práctica",
+    "rows": [
+      { "label": "Cómo pregunta el cliente", "common": "Tiene que elegir entre opciones de menú", "connect": "Escribe como quiera, como si hablara con una persona" },
+      { "label": "De dónde viene la respuesta", "common": "De frases registradas una por una, manualmente", "connect": "De los documentos reales del negocio, leídos por completo" },
+      { "label": "Información que cambia", "common": "Queda desactualizada hasta que alguien la reprograma", "connect": "Consulta la agenda y los datos en el momento de la pregunta" },
+      { "label": "Cuando no sabe algo", "common": "Repite el menú o dice \"no entendí\"", "connect": "Avisa que va a llamar a una persona y pasa la conversación" },
+      { "label": "Para actualizar", "common": "Llamar a soporte y reprogramar el flujo", "connect": "Cambiar el documento. Vuelve a aprender solo" },
+      { "label": "Riesgo de respuesta incorrecta", "common": "Responde fuera de contexto cuando el menú no lo cubre", "connect": "Solo responde dentro de lo autorizado" }
+    ]
+  },
+  "steps": {
+    "title": "Cuatro pasos hasta estar en funcionamiento",
+    "items": [
+      { "title": "Conversación inicial", "description": "Entendemos cómo funciona la atención hoy y cuáles preguntas se repiten más. Sin costo y sin compromiso." },
+      { "title": "Montaje", "description": "Lee los documentos del negocio, definimos su forma de hablar y los límites de lo que puede responder solo." },
+      { "title": "Ajustes a medida", "description": "Si necesita conectarse con la agenda o el sistema ya utilizado, eso se hace y se acuerda por escrito." },
+      { "title": "En funcionamiento, con soporte", "description": "Acompañamos las primeras conversaciones reales y ajustamos. El primer mes de soporte está incluido." }
+    ]
+  },
+  "cta": {
+    "title": "¿Quiere ver esto funcionando en su negocio?",
+    "description": "Pruebe el asistente en vivo ahora mismo, sin compromiso, y vea la diferencia en la práctica.",
+    "buttonLabel": "Probar Asistente en Vivo"
+  },
+  "verticals": [
+    {
+      "id": "buffet",
+      "tabLabel": "Banquetes y eventos",
+      "customerQuestion": "Hola, ¿tienen fecha libre para el 15 de noviembre?",
+      "followUpQuestion": "¿Y cuánto sale para 80 personas?",
+      "commonReply1": "¡Hola! Elija una opción:\n1 · Horarios\n2 · Precios\n3 · Hablar con un asesor",
+      "commonReply2": "No entendí. Elija una opción:\n1 · Horarios\n2 · Precios\n3 · Hablar con un asesor",
+      "connectReply1": "¡Hola! Déjeme revisar la agenda… el 15/11 está libre por la tarde. ¿Quiere que ya lo reserve?",
+      "connectReply2": "Para 80 personas el paquete sale en $4.200, con 4 horas de fiesta, banquete completo y personal.",
+      "commonVerdict": "El cliente desiste y busca otra opción.",
+      "connectVerdict": "El cliente cierra, a las 23:47."
+    },
+    {
+      "id": "clinica",
+      "tabLabel": "Clínica",
+      "customerQuestion": "Buenas noches, ¿atienden la obra social Unimed?",
+      "followUpQuestion": "¿Tienen horario el jueves por la mañana?",
+      "commonReply1": "¡Hola! Elija una opción:\n1 · Agendar\n2 · Cancelar\n3 · Hablar con un asesor",
+      "commonReply2": "No entendí. Elija una opción:\n1 · Agendar\n2 · Cancelar\n3 · Hablar con un asesor",
+      "connectReply1": "¡Buenas noches! Sí, atendemos Unimed para consultas y controles. La autorización solo es necesaria para estudios.",
+      "connectReply2": "Tengo jueves a las 9:20 y a las 10:40 con la Dra. Helena. ¿Quiere que reserve alguno?",
+      "commonVerdict": "El paciente llama a otra clínica.",
+      "connectVerdict": "El paciente ya sale agendado."
+    },
+    {
+      "id": "escola",
+      "tabLabel": "Escuela",
+      "customerQuestion": "Hola, ¿a qué hora es la reunión de padres de 5º grado?",
+      "followUpQuestion": "¿Necesito llevar algún documento?",
+      "commonReply1": "¡Hola! Elija una opción:\n1 · Matrículas\n2 · Secretaría\n3 · Hablar con un asesor",
+      "commonReply2": "No entendí. Elija una opción:\n1 · Matrículas\n2 · Secretaría\n3 · Hablar con un asesor",
+      "connectReply1": "¡Hola! La reunión de 5º grado es el 12/09, a las 19h, en el auditorio. El ingreso es por el portón 2.",
+      "connectReply2": "No necesita documento, solo confirmar asistencia hasta el día 10 — puedo confirmarlo por aquí, si quiere.",
+      "commonVerdict": "La secretaría responde al día siguiente.",
+      "connectVerdict": "La secretaría ni tuvo que intervenir."
+    },
+    {
+      "id": "imob",
+      "tabLabel": "Inmobiliaria",
+      "customerQuestion": "¿Ese departamento del centro acepta mascotas?",
+      "followUpQuestion": "¿Cuánto es la expensa?",
+      "commonReply1": "¡Hola! Elija una opción:\n1 · Alquilar\n2 · Comprar\n3 · Hablar con un agente",
+      "commonReply2": "No entendí. Elija una opción:\n1 · Alquilar\n2 · Comprar\n3 · Hablar con un agente",
+      "connectReply1": "¡Sí acepta! El edificio permite mascotas de hasta 15kg, según el reglamento interno.",
+      "connectReply2": "La expensa es de $480, ya con agua y gas incluidos. ¿Quiere agendar una visita?",
+      "commonVerdict": "El interesado busca otro aviso.",
+      "connectVerdict": "El agente recibe la visita agendada."
+    },
+    {
+      "id": "rh",
+      "tabLabel": "RRHH",
+      "customerQuestion": "¿Cuántos días de vacaciones tengo acumulados?",
+      "followUpQuestion": "¿Cómo los solicito?",
+      "commonReply1": "¡Hola! Elija una opción:\n1 · Beneficios\n2 · Recibo de sueldo\n3 · Hablar con RRHH",
+      "commonReply2": "No entendí. Elija una opción:\n1 · Beneficios\n2 · Recibo de sueldo\n3 · Hablar con RRHH",
+      "connectReply1": "Tiene 22 días disponibles, con el período de acumulación cerrado en marzo.",
+      "connectReply2": "Es a través del formulario interno, con 30 días de anticipación. ¿Quiere que le envíe el enlace?",
+      "commonVerdict": "El empleado va personalmente a RRHH.",
+      "connectVerdict": "RRHH recupera la mañana."
+    }
+  ]
+}

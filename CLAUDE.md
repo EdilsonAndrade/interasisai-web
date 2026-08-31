@@ -2,7 +2,7 @@
 
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at specs/027-interasisai-connect-modal/plan.md
+at specs/029-system-prompts-panel/plan.md
 
 ## RULES
 
@@ -20,6 +20,7 @@ at specs/027-interasisai-connect-modal/plan.md
   4. /speckit-implement
 4. O nome da branch sempre levará o NOME da ISSUE do Linear, se não houver, pergunte.
 5. CASO não haja ticket no linear, atuar pontualmente após entendimento
+6. Não inicie o container, ou suba instancia para testar o site ou backend, sempre peça ao usuário para seguir conforme plano de Test Guide, não queria ler o navegador , exceto se solicitado
 
 ## Test Guide
 1. At the end of all implementation, describe how to test following the example

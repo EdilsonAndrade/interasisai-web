@@ -58,7 +58,7 @@ export function SystemPromptList({
               type="button"
               onClick={() => onSelect(prompt.prompt_key)}
               aria-current={active ? "true" : undefined}
-              className={`flex w-full items-center gap-3 break-words rounded-card border px-4 py-3 text-left text-sm font-semibold transition-colors ${
+              className={`flex min-w-[284px] items-center gap-3 break-words rounded-card border px-4 py-3 text-left text-sm font-semibold transition-colors ${
                 active
                   ? "border-brand-primary bg-brand-primary/10 text-brand-primary"
                   : "border-border-subtle bg-surface-base text-text-body hover:border-brand-primary/30"

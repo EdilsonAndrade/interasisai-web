@@ -37,7 +37,7 @@ export function SystemPromptsPage() {
         </p>
       </header>
 
-      <div className="grid gap-6 md:grid-cols-[minmax(0,260px)_1fr]">
+      <div className="grid gap-10 md:grid-cols-[minmax(0,260px)_1fr]">
         <SystemPromptList
           prompts={prompts}
           selectedPromptKey={selectedPromptKey}

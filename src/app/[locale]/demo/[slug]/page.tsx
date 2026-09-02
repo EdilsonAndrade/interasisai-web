@@ -1,18 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import DemoWidgetLoader from "@/components/chat/DemoWidgetLoader";
 import { getDemoTenant } from "@/lib/demoTenants";
+
+type PageParams = { locale: string; slug: string };
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<PageParams>;
 }): Promise<Metadata> {
-  const { slug } = await params;
+  const { locale, slug } = await params;
   const demo = getDemoTenant(slug);
+  const t = await getTranslations({ locale, namespace: "demo" });
 
   return {
-    title: demo ? `Demo · ${demo.nicho} | Interasis AI` : "Demo não encontrada",
+    title: demo ? t("metadataTitle", { nicho: t(`tenants.${slug}.nicho`) }) : t("metadataNotFoundTitle"),
     robots: { index: false, follow: false },
   };
 }
@@ -20,16 +24,17 @@ export async function generateMetadata({
 export default async function DemoPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: Promise<PageParams>;
 }) {
-  const { slug } = await params;
+  const { locale, slug } = await params;
   const demo = getDemoTenant(slug);
 
   if (!demo) {
     notFound();
   }
 
-  const { Icon, nicho, headline, subheadline, tenantId } = demo;
+  const { Icon, tenantId } = demo;
+  const t = await getTranslations({ locale, namespace: "demo" });
 
   return (
     <div
@@ -41,13 +46,13 @@ export default async function DemoPage({
           <Icon aria-hidden="true" className="h-8 w-8" />
         </div>
         <span className="rounded-pill border border-border-subtle/70 bg-surface-base/60 px-3.5 py-1.5 text-xs font-semibold">
-          Demo · {nicho}
+          {t("eyebrowPrefix")} · {t(`tenants.${slug}.nicho`)}
         </span>
-        <h1 className="font-space-grotesk text-3xl font-extrabold sm:text-4xl">{headline}</h1>
-        <p className="max-w-xl text-text-body">{subheadline}</p>
-        <p className="text-sm text-text-body/70">
-          Clique no ícone de chat no canto inferior direito para conversar com o assistente.
-        </p>
+        <h1 className="font-space-grotesk text-3xl font-extrabold sm:text-4xl">
+          {t(`tenants.${slug}.headline`)}
+        </h1>
+        <p className="max-w-xl text-text-body">{t(`tenants.${slug}.subheadline`)}</p>
+        <p className="text-sm text-text-body/70">{t("instruction")}</p>
       </div>
 
       <DemoWidgetLoader tenantId={tenantId} />

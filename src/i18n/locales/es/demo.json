@@ -1,0 +1,33 @@
+{
+  "eyebrowPrefix": "Demo",
+  "instruction": "Haga clic en el ícono de chat en la esquina inferior derecha para hablar con el asistente.",
+  "metadataTitle": "Demo · {nicho} | Interasis AI",
+  "metadataNotFoundTitle": "Demo no encontrada",
+  "tenants": {
+    "buffet": {
+      "nicho": "Buffet",
+      "headline": "Atención automática para su buffet",
+      "subheadline": "Vea cómo Interasis AI responde dudas sobre paquetes, fechas disponibles y presupuestos en tiempo real."
+    },
+    "clinica": {
+      "nicho": "Clínica",
+      "headline": "Atención automática para su clínica",
+      "subheadline": "Vea cómo Interasis AI responde dudas sobre convenios, citas y horarios en tiempo real."
+    },
+    "escola": {
+      "nicho": "Escuela",
+      "headline": "Atención automática para su escuela",
+      "subheadline": "Vea cómo Interasis AI responde dudas de matrícula, mensualidades y horarios en tiempo real."
+    },
+    "imob": {
+      "nicho": "Inmobiliaria",
+      "headline": "Atención automática para su inmobiliaria",
+      "subheadline": "Vea cómo Interasis AI responde dudas sobre propiedades, condiciones y visitas en tiempo real."
+    },
+    "rh": {
+      "nicho": "RRHH",
+      "headline": "Atención automática para su RRHH",
+      "subheadline": "Vea cómo Interasis AI responde dudas sobre vacaciones, beneficios y recibos de sueldo en tiempo real."
+    }
+  }
+}

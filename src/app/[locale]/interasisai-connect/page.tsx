@@ -71,6 +71,10 @@ export default async function InterasisAIConnectPage({ params }: PageProps) {
       common: t("comparisonBadges.common"),
       connect: t("comparisonBadges.connect"),
     },
+    verticalDemo: {
+      eyebrow: t("verticalDemo.eyebrow"),
+      buttonLabel: t("verticalDemo.buttonLabel"),
+    },
     architecture: {
       title: t("architecture.title"),
       description: t("architecture.description"),

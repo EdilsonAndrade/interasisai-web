@@ -25,6 +25,7 @@ export default function ConnectPage({ content, ctaButtonLabel }: ConnectPageProp
           verticals={content.verticals}
           labels={content.comparisonLabels}
           badges={content.comparisonBadges}
+          demoCta={content.verticalDemo}
         />
       </section>
 

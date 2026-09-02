@@ -15,6 +15,10 @@
     "common": "Hoy",
     "connect": "En vivo"
   },
+  "verticalDemo": {
+    "eyebrow": "¿Quiere verlo funcionando de verdad?",
+    "buttonLabel": "Haga clic aquí y pruébelo ahora"
+  },
   "architecture": {
     "title": "Leyó todo sobre el negocio antes de la primera atención",
     "description": "Una atención automática común necesita que alguien registre pregunta por pregunta, una por una. InterasisAI Connect funciona al revés: el negocio entrega los documentos que ya existen, y él aprende a partir de ellos — sin reprogramar nada cuando algo cambia.",

@@ -15,6 +15,10 @@
     "common": "Today",
     "connect": "Live"
   },
+  "verticalDemo": {
+    "eyebrow": "Want to see it working for real?",
+    "buttonLabel": "Click here and try it now"
+  },
   "architecture": {
     "title": "It read everything about the business before the first conversation",
     "description": "Common automated support needs someone to register questions one by one. InterasisAI Connect works the other way around: the business hands over the documents it already has, and it learns from them — no reprogramming needed when something changes.",

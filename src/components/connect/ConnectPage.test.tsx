@@ -1,5 +1,9 @@
 import { render, screen } from "@testing-library/react";
 
+jest.mock("next-intl", () => ({
+  useLocale: () => "pt-BR",
+}));
+
 import { ChatProvider } from "@/context/ChatContext";
 import ConnectPage from "./ConnectPage";
 import type { ConnectPageContent } from "./types";
@@ -21,6 +25,7 @@ const content: ConnectPageContent = {
   lead: "Parágrafo de abertura explicando o contraste.",
   comparisonLabels: { common: "Chatbot comum", connect: "InterasisAI Connect" },
   comparisonBadges: { common: "Hoje", connect: "Ao vivo" },
+  verticalDemo: { eyebrow: "Quer ver funcionando de verdade?", buttonLabel: "Clique aqui e experimente agora" },
   architecture: {
     title: "Ele leu tudo sobre o negócio",
     description: "Explicação leiga da arquitetura.",

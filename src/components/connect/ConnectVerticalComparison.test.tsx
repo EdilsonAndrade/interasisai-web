@@ -1,5 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 
+jest.mock("next-intl", () => ({
+  useLocale: () => "pt-BR",
+}));
+
 import ConnectVerticalComparison from "./ConnectVerticalComparison";
 import type { VerticalScenario } from "./types";
 
@@ -32,10 +36,16 @@ const verticals: VerticalScenario[] = [
 
 const labels = { common: "Chatbot comum", connect: "InterasisAI Connect" };
 const badges = { common: "Hoje", connect: "Ao vivo" };
+const demoCta = { eyebrow: "Quer ver funcionando de verdade?", buttonLabel: "Clique aqui e experimente agora" };
 
 function renderComparison() {
   return render(
-    <ConnectVerticalComparison verticals={verticals} labels={labels} badges={badges} />,
+    <ConnectVerticalComparison
+      verticals={verticals}
+      labels={labels}
+      badges={badges}
+      demoCta={demoCta}
+    />,
   );
 }
 
@@ -95,9 +105,19 @@ describe("ConnectVerticalComparison", () => {
     expect(screen.getByRole("tab", { name: "Clínica" })).toHaveFocus();
   });
 
-  it("never navigates away while switching tabs (no anchor/link elements)", () => {
+  it("shows a 'try it now' link to the active vertical's demo page", () => {
     renderComparison();
 
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /clique aqui e experimente agora/i })).toHaveAttribute(
+      "href",
+      "/pt-BR/demo/buffet",
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Clínica" }));
+
+    expect(screen.getByRole("link", { name: /clique aqui e experimente agora/i })).toHaveAttribute(
+      "href",
+      "/pt-BR/demo/clinica",
+    );
   });
 });

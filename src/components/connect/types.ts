@@ -64,6 +64,10 @@ export type ConnectPageContent = {
     common: string;
     connect: string;
   };
+  verticalDemo: {
+    eyebrow: string;
+    buttonLabel: string;
+  };
   architecture: {
     title: string;
     description: string;

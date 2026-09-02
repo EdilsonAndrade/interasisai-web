@@ -1,20 +1,27 @@
 "use client";
 
 import { useId, useRef, useState, type KeyboardEvent } from "react";
+import { ArrowRight } from "lucide-react";
+import { useLocale } from "next-intl";
+import Link from "next/link";
 
+import { getDemoTenant } from "@/lib/demoTenants";
 import type { VerticalScenario } from "./types";
 
 type ConnectVerticalComparisonProps = {
   verticals: VerticalScenario[];
   labels: { common: string; connect: string };
   badges: { common: string; connect: string };
+  demoCta: { eyebrow: string; buttonLabel: string };
 };
 
 export default function ConnectVerticalComparison({
   verticals,
   labels,
   badges,
+  demoCta,
 }: ConnectVerticalComparisonProps) {
+  const locale = useLocale();
   const baseId = useId();
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [activeId, setActiveId] = useState<VerticalScenario["id"] | undefined>(verticals[0]?.id);
@@ -91,6 +98,27 @@ export default function ConnectVerticalComparison({
           );
         })}
       </div>
+
+      {getDemoTenant(active.id) && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-brand-primary/40 bg-brand-primary/10 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-primary opacity-75" />
+              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-brand-primary" />
+            </span>
+            <span className="text-sm text-text-body">
+              <span className="font-bold text-brand-primary">{active.tabLabel}</span> — {demoCta.eyebrow}
+            </span>
+          </div>
+          <Link
+            href={`/${locale}/demo/${active.id}`}
+            className="inline-flex items-center gap-1.5 rounded-button bg-brand-primary px-4 py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-primary-hover"
+          >
+            {demoCta.buttonLabel}
+            <ArrowRight aria-hidden="true" className="h-4 w-4" />
+          </Link>
+        </div>
+      )}
 
       <div
         role="tabpanel"

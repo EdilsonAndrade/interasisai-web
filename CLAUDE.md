@@ -21,6 +21,7 @@ at specs/030-ingestao-multiplos-arquivos/plan.md
 4. O nome da branch sempre levará o NOME da ISSUE do Linear, se não houver, pergunte.
 5. CASO não haja ticket no linear, atuar pontualmente após entendimento
 6. Não inicie o container, ou suba instancia para testar o site ou backend, sempre peça ao usuário para seguir conforme plano de Test Guide, não queria ler o navegador , exceto se solicitado
+7. O projeto é multi-lingua, então sempre que for colocar textos, siga o padrão já existente I18N.
 
 ## Test Guide
 1. At the end of all implementation, describe how to test following the example
@@ -31,4 +32,6 @@ at specs/030-ingestao-multiplos-arquivos/plan.md
 4- Run this curl to update or inser
 </example>
 <!-- SPECKIT END -->
+
+
 

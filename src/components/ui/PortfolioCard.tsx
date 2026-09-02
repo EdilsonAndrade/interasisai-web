@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { ArrowUpRight, CheckCircle2 } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, Zap } from "lucide-react";
 import Link from "next/link";
 
 import TechBadge from "@/components/ui/TechBadge";
@@ -23,6 +23,7 @@ export type PortfolioCardProps = {
   featuresLabel?: string;
   ownershipLabel?: string;
   extraBadge?: ReactNode;
+  ctaBannerLabel?: string;
 };
 
 export default function PortfolioCard({
@@ -41,12 +42,24 @@ export default function PortfolioCard({
   learnMoreHref,
   featuresLabel = "Diferenciais & Recursos",
   ownershipLabel,
+  ctaBannerLabel,
 }: PortfolioCardProps) {
   return (
     <article
       data-testid="portfolio-card"
       className="group relative flex flex-col justify-between rounded-card border border-border-subtle/70 bg-surface-base/65 p-6 sm:p-8 shadow-floating backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-brand-primary/50 hover:shadow-2xl"
     >
+      {ctaBannerLabel && learnMoreHref && (
+        <Link
+          href={learnMoreHref}
+          data-testid="portfolio-cta-banner"
+          className="cta-banner-pulse -mx-6 -mt-6 mb-6 flex items-center justify-center gap-2 rounded-t-card bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 px-4 py-2.5 text-center text-sm font-extrabold uppercase tracking-wide text-white shadow-md transition-transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-white/70 sm:-mx-8 sm:-mt-8 sm:mb-8"
+        >
+          <Zap aria-hidden="true" className="h-4 w-4 shrink-0" />
+          <span>{ctaBannerLabel}</span>
+          <Zap aria-hidden="true" className="h-4 w-4 shrink-0" />
+        </Link>
+      )}
       <div className="flex flex-col gap-6">
         {/* Header: Icon & Status */}
         <div className="flex items-center justify-between gap-4">

@@ -92,6 +92,19 @@ html.theme-light body {
       opacity: 1;
     }
   }
+
+  /* ─── Portfolio CTA banner: brilho suave, sem apagar o texto ────── */
+  @keyframes cta-banner-glow {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.88;
+    }
+  }
+  .cta-banner-pulse {
+    animation: cta-banner-glow 2.4s ease-in-out infinite;
+  }
   .chat-message-content p {
     margin-bottom: 0.5rem;
   }

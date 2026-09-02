@@ -23,6 +23,7 @@ export default async function PortfolioSection() {
       learnMoreHref: `/${locale}/interasisai-connect`,
       featuresLabel: t("portfolio.actions.featuresLabel"),
       ownershipLabel: t("portfolio.ownershipLabel"),
+      ctaBannerLabel: t("portfolio.actions.ctaBanner"),
     },
     {
       title: t("portfolio.projects.simplificandoai.title"),

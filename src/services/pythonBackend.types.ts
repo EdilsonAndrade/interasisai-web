@@ -363,6 +363,95 @@ export type KnowledgeBaseWriteResult = KnowledgeBaseWriteSuccess | KnowledgeBase
 export type KnowledgeBaseDeleteResult = KnowledgeBaseDeleteSuccess | KnowledgeBaseFailure;
 
 // ---------------------------------------------------------------------------
+// Knowledge base items — EDI-39
+// GET/POST /tenants/{tenant_id}/knowledge-base/items
+// GET/PUT/DELETE /tenants/{tenant_id}/knowledge-base/items/{item_id}
+// PUT /tenants/{tenant_id}/knowledge-base/items/{item_id}/file
+// ---------------------------------------------------------------------------
+
+export type KnowledgeBaseItemSourceType = "file" | "texto";
+
+export type KnowledgeBaseItem = {
+  id: string;
+  tenant_id: string;
+  source_type: KnowledgeBaseItemSourceType;
+  filename: string | null;
+  content_preview: string;
+  content_length: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type KnowledgeBaseItemDetail = {
+  id: string;
+  tenant_id: string;
+  source_type: KnowledgeBaseItemSourceType;
+  filename: string | null;
+  content: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type KnowledgeBaseUploadMode = "append" | "replace";
+
+export type KnowledgeBaseDuplicateResolution = {
+  filename: string;
+  action: "replace" | "keep_both";
+  existing_item_id: string;
+};
+
+export type KnowledgeBaseUploadConflict = {
+  filename: string;
+  existing_item_id: string;
+};
+
+export type KnowledgeBaseUploadSummaryItem = {
+  id: string;
+  filename: string | null;
+  source_type: KnowledgeBaseItemSourceType;
+};
+
+export type KnowledgeBaseItemsListResult =
+  | { ok: true; status: number; data: KnowledgeBaseItem[] }
+  | KnowledgeBaseItemsFailure;
+
+export type KnowledgeBaseItemDetailResult =
+  | { ok: true; status: number; data: KnowledgeBaseItemDetail }
+  | KnowledgeBaseItemsFailure;
+
+export type KnowledgeBaseUploadSuccess = {
+  ok: true;
+  status: number;
+  data: {
+    created: KnowledgeBaseUploadSummaryItem[];
+    replaced: KnowledgeBaseUploadSummaryItem[];
+  };
+};
+
+export type KnowledgeBaseUploadConflictResult = {
+  ok: false;
+  status: 409;
+  message: string;
+  conflicts: KnowledgeBaseUploadConflict[];
+};
+
+export type KnowledgeBaseUploadResult =
+  | KnowledgeBaseUploadSuccess
+  | KnowledgeBaseUploadConflictResult
+  | KnowledgeBaseItemsFailure;
+
+export type KnowledgeBaseItemDeleteResult =
+  | { ok: true; status: number }
+  | KnowledgeBaseItemsFailure;
+
+export type KnowledgeBaseItemsFailure = {
+  ok: false;
+  status: number;
+  message: string;
+  retryable: boolean;
+};
+
+// ---------------------------------------------------------------------------
 // Tenant usage — GET /tenants/{id}/usage (EDI-63)
 // Source: specs/024-tenant-message-limit-admin-ui/contracts/, backend
 // specs/010-tenant-message-limit/contracts/tenant-message-limit.md

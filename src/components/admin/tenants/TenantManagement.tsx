@@ -59,6 +59,7 @@ export function TenantManagement() {
     if (management.tenant) {
       binding.fetchBinding(management.tenant.id);
       nodePrompts.fetchAll(management.tenant.id);
+      guide.setActiveTenant(management.tenant.id);
     } else {
       binding.clear();
       nodePrompts.clear();

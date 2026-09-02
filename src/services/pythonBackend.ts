@@ -38,6 +38,17 @@ import type {
   KnowledgeBaseWriteResult,
   KnowledgeBaseDeleteResult,
   KnowledgeBaseFailure,
+  KnowledgeBaseItem,
+  KnowledgeBaseItemDetail,
+  KnowledgeBaseItemsListResult,
+  KnowledgeBaseItemDetailResult,
+  KnowledgeBaseUploadResult,
+  KnowledgeBaseUploadMode,
+  KnowledgeBaseDuplicateResolution,
+  KnowledgeBaseUploadConflict,
+  KnowledgeBaseUploadSummaryItem,
+  KnowledgeBaseItemDeleteResult,
+  KnowledgeBaseItemsFailure,
   TenantUsage,
   TenantUsageResult,
   TenantMessageLimitConfig,
@@ -901,6 +912,261 @@ export async function deleteKnowledgeBase(
         ? success.message.trim()
         : "Base de conhecimento removida com sucesso.",
   };
+}
+
+// ---------------------------------------------------------------------------
+// Knowledge base items — EDI-39
+// GET/POST /tenants/{tenant_id}/knowledge-base/items
+// GET/PUT/DELETE /tenants/{tenant_id}/knowledge-base/items/{item_id}
+// PUT /tenants/{tenant_id}/knowledge-base/items/{item_id}/file
+// ---------------------------------------------------------------------------
+
+function knowledgeBaseItemsUrl(tenantId: string): string {
+  return `${getPythonBackendBaseUrl()}/api/v1/tenants/${encodeURIComponent(tenantId)}/knowledge-base/items`;
+}
+
+function isKnowledgeBaseItem(value: unknown): value is KnowledgeBaseItem {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Partial<KnowledgeBaseItem>;
+  return (
+    typeof item.id === "string" &&
+    typeof item.tenant_id === "string" &&
+    (item.source_type === "file" || item.source_type === "texto") &&
+    (typeof item.filename === "string" || item.filename === null) &&
+    typeof item.content_preview === "string" &&
+    typeof item.content_length === "number" &&
+    typeof item.created_at === "string" &&
+    typeof item.updated_at === "string"
+  );
+}
+
+function isKnowledgeBaseItemDetail(value: unknown): value is KnowledgeBaseItemDetail {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Partial<KnowledgeBaseItemDetail>;
+  return (
+    typeof item.id === "string" &&
+    typeof item.tenant_id === "string" &&
+    (item.source_type === "file" || item.source_type === "texto") &&
+    (typeof item.filename === "string" || item.filename === null) &&
+    typeof item.content === "string" &&
+    typeof item.created_at === "string" &&
+    typeof item.updated_at === "string"
+  );
+}
+
+function knowledgeBaseItemsFailure(status: number, payload?: unknown): KnowledgeBaseItemsFailure {
+  if (status === 404) {
+    return { ok: false, status, message: "Item não encontrado.", retryable: false };
+  }
+  return {
+    ok: false,
+    status,
+    message: getOperationErrorMessage(payload),
+    retryable: isRetryableStatus(status),
+  };
+}
+
+function knowledgeBaseItemsNetworkFailure(error: unknown): KnowledgeBaseItemsFailure {
+  return {
+    ok: false,
+    status: 0,
+    message:
+      error instanceof DOMException && error.name === "AbortError"
+        ? "Solicitação cancelada."
+        : NETWORK_ERROR_MSG,
+    retryable: true,
+  };
+}
+
+export async function listKnowledgeBaseItems(
+  tenantId: string,
+  signal?: AbortSignal,
+): Promise<KnowledgeBaseItemsListResult> {
+  let response: Response;
+  try {
+    response = await fetch(knowledgeBaseItemsUrl(tenantId), { method: "GET", signal });
+  } catch (error) {
+    return knowledgeBaseItemsNetworkFailure(error);
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) return knowledgeBaseItemsFailure(response.status, payload);
+  if (!Array.isArray(payload) || !payload.every(isKnowledgeBaseItem)) {
+    return knowledgeBaseItemsFailure(502);
+  }
+  return { ok: true, status: response.status, data: payload };
+}
+
+export async function getKnowledgeBaseItem(
+  tenantId: string,
+  itemId: string,
+  signal?: AbortSignal,
+): Promise<KnowledgeBaseItemDetailResult> {
+  let response: Response;
+  try {
+    response = await fetch(`${knowledgeBaseItemsUrl(tenantId)}/${encodeURIComponent(itemId)}`, {
+      method: "GET",
+      signal,
+    });
+  } catch (error) {
+    return knowledgeBaseItemsNetworkFailure(error);
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) return knowledgeBaseItemsFailure(response.status, payload);
+  if (!isKnowledgeBaseItemDetail(payload)) return knowledgeBaseItemsFailure(502);
+  return { ok: true, status: response.status, data: payload };
+}
+
+export type UploadKnowledgeBaseItemsInput = {
+  files?: File[];
+  texts?: string[];
+  mode: KnowledgeBaseUploadMode;
+  duplicateResolutions?: KnowledgeBaseDuplicateResolution[];
+};
+
+function isUploadSummaryItem(value: unknown): value is KnowledgeBaseUploadSummaryItem {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Partial<KnowledgeBaseUploadSummaryItem>;
+  return (
+    typeof item.id === "string" &&
+    (typeof item.filename === "string" || item.filename === null) &&
+    (item.source_type === "file" || item.source_type === "texto")
+  );
+}
+
+function isUploadConflict(value: unknown): value is KnowledgeBaseUploadConflict {
+  if (!value || typeof value !== "object") return false;
+  const item = value as Partial<KnowledgeBaseUploadConflict>;
+  return typeof item.filename === "string" && typeof item.existing_item_id === "string";
+}
+
+export async function uploadKnowledgeBaseItems(
+  tenantId: string,
+  input: UploadKnowledgeBaseItemsInput,
+  signal?: AbortSignal,
+): Promise<KnowledgeBaseUploadResult> {
+  const formData = new FormData();
+  for (const file of input.files ?? []) formData.append("files", file);
+  for (const text of input.texts ?? []) formData.append("texts", text);
+  formData.append("mode", input.mode);
+  if (input.duplicateResolutions && input.duplicateResolutions.length > 0) {
+    formData.append("duplicate_resolutions", JSON.stringify(input.duplicateResolutions));
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(knowledgeBaseItemsUrl(tenantId), {
+      method: "POST",
+      body: formData,
+      signal,
+    });
+  } catch (error) {
+    return knowledgeBaseItemsNetworkFailure(error);
+  }
+
+  const payload = await parseJsonSafely(response);
+
+  if (response.status === 409) {
+    const conflicts = (payload as { conflicts?: unknown } | null)?.conflicts;
+    if (Array.isArray(conflicts) && conflicts.every(isUploadConflict)) {
+      return {
+        ok: false,
+        status: 409,
+        message: getOperationErrorMessage(payload),
+        conflicts,
+      };
+    }
+    return knowledgeBaseItemsFailure(409, payload);
+  }
+
+  if (!response.ok) return knowledgeBaseItemsFailure(response.status, payload);
+
+  const created = (payload as { created?: unknown } | null)?.created;
+  const replaced = (payload as { replaced?: unknown } | null)?.replaced;
+  if (
+    !Array.isArray(created) ||
+    !Array.isArray(replaced) ||
+    !created.every(isUploadSummaryItem) ||
+    !replaced.every(isUploadSummaryItem)
+  ) {
+    return knowledgeBaseItemsFailure(502);
+  }
+
+  return { ok: true, status: response.status, data: { created, replaced } };
+}
+
+export async function updateKnowledgeBaseItemContent(
+  tenantId: string,
+  itemId: string,
+  content: string,
+  signal?: AbortSignal,
+): Promise<KnowledgeBaseItemDetailResult> {
+  let response: Response;
+  try {
+    response = await fetch(`${knowledgeBaseItemsUrl(tenantId)}/${encodeURIComponent(itemId)}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+      signal,
+    });
+  } catch (error) {
+    return knowledgeBaseItemsNetworkFailure(error);
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) return knowledgeBaseItemsFailure(response.status, payload);
+  if (!isKnowledgeBaseItemDetail(payload)) return knowledgeBaseItemsFailure(502);
+  return { ok: true, status: response.status, data: payload };
+}
+
+export async function replaceKnowledgeBaseItemFile(
+  tenantId: string,
+  itemId: string,
+  file: File,
+  signal?: AbortSignal,
+): Promise<KnowledgeBaseItemDetailResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  let response: Response;
+  try {
+    response = await fetch(`${knowledgeBaseItemsUrl(tenantId)}/${encodeURIComponent(itemId)}/file`, {
+      method: "PUT",
+      body: formData,
+      signal,
+    });
+  } catch (error) {
+    return knowledgeBaseItemsNetworkFailure(error);
+  }
+
+  const payload = await parseJsonSafely(response);
+  if (!response.ok) return knowledgeBaseItemsFailure(response.status, payload);
+  if (!isKnowledgeBaseItemDetail(payload)) return knowledgeBaseItemsFailure(502);
+  return { ok: true, status: response.status, data: payload };
+}
+
+export async function deleteKnowledgeBaseItem(
+  tenantId: string,
+  itemId: string,
+  signal?: AbortSignal,
+): Promise<KnowledgeBaseItemDeleteResult> {
+  let response: Response;
+  try {
+    response = await fetch(`${knowledgeBaseItemsUrl(tenantId)}/${encodeURIComponent(itemId)}`, {
+      method: "DELETE",
+      signal,
+    });
+  } catch (error) {
+    return knowledgeBaseItemsNetworkFailure(error);
+  }
+
+  if (!response.ok) {
+    const payload = await parseJsonSafely(response);
+    return knowledgeBaseItemsFailure(response.status, payload);
+  }
+
+  return { ok: true, status: response.status };
 }
 
 // ---------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { searchTenants, getKnowledgeBase } from "@/services/pythonBackend";
+import { searchTenants, getKnowledgeBase, listKnowledgeBaseItems } from "@/services/pythonBackend";
 import { fetchTenantPromptDetail } from "@/services/promptManager";
 import type { TenantPromptDetailResult } from "@/services/promptManager.types";
 import { AdminDashboard } from "./AdminDashboard";
@@ -14,6 +14,7 @@ jest.mock("@/services/pythonBackend", () => ({
   getKnowledgeBase: jest.fn(),
   saveKnowledgeBase: jest.fn(),
   deleteKnowledgeBase: jest.fn(),
+  listKnowledgeBaseItems: jest.fn(),
 }));
 
 jest.mock("@/services/promptManager", () => ({
@@ -22,6 +23,7 @@ jest.mock("@/services/promptManager", () => ({
 
 const searchTenantsMock = jest.mocked(searchTenants);
 const getKnowledgeBaseMock = jest.mocked(getKnowledgeBase);
+const listKnowledgeBaseItemsMock = jest.mocked(listKnowledgeBaseItems);
 const fetchTenantPromptDetailMock = jest.mocked(fetchTenantPromptDetail);
 
 const tenantOne = {
@@ -57,6 +59,7 @@ describe("AdminDashboard", () => {
       status: 200,
       data: { tenant_id: "1", content: null, updated_at: null },
     });
+    listKnowledgeBaseItemsMock.mockResolvedValue({ ok: true, status: 200, data: [] });
   });
 
   it("titles the screen after its real purpose (tenant lookup + knowledge base), not tenant creation", () => {

@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { AnimatePresence, motion, useDragControls } from "framer-motion";
-import { GripVertical, Maximize2, Minus, X } from "lucide-react";
+import { GripVertical, Maximize2, Minus } from "lucide-react";
 import { useOnboardingGuideContext } from "@/context/OnboardingGuideContext";
 import { ONBOARDING_STEPS } from "./onboardingSteps";
 import { OnboardingGuideItem } from "./OnboardingGuideItem";
@@ -12,7 +12,6 @@ export function OnboardingGuidePanel() {
     activeTenantId,
     completedSteps,
     isMinimized,
-    closeGuide,
     minimizeGuide,
     maximizeGuide,
     toggleStepComplete,
@@ -110,14 +109,6 @@ export function OnboardingGuidePanel() {
                   className="flex h-8 w-8 items-center justify-center rounded-full text-text-body hover:bg-surface-subtle"
                 >
                   <Minus className="h-4 w-4" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  onClick={closeGuide}
-                  aria-label="Fechar guia"
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-text-body hover:bg-surface-subtle"
-                >
-                  <X className="h-4 w-4" aria-hidden="true" />
                 </button>
               </div>
             </header>

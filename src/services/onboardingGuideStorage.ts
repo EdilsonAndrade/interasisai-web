@@ -10,6 +10,8 @@ import { ONBOARDING_STEP_IDS, type OnboardingStepId } from "./onboardingGuideSto
 
 const DISABLED_KEY = "onboarding_guide_disabled";
 const PROGRESS_KEY_PREFIX = "onboarding_guide_progress:";
+const ACTIVE_TENANT_KEY = "onboarding_guide_active_tenant";
+const MINIMIZED_KEY = "onboarding_guide_minimized";
 
 /** In-memory fallback storage when localStorage is unavailable */
 const memoryStore = new Map<string, string>();
@@ -100,4 +102,36 @@ export function readProgress(tenantId: string): OnboardingStepId[] {
 
 export function writeProgress(tenantId: string, steps: OnboardingStepId[]): void {
   writeRaw(progressKey(tenantId), JSON.stringify(steps));
+}
+
+/**
+ * Tenant the floating guide currently refers to. Persisted so the icon
+ * survives a page refresh or navigating between admin pages. Never throws.
+ */
+export function readActiveTenantId(): string | null {
+  return readRaw(ACTIVE_TENANT_KEY);
+}
+
+export function writeActiveTenantId(tenantId: string | null): void {
+  if (tenantId) {
+    writeRaw(ACTIVE_TENANT_KEY, tenantId);
+  } else {
+    removeRaw(ACTIVE_TENANT_KEY);
+  }
+}
+
+/**
+ * Whether the guide is collapsed to the floating icon. Persisted so a
+ * refresh doesn't unexpectedly re-expand (or re-collapse) the panel.
+ * Defaults to minimized (icon-only) when nothing was saved yet, so the
+ * icon shows up unobtrusively on first load instead of popping the full
+ * checklist open with no tenant context.
+ */
+export function readGuideMinimized(): boolean {
+  const raw = readRaw(MINIMIZED_KEY);
+  return raw === null ? true : raw === "true";
+}
+
+export function writeGuideMinimized(minimized: boolean): void {
+  writeRaw(MINIMIZED_KEY, minimized ? "true" : "false");
 }

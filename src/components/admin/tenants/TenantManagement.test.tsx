@@ -61,7 +61,7 @@ const guideActions = {
   completedSteps: [],
   isMinimized: false,
   openGuide: jest.fn(),
-  closeGuide: jest.fn(),
+  setActiveTenant: jest.fn(),
   minimizeGuide: jest.fn(),
   maximizeGuide: jest.fn(),
   toggleStepComplete: jest.fn(),
@@ -238,5 +238,33 @@ describe("TenantManagement", () => {
     const dialog = screen.getByRole("dialog", { name: "Editar tenant" });
     expect(within(dialog).getByLabelText(/Limite mensal de chamadas de LLM/i)).toHaveValue(500);
     expect(within(dialog).getByText("admin@buffet.com")).toBeInTheDocument();
+  });
+
+  it("keeps the floating guide pointed at whichever tenant is currently selected, not just newly created ones", () => {
+    useTenantMock.mockReturnValue({
+      tenant: {
+        id: "tenant-1",
+        name: "Tenant One",
+        google_calendar_id: "calendar",
+        allowed_domains: ["example.com"],
+        scheduling_enabled: true,
+        monthly_message_limit: null,
+        notification_emails: [],
+        created_at: "2026-08-08T10:00:00Z",
+        updated_at: null,
+        deleted_at: null,
+      },
+      operation: null,
+      isLoading: false,
+      error: null,
+      feedback: null,
+      fieldErrors: undefined,
+      pendingPromptId: null,
+      ...actions,
+    });
+
+    render(<TenantManagement />);
+
+    expect(guideActions.setActiveTenant).toHaveBeenCalledWith("tenant-1");
   });
 });

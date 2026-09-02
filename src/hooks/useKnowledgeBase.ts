@@ -17,6 +17,7 @@ type UseKnowledgeBaseReturn = {
   fieldErrors?: { content?: string };
   save: (content: string) => Promise<boolean>;
   remove: () => Promise<boolean>;
+  refresh: () => Promise<void>;
 };
 
 export function useKnowledgeBase(tenantId: string): UseKnowledgeBaseReturn {
@@ -29,30 +30,33 @@ export function useKnowledgeBase(tenantId: string): UseKnowledgeBaseReturn {
   const [fieldErrors, setFieldErrors] = useState<{ content?: string } | undefined>(undefined);
   const requestIdRef = useRef(0);
 
-  useEffect(() => {
-    // Invalidate any in-flight request from a previous tenant (FR-023).
+  const load = useCallback(async () => {
+    // Invalidate any in-flight request from a previous tenant/call (FR-023).
     const requestId = ++requestIdRef.current;
 
     setLoading(true);
     setError(null);
     setFieldErrors(undefined);
 
-    getKnowledgeBase(tenantId).then((result) => {
-      if (requestIdRef.current !== requestId) return; // stale — tenant changed
+    const result = await getKnowledgeBase(tenantId);
+    if (requestIdRef.current !== requestId) return; // stale — superseded by a newer call
 
-      setLoading(false);
+    setLoading(false);
 
-      if (result.ok) {
-        setContent(result.data.content);
-        setUpdatedAt(result.data.updated_at);
-        return;
-      }
+    if (result.ok) {
+      setContent(result.data.content);
+      setUpdatedAt(result.data.updated_at);
+      return;
+    }
 
-      setContent(null);
-      setUpdatedAt(null);
-      setError(result.message);
-    });
+    setContent(null);
+    setUpdatedAt(null);
+    setError(result.message);
   }, [tenantId]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const save = useCallback(
     async (draft: string): Promise<boolean> => {
@@ -96,5 +100,5 @@ export function useKnowledgeBase(tenantId: string): UseKnowledgeBaseReturn {
     return false;
   }, [tenantId]);
 
-  return { content, updatedAt, loading, saving, deleting, error, fieldErrors, save, remove };
+  return { content, updatedAt, loading, saving, deleting, error, fieldErrors, save, remove, refresh: load };
 }

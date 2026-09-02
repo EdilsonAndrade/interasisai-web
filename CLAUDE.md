@@ -2,7 +2,7 @@
 
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at specs/029-system-prompts-panel/plan.md
+at specs/030-ingestao-multiplos-arquivos/plan.md
 
 ## RULES
 

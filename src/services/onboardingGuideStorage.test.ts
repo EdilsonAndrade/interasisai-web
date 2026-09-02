@@ -1,7 +1,11 @@
 import {
+  readActiveTenantId,
   readGuideDisabled,
+  readGuideMinimized,
   readProgress,
+  writeActiveTenantId,
   writeGuideDisabled,
+  writeGuideMinimized,
   writeProgress,
 } from "./onboardingGuideStorage";
 
@@ -57,6 +61,44 @@ describe("onboardingGuideStorage", () => {
         JSON.stringify(["operational_prompt", "not_a_real_step"]),
       );
       expect(readProgress("tenant-1")).toEqual(["operational_prompt"]);
+    });
+  });
+
+  describe("active tenant", () => {
+    it("returns null when nothing was saved", () => {
+      expect(readActiveTenantId()).toBeNull();
+    });
+
+    it("persists and reads back the active tenant, surviving a refresh", () => {
+      writeActiveTenantId("tenant-1");
+      expect(readActiveTenantId()).toBe("tenant-1");
+      expect(localStorage.getItem("onboarding_guide_active_tenant")).toBe("tenant-1");
+    });
+
+    it("clears the active tenant when set to null", () => {
+      writeActiveTenantId("tenant-1");
+      writeActiveTenantId(null);
+      expect(readActiveTenantId()).toBeNull();
+      expect(localStorage.getItem("onboarding_guide_active_tenant")).toBeNull();
+    });
+  });
+
+  describe("minimized flag", () => {
+    it("defaults to minimized (icon-only) when nothing was saved", () => {
+      expect(readGuideMinimized()).toBe(true);
+    });
+
+    it("persists true across reads once minimized", () => {
+      writeGuideMinimized(true);
+      expect(readGuideMinimized()).toBe(true);
+      expect(localStorage.getItem("onboarding_guide_minimized")).toBe("true");
+    });
+
+    it("persists false across reads once maximized", () => {
+      writeGuideMinimized(true);
+      writeGuideMinimized(false);
+      expect(readGuideMinimized()).toBe(false);
+      expect(localStorage.getItem("onboarding_guide_minimized")).toBe("false");
     });
   });
 

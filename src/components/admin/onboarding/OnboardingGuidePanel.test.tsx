@@ -9,7 +9,6 @@ jest.mock("@/context/OnboardingGuideContext", () => ({
 
 const useGuideMock = jest.mocked(useOnboardingGuideContext);
 const guideActions = {
-  closeGuide: jest.fn(),
   minimizeGuide: jest.fn(),
   maximizeGuide: jest.fn(),
   toggleStepComplete: jest.fn(),
@@ -108,7 +107,7 @@ describe("OnboardingGuidePanel", () => {
     expect(guideActions.minimizeGuide).toHaveBeenCalledTimes(1);
   });
 
-  it("calls closeGuide when the close button is clicked", () => {
+  it("does not render a separate close button — minimizing is the only way back to the icon", () => {
     useGuideMock.mockReturnValue({
       activeTenantId: "tenant-1",
       completedSteps: [],
@@ -117,9 +116,7 @@ describe("OnboardingGuidePanel", () => {
     } as never);
     render(<OnboardingGuidePanel />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Fechar guia" }));
-
-    expect(guideActions.closeGuide).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole("button", { name: "Fechar guia" })).not.toBeInTheDocument();
   });
 
   it("shows a floating bar instead of the full checklist when minimized", () => {

@@ -14,6 +14,12 @@ import {
   getKnowledgeBase,
   saveKnowledgeBase,
   deleteKnowledgeBase,
+  listKnowledgeBaseItems,
+  getKnowledgeBaseItem,
+  uploadKnowledgeBaseItems,
+  updateKnowledgeBaseItemContent,
+  replaceKnowledgeBaseItemFile,
+  deleteKnowledgeBaseItem,
 } from "./pythonBackend";
 
 // ---------------------------------------------------------------------------
@@ -754,6 +760,290 @@ describe("pythonBackend", () => {
       fetchMock.mockRejectedValueOnce(new Error("offline"));
 
       const result = await deleteKnowledgeBase("1234");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 0,
+        message: "Não foi possível se conectar ao serviço de mensagens.",
+        retryable: true,
+      });
+    });
+  });
+
+  describe("listKnowledgeBaseItems", () => {
+    it("returns the item list", async () => {
+      const item = {
+        id: "item-1",
+        tenant_id: "1234",
+        source_type: "file",
+        filename: "precos.xlsx",
+        content_preview: "primeiros 1000 caracteres",
+        content_length: 4832,
+        created_at: "2026-09-01T12:00:00Z",
+        updated_at: "2026-09-01T12:00:00Z",
+      };
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, [item]));
+
+      const result = await listKnowledgeBaseItems("1234");
+
+      const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(
+        "http://test-api.example.com/api/v1/tenants/1234/knowledge-base/items",
+      );
+      expect(options.method).toBe("GET");
+      expect(result).toEqual({ ok: true, status: 200, data: [item] });
+    });
+
+    it("normalizes an invalid payload shape as a 502", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, { not: "an array" }));
+
+      const result = await listKnowledgeBaseItems("1234");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 502,
+        message: "Não foi possível concluir a operação. Tente novamente.",
+        retryable: true,
+      });
+    });
+  });
+
+  describe("getKnowledgeBaseItem", () => {
+    it("returns the full item content", async () => {
+      const detail = {
+        id: "item-1",
+        tenant_id: "1234",
+        source_type: "file",
+        filename: "precos.xlsx",
+        content: "conteúdo completo...",
+        created_at: "2026-09-01T12:00:00Z",
+        updated_at: "2026-09-01T12:00:00Z",
+      };
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, detail));
+
+      const result = await getKnowledgeBaseItem("1234", "item-1");
+
+      const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(
+        "http://test-api.example.com/api/v1/tenants/1234/knowledge-base/items/item-1",
+      );
+      expect(result).toEqual({ ok: true, status: 200, data: detail });
+    });
+
+    it("normalizes a 404 (item not found)", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(404, { detail: "not found" }));
+
+      const result = await getKnowledgeBaseItem("1234", "missing");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 404,
+        message: "Item não encontrado.",
+        retryable: false,
+      });
+    });
+  });
+
+  describe("uploadKnowledgeBaseItems", () => {
+    it("sends files/texts/mode as multipart form data and returns created/replaced items", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(201, {
+          created: [{ id: "item-1", filename: "precos.xlsx", source_type: "file" }],
+          replaced: [],
+        }),
+      );
+      const file = new File(["conteudo"], "precos.xlsx");
+
+      const result = await uploadKnowledgeBaseItems("1234", {
+        files: [file],
+        texts: ["texto colado"],
+        mode: "append",
+      });
+
+      const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(
+        "http://test-api.example.com/api/v1/tenants/1234/knowledge-base/items",
+      );
+      expect(options.method).toBe("POST");
+      const body = options.body as FormData;
+      expect(body.get("files")).toBe(file);
+      expect(body.get("texts")).toBe("texto colado");
+      expect(body.get("mode")).toBe("append");
+      expect(body.has("duplicate_resolutions")).toBe(false);
+      expect(result).toEqual({
+        ok: true,
+        status: 201,
+        data: {
+          created: [{ id: "item-1", filename: "precos.xlsx", source_type: "file" }],
+          replaced: [],
+        },
+      });
+    });
+
+    it("includes duplicate_resolutions as a JSON string when provided", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(201, { created: [], replaced: [] }),
+      );
+
+      await uploadKnowledgeBaseItems("1234", {
+        mode: "append",
+        duplicateResolutions: [
+          { filename: "precos.xlsx", action: "replace", existing_item_id: "item-1" },
+        ],
+      });
+
+      const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      const body = options.body as FormData;
+      expect(JSON.parse(body.get("duplicate_resolutions") as string)).toEqual([
+        { filename: "precos.xlsx", action: "replace", existing_item_id: "item-1" },
+      ]);
+    });
+
+    it("normalizes a 409 duplicate-filename conflict", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(409, {
+          detail: "Alguns arquivos já existem na base de conhecimento deste tenant.",
+          conflicts: [{ filename: "precos.xlsx", existing_item_id: "item-1" }],
+        }),
+      );
+
+      const result = await uploadKnowledgeBaseItems("1234", { mode: "append" });
+
+      expect(result).toEqual({
+        ok: false,
+        status: 409,
+        message: "Alguns arquivos já existem na base de conhecimento deste tenant.",
+        conflicts: [{ filename: "precos.xlsx", existing_item_id: "item-1" }],
+      });
+    });
+
+    it("normalizes a 422 (nothing sent / invalid extension)", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(422, { detail: "Envie ao menos um arquivo ou texto." }),
+      );
+
+      const result = await uploadKnowledgeBaseItems("1234", { mode: "append" });
+
+      expect(result).toEqual({
+        ok: false,
+        status: 422,
+        message: "Envie ao menos um arquivo ou texto.",
+        retryable: false,
+      });
+    });
+  });
+
+  describe("updateKnowledgeBaseItemContent", () => {
+    it("sends PUT with the edited content and returns the updated item", async () => {
+      const detail = {
+        id: "item-1",
+        tenant_id: "1234",
+        source_type: "file",
+        filename: "precos.xlsx",
+        content: "texto editado",
+        created_at: "2026-09-01T12:00:00Z",
+        updated_at: "2026-09-01T12:05:00Z",
+      };
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, detail));
+
+      const result = await updateKnowledgeBaseItemContent("1234", "item-1", "texto editado");
+
+      const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(
+        "http://test-api.example.com/api/v1/tenants/1234/knowledge-base/items/item-1",
+      );
+      expect(options.method).toBe("PUT");
+      expect(JSON.parse(options.body as string)).toEqual({ content: "texto editado" });
+      expect(result).toEqual({ ok: true, status: 200, data: detail });
+    });
+
+    it("normalizes a 422 (empty content)", async () => {
+      fetchMock.mockResolvedValueOnce(
+        createMockResponse(422, { detail: "content não pode estar vazio" }),
+      );
+
+      const result = await updateKnowledgeBaseItemContent("1234", "item-1", "");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 422,
+        message: "content não pode estar vazio",
+        retryable: false,
+      });
+    });
+  });
+
+  describe("replaceKnowledgeBaseItemFile", () => {
+    it("sends the new file as multipart form data and returns the updated item", async () => {
+      const detail = {
+        id: "item-1",
+        tenant_id: "1234",
+        source_type: "file",
+        filename: "precos-v2.xlsx",
+        content: "novo conteúdo extraído",
+        created_at: "2026-09-01T12:00:00Z",
+        updated_at: "2026-09-01T12:10:00Z",
+      };
+      fetchMock.mockResolvedValueOnce(createMockResponse(200, detail));
+      const file = new File(["conteudo"], "precos-v2.xlsx");
+
+      const result = await replaceKnowledgeBaseItemFile("1234", "item-1", file);
+
+      const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(
+        "http://test-api.example.com/api/v1/tenants/1234/knowledge-base/items/item-1/file",
+      );
+      expect(options.method).toBe("PUT");
+      expect((options.body as FormData).get("file")).toBe(file);
+      expect(result).toEqual({ ok: true, status: 200, data: detail });
+    });
+
+    it("normalizes a 404 (item not found)", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(404, { detail: "not found" }));
+      const file = new File(["conteudo"], "precos.xlsx");
+
+      const result = await replaceKnowledgeBaseItemFile("1234", "missing", file);
+
+      expect(result).toEqual({
+        ok: false,
+        status: 404,
+        message: "Item não encontrado.",
+        retryable: false,
+      });
+    });
+  });
+
+  describe("deleteKnowledgeBaseItem", () => {
+    it("sends DELETE and returns success", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(204, null));
+
+      const result = await deleteKnowledgeBaseItem("1234", "item-1");
+
+      const [url, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(url).toBe(
+        "http://test-api.example.com/api/v1/tenants/1234/knowledge-base/items/item-1",
+      );
+      expect(options.method).toBe("DELETE");
+      expect(result).toEqual({ ok: true, status: 204 });
+    });
+
+    it("normalizes a 404 (item not found)", async () => {
+      fetchMock.mockResolvedValueOnce(createMockResponse(404, { detail: "not found" }));
+
+      const result = await deleteKnowledgeBaseItem("1234", "missing");
+
+      expect(result).toEqual({
+        ok: false,
+        status: 404,
+        message: "Item não encontrado.",
+        retryable: false,
+      });
+    });
+
+    it("handles network failure", async () => {
+      fetchMock.mockRejectedValueOnce(new Error("offline"));
+
+      const result = await deleteKnowledgeBaseItem("1234", "item-1");
 
       expect(result).toEqual({
         ok: false,

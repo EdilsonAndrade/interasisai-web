@@ -21,7 +21,7 @@ export const DEMO_TENANTS: Record<string, DemoTenant> = {
   buffet: { tenantId: "demo-buffet", Icon: UtensilsCrossed },
   clinica: { tenantId: "demo-clinica", Icon: Stethoscope },
   escola: { tenantId: "demo-escola", Icon: GraduationCap },
-  imob: { tenantId: "demo-imob", Icon: Building2 },
+  imob: { tenantId: "demo-imobiliaria", Icon: Building2 },
   rh: { tenantId: "demo-rh", Icon: UsersRound },
 };
 

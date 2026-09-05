@@ -1,6 +1,7 @@
 {
   "eyebrowPrefix": "Demo",
   "instruction": "Clique no ícone de chat no canto inferior direito para conversar com o assistente.",
+  "refreshHint": "Se o chat não aparecer, clique aqui para atualizar a página",
   "metadataTitle": "Demo · {nicho} | Interasis AI",
   "metadataNotFoundTitle": "Demo não encontrada",
   "tenants": {

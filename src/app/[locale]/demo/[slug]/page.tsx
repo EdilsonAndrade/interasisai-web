@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import DemoWidgetLoader from "@/components/chat/DemoWidgetLoader";
+import RefreshChatHintButton from "@/components/chat/RefreshChatHintButton";
 import { getDemoTenant } from "@/lib/demoTenants";
 
 type PageParams = { locale: string; slug: string };
@@ -53,6 +54,7 @@ export default async function DemoPage({
         </h1>
         <p className="max-w-xl text-text-body">{t(`tenants.${slug}.subheadline`)}</p>
         <p className="text-sm text-text-body/70">{t("instruction")}</p>
+        <RefreshChatHintButton label={t("refreshHint")} />
       </div>
 
       <DemoWidgetLoader tenantId={tenantId} />
